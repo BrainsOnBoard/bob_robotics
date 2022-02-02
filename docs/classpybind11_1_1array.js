@@ -1,0 +1,26 @@
+var classpybind11_1_1array =
+[
+    [ "base", "classpybind11_1_1array.html#a246d06d1ca129a526b7c5efdeee48652", null ],
+    [ "data", "classpybind11_1_1array.html#ac3968183d53e2ebde0e323f054d28b6b", null ],
+    [ "dtype", "classpybind11_1_1array.html#a7f0f5c84c5de37740fc6edc943c65b2b", null ],
+    [ "flags", "classpybind11_1_1array.html#a6f4666d560c848144be4761ee630d957", null ],
+    [ "index_at", "classpybind11_1_1array.html#a726f25422313b8cc0e57a5604813ffc5", null ],
+    [ "itemsize", "classpybind11_1_1array.html#a10340a5561983400712a61483f9f478f", null ],
+    [ "mutable_data", "classpybind11_1_1array.html#a03adc39944561021d64e48f32c6a2d16", null ],
+    [ "mutable_unchecked", "classpybind11_1_1array.html#aefd5d89295d67ee31cd2e761c949422d", null ],
+    [ "nbytes", "classpybind11_1_1array.html#a38c15f5e8b761232e1ba84aca95ae18c", null ],
+    [ "ndim", "classpybind11_1_1array.html#a1f347b49d01c2f35ad5fadc7e620d8ad", null ],
+    [ "offset_at", "classpybind11_1_1array.html#a8856b8f237145987a62c19e61c9c26ba", null ],
+    [ "owndata", "classpybind11_1_1array.html#a803f1928e8d7ccf259c28797461a2880", null ],
+    [ "reshape", "classpybind11_1_1array.html#a60d1ac2531beff9fee39dd83e1f4207d", null ],
+    [ "resize", "classpybind11_1_1array.html#a33b1bd4c889fbaf108fa0352be379ef1", null ],
+    [ "shape", "classpybind11_1_1array.html#a9819cfa3c2bf418e3777a3de4b114b55", null ],
+    [ "shape", "classpybind11_1_1array.html#ac7bb2da511133347b3a1b5deaf3686dd", null ],
+    [ "size", "classpybind11_1_1array.html#afca19b0c0896314a48ba4bd1d8015924", null ],
+    [ "squeeze", "classpybind11_1_1array.html#ac25411005216cb5f14b7aff7c68ef111", null ],
+    [ "strides", "classpybind11_1_1array.html#a9e44b408902ea2bb6a240e0809bbacb7", null ],
+    [ "strides", "classpybind11_1_1array.html#a78085e31576480cc5d1d303ab17f9eef", null ],
+    [ "unchecked", "classpybind11_1_1array.html#a52aa193620f36569c4928d1ab206025f", null ],
+    [ "view", "classpybind11_1_1array.html#a0df117513c1b24547f72dadf995ef792", null ],
+    [ "writeable", "classpybind11_1_1array.html#a3e0d57570e47aa5e1637b3d7f872197a", null ]
+];

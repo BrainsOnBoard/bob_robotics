@@ -58,9 +58,11 @@ bobMain(int argc, char **argv)
     robot.setPose(pose);
 
     // Record random images into database (as this is just for testing)
-    constexpr auto frameRate = 20_Hz;
     Video::RandomInput<> cam{ { 360, 100 } };
-    auto recorder = database.getRouteVideoRecorder(cam.getOutputSize(), frameRate, { "UTM zone" });
+    cam.setFrameRate(20_Hz);
+    auto recorder = database.createVideoRouteRecorder(cam.getOutputSize(),
+                                                      cam.getFrameRate(),
+                                                      { "UTM zone" });
 
     cv::Mat fr;
     do {
@@ -69,7 +71,7 @@ bobMain(int argc, char **argv)
         plotArrow(robot.getPose());
         plt::plot(x, y);
         plt::axis("equal");
-        plt::pause((1 / frameRate).value());
+        plt::pause((1 / cam.getFrameRate()).value());
 
         if (!controller.step(robot.getPose(), robot, MaxSpeed, MaxTurn)) {
             break;
@@ -77,7 +79,7 @@ bobMain(int argc, char **argv)
 
         // Also save UTM zone
         cam.readFrameSync(fr);
-        recorder.record(pose, pose.yaw(), fr, route[0].zone);
+        recorder->record(pose, fr, route[0].zone);
     } while (plt::fignum_exists(1));
 
     return EXIT_SUCCESS;

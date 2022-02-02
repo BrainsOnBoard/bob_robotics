@@ -21,38 +21,13 @@ void setBuildStatus(String message, String state) {
     ]);
 }
 
-def runBuild(String name, String nodeLabel) {
-    stage("Building " + name + " (" + env.NODE_NAME + ")") {
-        dir(name) {
-            // Delete CMake cache folder
-            dir("build") {
-                deleteDir();
-            }
-
-            // Generate unique name for message
-            def uniqueMsg = "msg_build_" + name + "_" + env.NODE_NAME;
-
-            setBuildStatus("Building " + name + " (" + env.NODE_NAME + ")", "PENDING");
-
-            // Build tests and set build status based on return code
-            def statusCode = sh script:"./build_all.sh -DGENN_PATH=\"" + WORKSPACE + "/genn\" 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"", returnStatus:true
-            if(statusCode != 0) {
-                setBuildStatus("Building " + name + " (" + env.NODE_NAME + ")", "FAILURE");
-            }
-
-            // Archive output
-            archive uniqueMsg;
-        }
-    }
-}
-
 //--------------------------------------------------------------------------
 // Entry point
 //--------------------------------------------------------------------------
 // Build dictionary of available nodes and their labels
 def availableNodes = [:]
 for(node in jenkins.model.Jenkins.instance.nodes) {
-    if(node.getComputer().isOnline() && node.getComputer().countIdle() > 0) {
+    if(node.getComputer().isOnline()) {
         availableNodes[node.name] = node.getLabelString().split() as Set
     }
 }
@@ -85,35 +60,54 @@ for(b = 0; b < builderNodes.size(); b++) {
         node(nodeName) {
             stage("Checking out project (" + env.NODE_NAME + ")") {
                 checkout scm
+
+                // Delete CMake cache folder
+                dir("build") {
+                    deleteDir();
+                }
+
+                // Make sure we have a clean working tree
+                sh 'git clean -fXd'
             }
 
             stage("Downloading and building GeNN (" + env.NODE_NAME + ")") {
                 sh 'bin/download_and_build_genn.sh'
             }
 
-            runBuild("examples", nodeLabel);
-            runBuild("projects", nodeLabel);
-            runBuild("tools", nodeLabel);
-            runBuild("tests", nodeLabel);
+            def buildMsg = "Building BoB robotics (" + env.NODE_NAME + ")"
+            stage(buildMsg) {
+                // Generate unique name for message
+                def uniqueMsg = "msg_build_" + env.NODE_NAME;
+
+                setBuildStatus(buildMsg, "PENDING");
+
+                // Build tests and set build status based on return code
+                def statusCode = sh script:"./bin/build_all_jenkins.sh -DGENN_PATH=\"" + WORKSPACE + "/genn\" 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"", returnStatus:true
+                if(statusCode != 0) {
+                    setBuildStatus(buildMsg, "FAILURE");
+                }
+
+                // Archive output
+                archive uniqueMsg;
+            }
 
             // Parse test output for GCC warnings
-            recordIssues enabledForFailure: true, tool: gcc(pattern: "**/msg_build_*_" + env.NODE_NAME, id: "gcc_" + env.NODE_NAME), qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]]
+            recordIssues enabledForFailure: true, tool: gcc(pattern: "**/msg_build_" + env.NODE_NAME, id: "gcc_" + env.NODE_NAME), qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]]
 
             stage("Running tests (" + env.NODE_NAME + ")") {
                 setBuildStatus("Running tests (" + env.NODE_NAME + ")", "PENDING");
-                dir("tests") {
-                    // Generate unique name for message
-                    def uniqueMsg = "msg_test_results_" + env.NODE_NAME;
-                    def runTestsCommand = "./tests --gtest_output=xml:gtest_test_results.xml 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"";
-                    def runTestsStatus = sh script:runTestsCommand, returnStatus:true;
 
-                    // Archive output
-                    archive uniqueMsg;
+                // Generate unique name for message
+                def uniqueMsg = "msg_test_results_" + env.NODE_NAME;
+                def runTestsCommand = "./build/tests/tests --gtest_output=xml:gtest_test_results.xml 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"";
+                def runTestsStatus = sh script:runTestsCommand, returnStatus:true;
 
-                    // If tests failed, set failure status
-                    if(runTestsStatus != 0) {
-                        setBuildStatus("Running tests (" + env.NODE_NAME + ")", "FAILURE");
-                    }
+                // Archive output
+                archive uniqueMsg;
+
+                // If tests failed, set failure status
+                if(runTestsStatus != 0) {
+                    setBuildStatus("Running tests (" + env.NODE_NAME + ")", "FAILURE");
                 }
             }
 

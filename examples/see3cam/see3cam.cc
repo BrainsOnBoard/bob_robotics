@@ -87,7 +87,7 @@ int bobMain(int argc, char *argv[])
     cv::namedWindow("Unwrapped", cv::WINDOW_NORMAL);
     cv::resizeWindow("Unwrapped", unwrapWidth, unwrapHeight);
 
-    cv::Mat output(rawHeight, rawWidth, CV_8UC1);
+    cv::Mat image(rawHeight, rawWidth, CV_8UC1);
     cv::Mat unwrapped(unwrapHeight, unwrapWidth, CV_8UC1);
 
     {
@@ -98,24 +98,24 @@ int bobMain(int argc, char *argv[])
             try {
                 switch (mode) {
                 case Mode::Clamp:
-                    cam.captureSuperPixelClamp(output);
+                    cam.captureSuperPixelClamp(image);
                     break;
                 case Mode::Shift:
-                    cam.captureSuperPixel(output);
+                    cam.captureSuperPixel(image);
                     break;
                 case Mode::WhiteBalanceU30:
-                    cam.captureSuperPixelWBU30(output);
+                    cam.captureSuperPixelWBU30(image);
                     break;
                 case Mode::WhiteBalanceCoolWhite:
-                    cam.captureSuperPixelWBCoolWhite(output);
+                    cam.captureSuperPixelWBCoolWhite(image);
                     break;
                 case Mode::Greyscale:
-                    cam.captureSuperPixelGreyscale(output);
+                    cam.captureSuperPixelGreyscale(image);
                 }
 
-                cv::imshow("Raw", output);
+                cv::imshow("Raw", image);
 
-                unwrapper.unwrap(output, unwrapped);
+                unwrapper.unwrap(image, unwrapped);
                 cv::imshow("Unwrapped", unwrapped);
             } catch (Video::Video4LinuxCamera::Error const &) {
                 // Ignore V4L errors
@@ -123,23 +123,23 @@ int bobMain(int argc, char *argv[])
 
             const int key = cv::waitKey(1);
             if(key == '1') {
-                setMode(Mode::Clamp, mode, output, unwrapped);
+                setMode(Mode::Clamp, mode, image, unwrapped);
                 LOG_INFO << "Clamp mode";
             }
             else if(key == '2') {
-                setMode(Mode::Shift, mode, output, unwrapped);
+                setMode(Mode::Shift, mode, image, unwrapped);
                 LOG_INFO << "Scale mode";
             }
             else if(key == '3') {
-                setMode(Mode::WhiteBalanceCoolWhite, mode, output, unwrapped);
+                setMode(Mode::WhiteBalanceCoolWhite, mode, image, unwrapped);
                 LOG_INFO << "White balance (cool white)";
             }
             else if(key == '4') {
-                setMode(Mode::WhiteBalanceU30, mode, output, unwrapped);
+                setMode(Mode::WhiteBalanceU30, mode, image, unwrapped);
                 LOG_INFO << "White balance (U30)";
             }
             else if(key == '5') {
-                setMode(Mode::Greyscale, mode, output, unwrapped);
+                setMode(Mode::Greyscale, mode, image, unwrapped);
                 LOG_INFO << "Greyscale";
             }
             else if(key == 'c') {

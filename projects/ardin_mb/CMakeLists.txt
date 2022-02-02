@@ -1,23 +1,42 @@
-cmake_minimum_required(VERSION 3.1)
-include(../../cmake/bob_robotics.cmake)
+cmake_minimum_required(VERSION 3.10)
+include(../../cmake/BoBRobotics.cmake)
+project(ardin_mb)
 
-if(NO_GENN)
-    add_definitions(-DNO_GENN)
-    BoB_project(IS_EXPERIMENT TRUE
-                EXECUTABLE ardin_mb
-                SOURCES ardin_mb.cc state_handler.cc opencv_texture.cc vector_field.cc visual_navigation_ui.cc
-                BOB_MODULES common antworld navigation
-                THIRD_PARTY imgui)
+set(IS_EXPERIMENT TRUE)
+find_package(BoBRobotics QUIET REQUIRED COMPONENTS antworld common navigation)
+find_package(BoBThirdParty REQUIRED imgui)
+
+if(NOT DEFINED NO_GENN)
+    find_package(GeNN)
+    if(GeNN_FOUND)
+        add_genn_model(mb_memory_ardin model_ardin.cc)
+    else()
+        message(WARNING "GeNN not found; building without")
+    endif()
+endif()
+
+set(SOURCES ardin_mb.cc state_handler.cc opencv_texture.cc vector_field.cc
+    visual_navigation_ui.cc)
+
+if(TARGET mb_memory_ardin)
+    add_executable(ardin_mb ${SOURCES} mb_memory.cc mb_memory_ardin.cc)
+    target_link_libraries(ardin_mb ${BoBRobotics_LIBRARIES} BoBThirdParty::imgui
+                          mb_memory_ardin)
 else()
-    BoB_project(IS_EXPERIMENT TRUE
-                EXECUTABLE ardin_mb
-                SOURCES ardin_mb.cc state_handler.cc mb_memory.cc opencv_texture.cc mb_memory_ardin.cc vector_field.cc visual_navigation_ui.cc
-                BOB_MODULES common antworld navigation
-                THIRD_PARTY imgui
-                INCLUDE_GENN_USERPROJECTS)
+    add_executable(ardin_mb ${SORUCES})
+    target_link_libraries(ardin_mb ${BoBRobotics_LIBRARIES} BoBThirdParty::imgui)
 endif()
 
-# Suppress warning from inside imgui
-if(NOT WIN32)
-    add_compile_flags(-Wno-int-to-pointer-cast)
+if(UNIX)
+    configure_file(run_benchmark.sh.in "${CMAKE_CURRENT_BINARY_DIR}/run_benchmark.sh")
+    execute_process(COMMAND chmod +x "${CMAKE_CURRENT_BINARY_DIR}/run_benchmark.sh")
 endif()
+
+# Disable warning to do with imgui
+include(CheckCXXCompilerFlag)
+foreach(FLAG -Wno-int-to-pointer-cast)
+    check_cxx_compiler_flag(${FLAG} COMPILER_SUPPORTS_${FLAG})
+    if(COMPILER_SUPPORTS_${FLAG})
+        target_compile_options(ardin_mb PRIVATE ${FLAG})
+    endif()
+endforeach()

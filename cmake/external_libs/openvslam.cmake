@@ -1,5 +1,0 @@
-find_package(openvslam)
-BoB_add_link_libraries(openvslam::openvslam)
-if(USE_PANGOLIN_VIEWER)
-    BoB_add_link_libraries(openvslam::pangolin_viewer)
-endif()

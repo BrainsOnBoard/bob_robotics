@@ -30,7 +30,7 @@ void testCCoeff(const std::string &filename, const ImgProc::Mask &mask, std::pai
     using namespace BoBRobotics;
     constexpr float precision = 1e-5f;
 
-    const auto filepath = Path::getProgramDirectory() / "navigation" / filename;
+    const auto filepath = getTestsPath() / "navigation" / filename;
     const auto trueDifferences = readMatrix<float>(filepath);
 
     PerfectMemoryRotater<PerfectMemoryStore::RawImage<CorrCoefficient>> algo{ TestImageSize };
@@ -93,7 +93,7 @@ testHog(const std::string &filename, std::pair<size_t, size_t> window, float pre
 
     using namespace BoBRobotics;
 
-    const auto filepath = Path::getProgramDirectory() / "navigation" / filename;
+    const auto filepath = getTestsPath() / "navigation" / filename;
     const auto trueDifferences = readMatrix<float>(filepath);
 
     PerfectMemoryRotater<Store> algo{ TestImageSize, cv::Size(10, 10), 8 };

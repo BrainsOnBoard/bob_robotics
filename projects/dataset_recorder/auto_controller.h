@@ -96,15 +96,15 @@ private:
         // Load route from image database
         std::vector<MapCoordinate::UTMCoordinate> route;
         for (const auto &entry : database) {
-            if (std::isnan(entry.position.x().value())) {
+            if (std::isnan(entry.pose.x().value())) {
                 continue;
             }
 
             route.emplace_back();
             auto &utm = route.back();
-            utm.easting = entry.position.x();
-            utm.northing = entry.position.y();
-            utm.height = entry.position.z();
+            utm.easting = entry.pose.x();
+            utm.northing = entry.pose.y();
+            utm.height = entry.pose.z();
 
             // Copy UTM zone
             memset(utm.zone, 0, 4);

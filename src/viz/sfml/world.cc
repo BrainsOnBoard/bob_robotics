@@ -67,7 +67,7 @@ World::World(const Vector2<meter_t> &arenaSize)
 World::CarAgent
 World::createCarAgent(meter_t carWidth)
 {
-    return CarAgent(*this, carWidth);
+    return { *this, carWidth };
 }
 
 bool

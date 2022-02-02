@@ -1,43 +1,10 @@
 {
     "configurations": [
         {
-            "name": "Linux",
-            "includePath": [
-                "${workspaceFolder}/include",
-                "${workspaceFolder}",
-                "${workspaceFolder}/third_party/ev3dev-lang-cpp",
-                "${workspaceFolder}/third_party/plog/include",
-                "${workspaceFolder}/third_party/pybind11/include",
-                "${workspaceFolder}/third_party/development_kit_odk2",
-                "${workspaceFolder}/third_party/imgui",
-                "${workspaceFolder}/third_party/imgui/include",
-                "${ARSDK_ROOT}/out/arsdk-native/staging/usr/include",
-                "/usr/include/python3.7m",
-                "/usr/include/python3.8",
-                "/usr/include/python3.9",
-                "/usr/lib/python3.7/site-packages/numpy/core/include",
-                "/usr/lib/python3.8/site-packages/numpy/core/include",
-                "/usr/lib/python3.9/site-packages/numpy/core/include",
-                "/usr/include/eigen3",
-                "/usr/include/opencv4",
-                "/usr/include/gazebo-9",
-                "/usr/include/gazebo-10",
-                "/usr/include/gazebo-11",
-                "/usr/include/ignition/**",
-                "/usr/include/sdformat-6.0",
-                "/usr/include/sdformat-6.2",
-                "/usr/include/sdformat-9.1",
-                "/usr/include/sdformat-9.2",
-                "/usr/include/sdformat-9.5",
-                "/usr/include/SDL2",
-                "/usr/include/genn"
-            ],
-            "defines": [
-                "BOB_ROBOTICS_PATH=\"/some/path\"",
-                "BOB_PROJECT_GIT_COMMIT=\"abcdef\"",
-                "BOB_ROBOTICS_GIT_COMMIT=\"abcdef\""
-            ],
-            "cppStandard": "c++14"
+            "name": "default",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+            "cppStandard": "c++14",
+            "configurationProvider": "ms-vscode.cmake-tools"
         }
     ],
     "version": 4

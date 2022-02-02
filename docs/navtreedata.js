@@ -26,7 +26,7 @@ var NAVTREE =
 [
   [ "BoB robotics", "index.html", [
     [ "BoB robotics Documentation", "index.html", null ],
-    [ "CMake utilities", "md_cmake_README.html", null ],
+    [ "CMake", "md_cmake_README.html", null ],
     [ "Example image databases", "md_docs_source_example_image_databases_README.html", null ],
     [ "Build requirements", "md_docs_source_requirements.html", null ],
     [ "Norbot shopping list", "md_docs_source_robot_shopping_list.html", null ],
@@ -38,7 +38,7 @@ var NAVTREE =
     [ "Robot test programs", "md_examples_robot_net_README.html", null ],
     [ "Vicon test", "md_examples_vicon_README.html", null ],
     [ "Dependency:", "md_include_common_README.html", null ],
-    [ "Default drone joystick controls", "md_include_robots_bebop_README.html", null ],
+    [ "Default drone joystick controls", "md_include_robots_uav_bebop_README.html", null ],
     [ "Ardin et al. Model of navigation", "md_projects_ardin_mb_README.html", null ],
     [ "Snapshot bot", "md_projects_snapshot_bot_README.html", null ],
     [ "Stone et al. Model of path integration", "md_projects_stone_cx_README.html", null ],
@@ -66,7 +66,8 @@ var NAVTREE =
         [ "Functions", "functions_func.html", "functions_func" ],
         [ "Variables", "functions_vars.html", null ],
         [ "Typedefs", "functions_type.html", null ],
-        [ "Enumerations", "functions_enum.html", null ]
+        [ "Enumerations", "functions_enum.html", null ],
+        [ "Related Functions", "functions_rela.html", null ]
       ] ]
     ] ],
     [ "Files", "files.html", [
@@ -81,37 +82,23 @@ var NAVTREE =
 
 var NAVTREEINDEX =
 [
-"",
-"classBoBRobotics_1_1AntWorld_1_1Camera.html#a199d86cd32f8f2594336b4ddb9d10370",
-"classBoBRobotics_1_1MindstormsIMU.html#a6b0aec7823b129384d45851ea135cac0",
-"classBoBRobotics_1_1PoseBase.html#acb7156fc82b5fde7e3b71d75b0f855ae",
-"classBoBRobotics_1_1Robots_1_1UAV.html#aedb1bae6b013b4cfb9719d1c6ec17db6",
-"classCLI_1_1App.html#a02368e2fe89470ab9b4131c7e3288349",
-"classCLI_1_1AsSizeValue.html#adb05af0aa99ba3dddbb3548d42e3de26",
-"classCLI_1_1Option.html#aef9822a0bd4b5f72cf08df196749d3a7",
-"classDifferencers.html#a5c29062c7ab3dd3a021c4ad064154653",
-"classVisualNavigationUI.html#a9a82b0aecda50c998d9bf76bdb6dd6c7",
-"functions_v.html",
-"matplotlibcpp_8h.html#ac8640334bc902df7072e9cbff6c77bed",
-"namespaceunits.html#a060f1062296bf249048d1420f111b970",
-"namespaceunits.html#a345c1b90dda5689afec69eb69d46248e",
-"namespaceunits.html#a620cdb55bb08bc52fd25e6c7b5747ff5",
-"namespaceunits.html#a935fcb21a55be5bab4acc8f2abc62d81",
-"namespaceunits.html#ac4f45f9eea7048f821cc886e8013a6a6",
-"namespaceunits.html#af5e36c1a42492f3029c9debc671d53ad",
-"namespaceunits_1_1data__transfer__rate.html#a8d29c702bb6e7b277806f2ccef925da3",
-"namespaceunits_1_1mass.html#acb86eec7ca3d81132e39088765e6b61e",
-"namespaceunits_1_1volume.html#abbdd812d2cc64f89da5633a4d5d7767b",
-"structCLI_1_1detail_1_1pair__adaptor_3_01T_00_01conditional__t_3_01false_00_01void__t_3_01typenac7f3d35561ff46242630d08443185a90.html#a0a49df2a80091b7be7df2213a0d1385b",
-"test__ofstad_8py.html#a72fc016e0f5958dad6626a2e9e216d18",
-"units_8h.html#a2088bc7405535f0b0af3e8936ac196ff",
-"units_8h.html#a3dc4c289b9e5457f455016aef4822a70",
-"units_8h.html#a5e38ac576685feae1fde9e8765e92cae",
-"units_8h.html#a7d4e806983623b283ebfeb29b239ee85",
-"units_8h.html#a9b5290e10c1c0b13c65edc8553617ab9",
-"units_8h.html#abccf2b57f2ff13c98a8725b84c049a55",
-"units_8h.html#adcd36b8ce902e64a5810fa15f6447989",
-"units_8h.html#afa215f08eb1db62b8926150f14eb681d"
+"UTM_8h.html",
+"classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1ImageFileWriter.html",
+"classBoBRobotics_1_1Robots_1_1Tank_1_1TankBase.html",
+"classBoBRobotics_1_1Video_1_1RandomInput.html",
+"classCLI_1_1App.html#a76d7d45b60647632df392dd5e696877a",
+"classCLI_1_1AsNumberWithUnit.html#a4f1b96d1a43a6acb3f85b68dd6f5a321",
+"classCLI_1_1Option.html#a83302957a61e4bd7e5f21c552b39edb5",
+"classCLI_1_1Validator.html#a35930c9b193bb0f7c5b7597dfe002e1f",
+"classio_1_1detail_1_1AsynchronousReader.html",
+"classpybind11_1_1detail_1_1unchecked__reference.html#ab538a4ad49407e96da3c64e9137beeb5",
+"group__UnitManipulators.html#ga2b89e0d3d6d3b496db4c067b8cf38707",
+"namespaceunits.html#a8277ba3ab0b1d897f5bd59de7854163b",
+"structCLI_1_1is__vector_3_01const_01std_1_1vector_3_01T_00_01A_01_4_01_4.html",
+"structpybind11_1_1detail_1_1equivalent__integer_3_01false_00_014_01_4.html",
+"structpybind11_1_1detail_1_1nonsimple__values__and__holders.html",
+"structpybind11_1_1detail_1_1type__caster_3_01Type_00_01enable__if__t_3_01is__eigen__dense__map_3_01Type_01_4_1_1value_01_4_01_4.html",
+"structunits_1_1traits_1_1is__density__unit.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

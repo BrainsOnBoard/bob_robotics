@@ -21,7 +21,6 @@ import os
 import shutil
 import subprocess
 import sys
-from xml.sax.saxutils import escape
 
 INCLUDE_CHECKS = (
     'bugprone-*',
@@ -37,7 +36,9 @@ INCLUDE_CHECKS = (
 EXCLUDE_CHECKS = (
     '*osx.*',
     'bugprone-branch-clone',
+    'bugprone-easily-swappable-parameters',
     'bugprone-exception-escape',
+    'bugprone-implicit-widening-of-multiplication-result',
     'bugprone-integer-division',
     'bugprone-macro-parentheses',
     'bugprone-narrowing-conversions',
@@ -51,6 +52,7 @@ EXCLUDE_CHECKS = (
     'modernize-use-emplace',
     'modernize-use-equals-default',
     'modernize-use-nodiscard',
+    'modernize-use-override',
     'modernize-raw-string-literal',
     'modernize-use-override',
     'modernize-use-trailing-return-type',
@@ -64,6 +66,7 @@ EXCLUDE_CHECKS = (
     'readability-magic-numbers',
     'readability-make-member-function-const',
     'readability-named-parameter',
+    'readability-redundant-declaration',
     'readability-static-accessed-through-instance',
     'readability-uppercase-literal-suffix',
     'readability-qualified-auto',
@@ -92,7 +95,10 @@ if os.path.exists(FIXES_DIR):
 os.mkdir(FIXES_DIR)
 
 def run_clang_tidy(file):
-    args = ['/usr/bin/clang-tidy', '-p', '.', file]
+    # We force use of C++17 because some of the code requires it (anything using
+    # Gazebo v11+) and if we don't explicitly do this, then clang-tidy seems to
+    # be using C++14 everywhere
+    args = ['/usr/bin/clang-tidy', '-p', '.', '-extra-arg=-std=c++17', file]
 
     # Explicitly (disallow) various checks
     if check_args:

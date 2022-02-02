@@ -3,9 +3,12 @@
 #include "hid/robot_control.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "robots/robot_type.h"
-#include "vicon/capture_control.h"
-#include "vicon/udp.h"
 #include "video/see3cam_cu40.h"
+
+#ifdef USE_VICON
+#include "vicon/udp.h"
+#include "vicon/capture_control.h"
+#endif
 
 // Third-party includes
 #include "plog/Log.h"
@@ -47,10 +50,10 @@ int bobMain(int, char **)
     // Create motor interface
     ROBOT_TYPE motor;
 
-    cv::Mat output;
+    cv::Mat image;
     cv::Mat unwrapped(unwrapSize, CV_8UC1);
 
-#ifdef VICON_CAPTURE
+#ifdef USE_VICON
     // Create Vicon UDP interface
     Vicon::UDPClient<> vicon(51001);
 
@@ -65,7 +68,7 @@ int bobMain(int, char **)
     std::ofstream data("vicon.csv");
     data.exceptions(std::ios::badbit | std::ios::failbit);
     data << "Filename, Frame, X, Y, Z, Rx, Ry, Rz" << std::endl;
-#endif  // VICON_CAPTURE
+#endif  // USE_VICON
 
     // Loop through time until joystick button pressed
     HID::addJoystick(motor, joystick, joystickDeadzone);
@@ -74,10 +77,10 @@ int bobMain(int, char **)
         joystick.update();
 
         // If we successfully captured a frame
-        cam.readGreyscaleFrame(output);
+        cam.readGreyscaleFrame(image);
 
         // Unwrap frame
-        unwrapper.unwrap(output, unwrapped);
+        unwrapper.unwrap(image, unwrapped);
 
         // If recording interval has elapsed
         if ((x % recordingInterval) == 0) {
@@ -86,7 +89,7 @@ int bobMain(int, char **)
             sprintf(filename, "image_%u.png", x);
             cv::imwrite(filename, unwrapped);
 
-#ifdef VICON_CAPTURE
+#ifdef USE_VICON
             // Get tracking data
             auto objectData = vicon.getObjectData();
             const auto &position = objectData.getPose().position();
@@ -97,14 +100,14 @@ int bobMain(int, char **)
                  << position[0].value() << ", " << position[1].value() << ", "
                  << position[2].value() << ", " << attitude[0].value() << ", "
                  << attitude[1].value() << ", " << attitude[2].value() << std::endl;
-#endif // VICON_CAPTURE
+#endif // USE_VICON
         }
     }
 
-#ifdef VICON_CAPTURE
+#ifdef USE_VICON
     // Stop capture
     viconCaptureControl.stopRecording("camera_recorder");
-#endif  // VICON_CAPTURE
+#endif  // USE_VICON
 
     return EXIT_SUCCESS;
 }

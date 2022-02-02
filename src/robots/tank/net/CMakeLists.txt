@@ -1,4 +1,6 @@
-cmake_minimum_required(VERSION 3.1)
-include(../../../../cmake/bob_robotics.cmake)
-BoB_module(SOURCES sink.cc
-           BOB_MODULES net robots/tank)
+cmake_minimum_required(VERSION 3.10)
+include(../../../../cmake/BoBRobotics.cmake)
+project(robots/tank/net)
+
+find_package(BoBRobotics REQUIRED net)
+BoB_module(sink.cc)

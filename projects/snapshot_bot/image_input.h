@@ -1,8 +1,16 @@
 #pragma once
 
 // BoB robotics includes
+#include "imgproc/mask.h"
 #include "imgproc/opencv_unwrap_360.h"
-#include "video/panoramic.h"
+
+// OpenCV
+#include <opencv2/opencv.hpp>
+
+// Standard C++ includes
+#include <memory>
+#include <utility>
+#include <vector>
 
 // Forward declarations
 class Config;
@@ -12,26 +20,39 @@ class Config;
 //----------------------------------------------------------------------------
 class ImageInput
 {
+protected:
+    using OpenCVUnwrap360 = BoBRobotics::ImgProc::OpenCVUnwrap360;
+    using Mask = BoBRobotics::ImgProc::Mask;
+
 public:
-    ImageInput(const Config &config);
+    ImageInput(const Config &config, const cv::Size &unwrapSize, std::unique_ptr<OpenCVUnwrap360> unwrapper);
     virtual ~ImageInput() = default;
 
     //----------------------------------------------------------------------------
     // Declared virtuals
     //----------------------------------------------------------------------------
-    virtual const cv::Mat &processSnapshot(const cv::Mat &snapshot) = 0;
-    virtual cv::Size getOutputSize() const{ return m_InputSize; }
+    virtual std::pair<cv::Mat, Mask> processSnapshot(const cv::Mat &snapshot) = 0;
+    virtual cv::Size getOutputSize() const;
+    virtual void writeMetadata(cv::FileStorage &fs) const;
 
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    const cv::Size &getInputSize() const{ return m_InputSize; }
+    cv::Size getUnwrapSize() const;
+
+    //! Unwrap the image, crop and apply mask (if needed)
+    std::pair<cv::Mat, Mask> preprocess(const cv::Mat &image) const;
 
 private:
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
-    const cv::Size m_InputSize;
+    mutable Mask m_Mask;
+    mutable cv::Mat m_Unwrapped;
+    const cv::Rect &m_CropRect;
+    const cv::Size &m_InputSize;
+    std::unique_ptr<OpenCVUnwrap360> m_Unwrapper;
+    const bool m_UseODK;
 };
 
 //----------------------------------------------------------------------------
@@ -41,16 +62,15 @@ private:
 class ImageInputRaw : public ImageInput
 {
 public:
-    ImageInputRaw(const Config &config);
+    ImageInputRaw(const Config &config, const cv::Size &unwrapSize, std::unique_ptr<OpenCVUnwrap360> unwrapper);
 
     //----------------------------------------------------------------------------
     // ImageInput virtuals
     //----------------------------------------------------------------------------
-    virtual const cv::Mat &processSnapshot(const cv::Mat &snapshot) override;
-
+    virtual std::pair<cv::Mat, Mask> processSnapshot(const cv::Mat &snapshot) override;
 
 private:
-    cv::Mat m_GreyscaleUnwrapped;
+    cv::Mat m_Greyscale;
 };
 
 //----------------------------------------------------------------------------
@@ -60,13 +80,13 @@ private:
 class ImageInputBinary : public ImageInput
 {
 public:
-    ImageInputBinary(const Config &config);
+    ImageInputBinary(const Config &config, const cv::Size &unwrapSize, std::unique_ptr<OpenCVUnwrap360> unwrapper);
 
     //----------------------------------------------------------------------------
     // ImageInput virtuals
     //----------------------------------------------------------------------------
-    virtual const cv::Mat &processSnapshot(const cv::Mat &snapshot) override;
-    virtual cv::Size getOutputSize() const override { return cv::Size(getInputSize().width - 2, getInputSize().height - 2); }
+    virtual std::pair<cv::Mat, Mask> processSnapshot(const cv::Mat &snapshot) override;
+    virtual cv::Size getOutputSize() const override { return cv::Size(getUnwrapSize().width - 2, getUnwrapSize().height - 2); }
 
 protected:
     //----------------------------------------------------------------------------
@@ -102,16 +122,16 @@ private:
 class ImageInputHorizon : public ImageInputBinary
 {
 public:
-    ImageInputHorizon(const Config &config);
+    ImageInputHorizon(const Config &config, const cv::Size &unwrapSize, std::unique_ptr<OpenCVUnwrap360> unwrapper);
 
     //----------------------------------------------------------------------------
     // ImageInput virtuals
     //----------------------------------------------------------------------------
-    virtual const cv::Mat &processSnapshot(const cv::Mat &snapshot) override;
+    virtual std::pair<cv::Mat, Mask> processSnapshot(const cv::Mat &snapshot) override;
 
     virtual cv::Size getOutputSize() const override
     {
-        return cv::Size(getInputSize().width - 2, 1);
+        return cv::Size(getUnwrapSize().width - 2, 1);
     }
 
 private:
@@ -126,4 +146,6 @@ private:
     std::vector<int> m_ColumnHorizonPixelsCount;
 };
 
-std::unique_ptr<ImageInput> createImageInput(const Config &config);
+std::unique_ptr<ImageInput> createImageInput(const Config &config,
+                                             const cv::Size &unwrapSize,
+                                             std::unique_ptr<BoBRobotics::ImgProc::OpenCVUnwrap360> unwrapper);

@@ -1,27 +1,33 @@
-cmake_minimum_required(VERSION 3.1)
-include(../../cmake/bob_robotics.cmake)
+cmake_minimum_required(VERSION 3.10)
+include(../../cmake/BoBRobotics.cmake)
+project(dataset_recorder)
 
-if(NOT DEFINED TARGET)
-    set(TARGET dataset_recorder)
+set(IS_EXPERIMENT TRUE)
+find_package(BoBRobotics QUIET REQUIRED COMPONENTS gps navigation
+             robots/ackermann robots/control video)
+find_package(BoBThirdParty COMPONENTS matplotlibcpp)
+
+add_executable(dataset_recorder dataset_recorder.cc)
+target_link_libraries(dataset_recorder PUBLIC BoBRobotics::gps
+                      BoBRobotics::navigation BoBRobotics::robots__ackermann
+                      BoBRobotics::video)
+if(DUMMY_CAMERA)
+    target_compile_definitions(dataset_recorder PUBLIC DUMMY_CAMERA)
 endif()
 
-set(SOURCES ${TARGET}.cc)
-set(MODULES common navigation robots/ackermann video)
+add_executable(auto_dataset_recorder auto_dataset_recorder.cc)
+target_link_libraries(auto_dataset_recorder PUBLIC ${BoBRobotics_LIBRARIES})
+if(DUMMY_CAMERA)
+    target_compile_definitions(auto_dataset_recorder PUBLIC DUMMY_CAMERA)
+endif()
 
-if(${TARGET} STREQUAL dataset_recorder)
-    BoB_project(IS_EXPERIMENT TRUE
-                SOURCES ${SOURCES}
-                BOB_MODULES ${MODULES} gps
-                OPTIONS DUMMY_CAMERA)
-elseif(${TARGET} STREQUAL auto_dataset_recorder)
-    BoB_project(IS_EXPERIMENT TRUE
-                SOURCES ${SOURCES}
-                BOB_MODULES ${MODULES} gps robots/control
-                OPTIONS DUMMY_CAMERA)
-elseif(${TARGET} STREQUAL auto_dataset_recorder_simulated)
-    BoB_project(SOURCES ${SOURCES}
-                BOB_MODULES ${MODULES} robots/control
-                THIRD_PARTY matplotlibcpp)
-else()
-    message(FATAL_ERROR "${TARGET} is not a valid target")
+if(BoBThirdParty_FOUND)
+    add_executable(auto_dataset_recorder_simulated auto_dataset_recorder_simulated.cc)
+    target_link_libraries(auto_dataset_recorder_simulated PUBLIC
+                          BoBRobotics::navigation BoBRobotics::robots__ackermann
+                          BoBRobotics::robots__control BoBRobotics::video
+                          ${BoBThirdParty_LIBRARIES})
+    if(DUMMY_CAMERA)
+        target_compile_definitions(auto_dataset_recorder PUBLIC DUMMY_CAMERA)
+    endif()
 endif()

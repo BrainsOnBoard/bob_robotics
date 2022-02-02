@@ -8,6 +8,7 @@
 
 // Third-party includes
 #include "plog/Log.h"
+#include "third_party/optional.hpp"
 #include "third_party/path.h"
 #include "third_party/units.h"
 
@@ -23,6 +24,7 @@
 // Standard C++ includes
 #include <array>
 #include <fstream>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <string>
@@ -88,12 +90,16 @@ public:
     //! The metadata for an entry in an ImageDatabase
     struct Entry
     {
-        Vector3<millimeter_t> position = Vector3<millimeter_t>::nan();
-        degree_t heading{ NAN };
+        Pose3<millimeter_t, degree_t> pose;
         filesystem::path path;
         std::array<size_t, 3> gridPosition; //! For grid-type databases, indicates the x,y,z grid position
         std::unordered_map<std::string, std::string> extraFields;
 
+        Entry();
+        Entry(const Pose3<millimeter_t, degree_t> &_pose,
+              filesystem::path _path,
+              const std::array<size_t, 3> &_gridPosition,
+              std::unordered_map<std::string, std::string> _extraFields);
         cv::Mat load(bool greyscale = true) const;
         bool hasExtraField(const std::string &name) const;
         const std::string &getExtraField(const std::string &name) const;
@@ -101,15 +107,17 @@ public:
 
     class FrameWriter {
     public:
-        virtual std::string getCurrentFilenameRoot() const = 0;
-        virtual void writeFrame(const cv::Mat &frame, Entry &entry) = 0;
+        virtual ~FrameWriter() = default;
+        virtual void writeFrame(const cv::Mat &frame, Entry &entry,
+                                const std::function<std::string()> &getFileName) = 0;
     };
 
     class ImageFileWriter
       : public FrameWriter {
     public:
         ImageFileWriter(const ImageDatabase &, std::string imageFormat);
-        void writeFrame(const cv::Mat &frame, Entry &entry) override;
+        void writeFrame(const cv::Mat &frame, Entry &entry,
+                        const std::function<std::string()> &getFileName) override;
 
     private:
         const std::string m_ImageFormat;
@@ -118,9 +126,8 @@ public:
     class VideoFileWriter
       : public FrameWriter {
     public:
-        VideoFileWriter(const ImageDatabase &,
-                        const std::pair<const std::string &, const std::string &> &format);
-        void writeFrame(const cv::Mat &frame, Entry &entry) override;
+        VideoFileWriter(const ImageDatabase &, const std::string& extension, std::string codec);
+        void writeFrame(const cv::Mat &frame, Entry &entry, const std::function<std::string()> &getFileName) override;
         const std::string &getVideoFileName() const;
 
     private:
@@ -129,9 +136,7 @@ public:
     };
 
     //! Base class for GridRecorder and RouteRecorder
-    template<class FrameWriterType>
     class Recorder
-      : public FrameWriterType
     {
     public:
         ~Recorder()
@@ -165,27 +170,33 @@ public:
             m_Recording = false;
         }
 
+        void setSaveImages(bool saveImages)
+        {
+            m_SaveImages = saveImages;
+        }
+
         //! Current number of *new* entries for the ImageDatabase
         size_t size() const { return m_NewEntries.size(); }
 
     private:
-        const std::vector<std::string> m_ExtraFieldNames;
         ImageDatabase &m_ImageDatabase;
-        bool m_Recording;
+        const std::vector<std::string> m_ExtraFieldNames;
         std::vector<Entry> m_NewEntries;
+        std::unique_ptr<FrameWriter> m_Writer;
+        bool m_Recording, m_SaveImages;
 
     protected:
         cv::FileStorage m_YAML;
 
-        template<class T, class... Ts>
         Recorder(ImageDatabase &imageDatabase,
                  bool isRoute,
-                 T &&format,
+                 std::unique_ptr<FrameWriter> writer,
                  std::vector<std::string> extraFieldNames)
-          : FrameWriterType{ imageDatabase, std::move(format) }
+          : m_ImageDatabase(imageDatabase)
           , m_ExtraFieldNames(std::move(extraFieldNames))
-          , m_ImageDatabase(imageDatabase)
+          , m_Writer(std::move(writer))
           , m_Recording(true)
+          , m_SaveImages(true)
           , m_YAML(".yml", cv::FileStorage::WRITE | cv::FileStorage::MEMORY)
         {
             // Set this property of the ImageDatabase
@@ -216,10 +227,21 @@ public:
                    << "type" << (isRoute ? "route" : "grid");
         }
 
+        void addEntry(const cv::Mat &image, Entry entry,
+                      const std::function<std::string()> &getFileName)
+        {
+            BOB_ASSERT(entry.extraFields.size() == m_ExtraFieldNames.size());
+
+            if (m_SaveImages) {
+                m_Writer->writeFrame(image, entry, getFileName);
+            }
+            m_NewEntries.emplace_back(std::move(entry));
+        }
+
         template<class... Ts>
         void addEntry(const cv::Mat &image,
-                      const Vector3<millimeter_t> &position,
-                      const degree_t heading,
+                      const std::function<std::string()> &getFileName,
+                      const Pose3<millimeter_t, degree_t> &pose,
                       const std::array<size_t, 3> &gridPosition,
                       Ts&&... extraFieldValues)
         {
@@ -230,13 +252,15 @@ public:
             BOB_ASSERT(m_Recording);
 
             Entry newEntry{
-                position,
-                heading,
+                pose,
                 "",
                 gridPosition,
                 {}
             };
-            this->writeFrame(image, newEntry);
+
+            if (m_SaveImages) {
+                m_Writer->writeFrame(image, newEntry, getFileName);
+            }
             m_NewEntries.emplace_back(std::move(newEntry));
 
             setExtraFields(std::forward<Ts>(extraFieldValues)...);
@@ -274,15 +298,13 @@ public:
 
     //! For recording a grid of images at a fixed heading
     class GridRecorder
-      : public Recorder<ImageFileWriter> {
+      : public Recorder {
     public:
         GridRecorder(ImageDatabase &imageDatabase, const Range &xrange,
                      const Range &yrange, const Range &zrange = Range(0_mm),
                      degree_t heading = 0_deg,
                      std::string imageFormat = "png",
                      std::vector<std::string> extraFieldNames = {});
-
-        std::string getCurrentFilenameRoot() const override;
 
         //! Get the physical position represented by grid coordinates
         Vector3<millimeter_t> getPosition(const std::array<size_t, 3> &gridPosition) const;
@@ -317,10 +339,28 @@ public:
         void record(const std::array<size_t, 3> &gridPosition,
                     const cv::Mat &image, Ts&&... extraFieldValues)
         {
+            const auto getFileName = [this]() {
+                // Convert to integers
+                std::array<int, 3> iposition;
+                const auto position = getPosition(m_Current);
+                std::transform(position.begin(), position.end(), iposition.begin(),
+                    [](auto mm) {
+                        return static_cast<int>(units::math::round(mm));
+                    });
+
+                // Make filename
+                std::ostringstream ss;
+                ss << "image_" << std::setw(7) << std::setfill('0') << std::showpos << std::internal
+                   << std::setw(7) << iposition[0] << "_"
+                   << std::setw(7) << iposition[1] << "_"
+                   << std::setw(7) << iposition[2];
+                return (this->getImageDatabase().getPath() / ss.str()).str();
+            };
+
             const auto position = getPosition(gridPosition);
-            this->addEntry(image, position, m_Heading,
-                     { gridPosition[0], gridPosition[1], gridPosition[2] },
-                     std::forward<Ts>(extraFieldValues)...);
+            constexpr degree_t nan{ NAN };
+            this->addEntry(image, getFileName, { position, { m_Heading, nan, nan } },
+                           gridPosition, std::forward<Ts>(extraFieldValues)...);
         }
 
         size_t maximumSize() const;
@@ -335,17 +375,13 @@ public:
         std::array<size_t, 3> m_Current;
     };
 
-    //! For saving images recorded along a route
-    template<class FrameWriterType>
+        //! For saving images recorded along a route
     class RouteRecorder
-      : public Recorder<FrameWriterType> {
+      : public Recorder
+    {
     public:
-        template<class T>
-        RouteRecorder(ImageDatabase &imageDatabase, T &&format,
-                      std::vector<std::string> extraFieldNames)
-          : Recorder<FrameWriterType>(imageDatabase, true,
-                                      std::move(format),
-                                      std::move(extraFieldNames))
+        RouteRecorder(ImageDatabase &imageDatabase, std::unique_ptr<FrameWriter> writer, std::vector<std::string> extraFieldNames)
+          : Recorder(imageDatabase, true, std::move(writer), std::move(extraFieldNames))
         {
             BOB_ASSERT(!imageDatabase.isGrid());
         }
@@ -355,14 +391,20 @@ public:
          *        extra fields, if used
          */
         template<class... Ts>
-        void record(const Vector3<millimeter_t> &position, degree_t heading,
-                    const cv::Mat &image, Ts &&... extraFieldValues)
+        void record(const Pose3<millimeter_t, degree_t> &pose,
+                    const cv::Mat &image, Ts &&...extraFieldValues)
         {
-            this->addEntry(image, position, heading, { 0, 0, 0 },
-                           std::forward<Ts>(extraFieldValues)...);
+            this->addEntry(image, std::bind(&RouteRecorder::getFileName, this),
+                           pose, { 0, 0, 0 }, std::forward<Ts>(extraFieldValues)...);
         }
 
-        std::string getCurrentFilenameRoot() const override
+        void record(const cv::Mat &image, Entry entry)
+        {
+            this->addEntry(image, entry, std::bind(&RouteRecorder::getFileName, this));
+        }
+
+    private:
+        std::string getFileName()
         {
             std::ostringstream ss;
             ss << "image" << std::setw(5) << std::setfill('0') << this->size() + 1;
@@ -408,6 +450,9 @@ public:
     void loadImages(std::vector<cv::Mat> &images, const cv::Size &size = {},
                     size_t frameSkip = 1, bool greyscale = true) const;
 
+    //! Whether the database consists of panoramic images which need unwrapping
+    bool needsUnwrapping() const;
+
     //! Access the metadata for this database via OpenCV's persistence API
     cv::FileNode getMetadata() const;
 
@@ -418,30 +463,31 @@ public:
     const std::tm &getCreationTime() const;
 
     //! Start recording a grid of images
-    GridRecorder getGridRecorder(const Range &xrange, const Range &yrange,
-                                 const Range &zrange = Range(0_mm),
-                                 degree_t heading = 0_deg,
-                                 std::string imageFormat = "png",
-                                 std::vector<std::string> extraFieldNames = {});
+    std::unique_ptr<GridRecorder> createGridRecorder(const Range &xrange,
+                                                     const Range &yrange,
+                                                     const Range &zrange = Range(0_mm),
+                                                     degree_t heading = 0_deg,
+                                                     std::string imageFormat = "png",
+                                                     std::vector<std::string> extraFieldNames = {});
 
     //! Start recording a route
-    RouteRecorder<ImageFileWriter> getRouteRecorder(std::string imageFormat = "png",
-                                                    std::vector<std::string> extraFieldNames = {});
+    std::unique_ptr<RouteRecorder> createRouteRecorder(std::string imageFormat = "png",
+                                                       std::vector<std::string> extraFieldNames = {});
 
     /**!
      * \brief Start recording a route, saving images into video file using
      *        default AVI/MJPEG format.
      */
-    RouteRecorder<VideoFileWriter> getRouteVideoRecorder(const cv::Size &resolution,
-                                                         hertz_t fps,
-                                                         std::vector<std::string> extraFieldNames = {});
+    std::unique_ptr<RouteRecorder> createVideoRouteRecorder(const cv::Size &resolution,
+                                                            hertz_t fps,
+                                                            std::vector<std::string> extraFieldNames = {});
 
     //! Start recording a route, saving images into video file with a custom codec
-    RouteRecorder<VideoFileWriter> getRouteVideoRecorder(const cv::Size &resolution,
-                                                         hertz_t fps,
-                                                         const std::string &extension,
-                                                         const std::string &codec,
-                                                         std::vector<std::string> extraFieldNames = {});
+    std::unique_ptr<RouteRecorder> createVideoRouteRecorder(const cv::Size &resolution,
+                                                            hertz_t fps,
+                                                            const std::string &extension,
+                                                            const std::string &codec,
+                                                            std::vector<std::string> extraFieldNames = {});
 
     hertz_t getFrameRate() const;
 
@@ -519,7 +565,7 @@ private:
     std::tm m_CreationTime;
     hertz_t m_FrameRate{ 0 };
     bool m_IsRoute;
-    bool m_NeedsUnwrapping = true;
+    std::experimental::optional<bool> m_NeedsUnwrapping;
 
     ImageDatabase(const std::tm *creationTime, filesystem::path databasePath,
                   bool overwrite);

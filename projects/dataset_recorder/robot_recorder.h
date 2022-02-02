@@ -36,18 +36,18 @@ public:
       : m_GPS{ gps }
       , m_Camera{ getCamera() }
       , m_Database{ getCurrentDateTime(useSystemClock) }
-      , m_Recorder{ m_Database.getRouteVideoRecorder(m_Camera->getOutputSize(),
-                                                     m_Camera->getFrameRate(),
-                                                     "mp4",
-                                                     "mp4v",
-                                                     { "Pitch [degrees]",
-                                                       "Roll [degrees]",
-                                                       "Speed",
-                                                       "Steering angle [degrees]",
-                                                       "UTM zone",
-                                                       "GPS quality",
-                                                       "Horizontal dilution [mm]",
-                                                       "Timestamp [ms]" }) }
+      , m_Recorder{ m_Database.createVideoRouteRecorder(m_Camera->getOutputSize(),
+                                                        m_Camera->getFrameRate(),
+                                                        "mp4",
+                                                        "mp4v",
+                                                        { "Pitch [degrees]",
+                                                          "Roll [degrees]",
+                                                          "Speed",
+                                                          "Steering angle [degrees]",
+                                                          "UTM zone",
+                                                          "GPS quality",
+                                                          "Horizontal dilution [mm]",
+                                                          "Timestamp [ms]" }) }
     {
         // Start timing
         m_Stopwatch.start();
@@ -74,12 +74,10 @@ public:
         const millisecond_t time = m_Stopwatch.elapsed();
 
         // get imu data
-        degree_t yaw{ NAN }, pitch{ NAN }, roll{ NAN };
+        constexpr degree_t nandeg{ NAN };
+        std::array<degree_t, 3> attitude = { nandeg, nandeg, nandeg };
         try {
-            const auto angles = imu.getEulerAngles();
-            yaw = angles[0];
-            pitch = angles[1];
-            roll = angles[2];
+            attitude = imu.getEulerAngles();
         } catch (std::exception &e) {
             LOGE << "Could not read from IMU: " << e.what();
         }
@@ -110,21 +108,20 @@ public:
 
             // converting to UTM
             const auto utm = MapCoordinate::latLonToUTM(coord);
-            m_Recorder.record(utm.toVector(), degree_t{ yaw }, m_Frame,
-                              pitch.value(), roll.value(), botSpeed,
-                              turnAngle.value(), utm.zone,
-                              (int) m_GPSData.gpsQuality,
-                              millimeter_t{ m_GPSData.horizontalDilution }.value(),
-                              time.value());
+            m_Recorder->record({ utm.toVector(), attitude }, m_Frame, botSpeed,
+                               turnAngle.value(), utm.zone,
+                               (int) m_GPSData.gpsQuality,
+                               millimeter_t{ m_GPSData.horizontalDilution }.value(),
+                               time.value());
         } else {
             /*
              * No new data was available. Indicate this by writing NaNs to the
              * CSV file. We can always estimate these missing values post hoc
              * with interpolation.
              */
-            m_Recorder.record(Vector3<millimeter_t>::nan(), degree_t{ yaw },
-                              m_Frame, pitch.value(), roll.value(), botSpeed,
-                              turnAngle.value(), "", -1, NAN, time.value());
+            m_Recorder->record(Pose3<millimeter_t, degree_t>::nan(), m_Frame,
+                               botSpeed, turnAngle.value(), "", -1, NAN,
+                               time.value());
         }
 
         return time;
@@ -141,7 +138,7 @@ private:
     std::unique_ptr<Video::Input> m_Camera;
     cv::Mat m_Frame;
     Navigation::ImageDatabase m_Database;
-    Navigation::ImageDatabase::RouteRecorder<Navigation::ImageDatabase::VideoFileWriter> m_Recorder;
+    std::unique_ptr<Navigation::ImageDatabase::RouteRecorder> m_Recorder;
     Stopwatch m_Stopwatch;
 
     static std::unique_ptr<Video::Input> getCamera()

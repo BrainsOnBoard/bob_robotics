@@ -54,6 +54,7 @@ namespace
 class HeadingSource
 {
 public:
+    virtual ~HeadingSource() = default;
     virtual radian_t getHeading() = 0;
 };
 

@@ -1,28 +1,21 @@
-cmake_minimum_required(VERSION 3.1)
-include(../../cmake/bob_robotics.cmake)
+cmake_minimum_required(VERSION 3.10)
+include(../../cmake/BoBRobotics.cmake)
+project(stone_cx)
 
-if(NOT TARGET)
-    set(TARGET simulator)
-endif()
+find_package(BoBRobotics QUIET REQUIRED COMPONENTS common hid imgproc net os robots video)
+find_package(GeNN REQUIRED)
+find_package(OpenCV REQUIRED)
 
-if(${TARGET} STREQUAL simulator)
-    set(SOURCES simulator.cc spline.cc visualizationCommon.cc)
-    set(BOB_MODULES common)
-elseif(${TARGET} STREQUAL simulatorReplay)
-    set(SOURCES simulatorReplay.cc visualizationCommon.cc)
-    set(BOB_MODULES common)
-elseif(${TARGET} STREQUAL robot)
-    set(SOURCES robot.cc visualizationCommon.cc)
-    set(BOB_MODULES common hid imgproc net os robots robots video)
-else()
-    message(FATAL_ERROR "Bad target specified")
-endif()
+# build simulator
+add_genn_model(model model.cc BACKEND CPU SHARED_LIBRARY_MODEL OFF)
 
-BoB_project(IS_EXPERIMENT TRUE
-            EXECUTABLE ${TARGET}
-            SOURCES ${SOURCES}
-            BOB_MODULES ${BOB_MODULES}
-            GENN_MODEL model.cc
-            GENN_CPU_ONLY TRUE
-            EXTERNAL_LIBS opencv
-            OPTIONS RECORD_ELECTROPHYS RECORD_SENSORS USE_SEE3CAM)
+# NB: simulatorReplay is not included as it won't compile with GeNN 4
+add_executable(stone_cx_simulator simulator.cc spline.cc visualizationCommon.cc)
+target_include_directories(stone_cx_simulator PUBLIC ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(stone_cx_simulator PUBLIC BoBRobotics::common model
+                      ${OpenCV_LIBS})
+
+add_executable(stone_cx_robot robot.cc visualizationCommon.cc)
+target_include_directories(stone_cx_robot PUBLIC ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(stone_cx_robot PUBLIC ${BoBRobotics_LIBRARIES} model
+                      ${OpenCV_LIBS})
