@@ -59,6 +59,7 @@ Config::Config()
   , m_CroppedRect(0, 0, 180, 50)
   , m_WatershedMarkerImageFilename("segmentation.png")
   , m_JoystickDeadzone(0.25f)
+  , m_JoystickGain(1.f)
   , m_AutoTrain(true)
   , m_TrainInterval(0.0)
   , m_MotorCommandInterval(500.0)
@@ -143,6 +144,7 @@ Config::read(const cv::FileNode &node)
         m_WatershedMarkerImageFilename = (std::string)watershedMarkerImageFilename;
 
         cv::read(node["joystickDeadzone"], m_JoystickDeadzone, m_JoystickDeadzone);
+        cv::read(node["joystickGain"], m_JoystickGain, m_JoystickGain);
         cv::read(node["serverListenPort"], m_ServerListenPort, m_ServerListenPort);
         cv::read(node["snapshotServerListenPort"], m_SnapshotServerListenPort, m_SnapshotServerListenPort);
         cv::read(node["bestSnapshotServerListenPort"], m_BestSnapshotServerListenPort, m_BestSnapshotServerListenPort);
@@ -239,6 +241,7 @@ Config::write(cv::FileStorage &fs) const
     fs << "maskImageFilename" << getMaskImageFilename();
     fs << "watershedMarkerImageFilename" << getWatershedMarkerImageFilename();
     fs << "joystickDeadzone" << getJoystickDeadzone();
+    fs << "joystickGain" << getJoystickGain();
     fs << "autoTrain" << shouldAutoTrain();
     fs << "trainInterval" << getTrainInterval().count();
     fs << "testFrameSkip" << getIntegerSize(getSkipFrames());

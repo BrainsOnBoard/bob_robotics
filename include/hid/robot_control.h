@@ -13,15 +13,24 @@
 // Standard C includes
 #include <cmath>
 
-#define DEFAULT_DEAD_ZONE 0.25f
-
 namespace BoBRobotics {
 namespace HID {
+constexpr float DefaultDeadZone = 0.25f;
+constexpr float DefaultGain = 1.f;
+
 template<class RobotType>
 void
-drive(RobotType &robot, const JoystickBase<JAxis, JButton> &joystick)
+drive(RobotType &robot, const JoystickBase<JAxis, JButton> &joystick,
+      float deadZone = DefaultDeadZone)
 {
-    drive(robot, joystick, DEFAULT_DEAD_ZONE);
+    drive(robot, joystick, deadZone, DefaultGain);
+}
+
+template<class RobotType>
+void addJoystick(RobotType &robot, JoystickBase<JAxis, JButton> &joystick,
+                 float deadZone = DefaultDeadZone)
+{
+    addJoystick(robot, joystick, deadZone, DefaultGain);
 }
 
 template<class AckermannType,
@@ -57,12 +66,13 @@ constexpr auto usedAxes()
 template<class RobotType,
          std::enable_if_t<!Robots::IsUAV<RobotType>::value, int> = 0>
 void
-addJoystick(RobotType &robot, JoystickBase<JAxis, JButton> &joystick, float deadZone = DEFAULT_DEAD_ZONE)
+addJoystick(RobotType &robot, JoystickBase<JAxis, JButton> &joystick,
+            float deadZone, float gain)
 {
-    joystick.addHandler([&robot, deadZone](auto &joystick, JAxis axis, float) {
+    joystick.addHandler([&](auto &joystick, JAxis axis, float) {
         constexpr auto axes = usedAxes<RobotType>();
         if (std::find(axes.begin(), axes.end(), axis) != axes.end()) {
-            drive(robot, joystick, deadZone);
+            drive(robot, joystick, deadZone, gain);
             return true;
         }
 
@@ -72,10 +82,11 @@ addJoystick(RobotType &robot, JoystickBase<JAxis, JButton> &joystick, float dead
 
 template<class AckermannType, std::enable_if_t<Robots::IsAckermann<AckermannType>::value, int> = 0>
 void
-drive(AckermannType &robot, JoystickBase<JAxis, JButton> &joystick, float deadZone)
+drive(AckermannType &robot, JoystickBase<JAxis, JButton> &joystick,
+      float deadZone, float gain)
 {
-    const auto thresh = [deadZone](float val) {
-        return fabs(val) <= deadZone ? 0.f : val;
+    const auto thresh = [deadZone, gain](float val) {
+        return fabs(val) <= deadZone ? 0.f : val * gain;
     };
 
     robot.move(thresh(joystick.getState(JAxis::LeftStickVertical)),
@@ -84,7 +95,8 @@ drive(AckermannType &robot, JoystickBase<JAxis, JButton> &joystick, float deadZo
 
 template<class Omni2DType, std::enable_if_t<Robots::IsOmni2D<Omni2DType>::value, int> = 0>
 void
-drive(Omni2DType &robot, const JoystickBase<JAxis, JButton> &joystick, float deadZone)
+drive(Omni2DType &robot, const JoystickBase<JAxis, JButton> &joystick,
+      float deadZone, float gain)
 {
     const auto forward = -joystick.getState(JAxis::LeftStickVertical);
     const auto sideways = joystick.getState(JAxis::LeftStickHorizontal);
@@ -94,16 +106,18 @@ drive(Omni2DType &robot, const JoystickBase<JAxis, JButton> &joystick, float dea
     const bool deadSideways = (fabs(sideways) < deadZone);
     const bool deadTurn = (fabs(turn) < deadZone);
 
-    robot.omni2D(forward * !deadForward, sideways * !deadSideways, turn * !deadTurn);
+    robot.omni2D(gain * forward * !deadForward, gain * sideways * !deadSideways,
+                 gain * turn * !deadTurn);
 }
 
 template<class TankType, std::enable_if_t<Robots::IsTank<TankType>::value, int> = 0>
 void
-drive(TankType &robot, const JoystickBase<JAxis, JButton> &joystick, float deadZone)
+drive(TankType &robot, const JoystickBase<JAxis, JButton> &joystick,
+      float deadZone, float gain)
 {
-    const auto x = joystick.getState(JAxis::LeftStickHorizontal);
-    const auto y = joystick.getState(JAxis::LeftStickVertical);
-    const float halfPi = pi<float>() / 2.0f;
+    const auto x = gain * joystick.getState(JAxis::LeftStickHorizontal);
+    const auto y = gain * joystick.getState(JAxis::LeftStickVertical);
+    constexpr float halfPi = pi<float>() / 2.0f;
 
     const bool deadX = (fabs(x) < deadZone);
     const bool deadY = (fabs(y) < deadZone);
@@ -156,38 +170,40 @@ controlWithThumbsticks(TankType &robot, JoystickBase<JAxis, JButton> &joystick)
 
 template<class UAVType, std::enable_if_t<Robots::IsUAV<UAVType>::value, int> = 0>
 void
-drive(UAVType &uav, const JoystickBase<JAxis, JButton> &joystick)
+drive(UAVType &uav, const JoystickBase<JAxis, JButton> &joystick,
+      float /*deadZone*/, float gain)
 {
-    uav.setRoll(joystick.getState(JAxis::RightStickHorizontal));
-    uav.setPitch(-joystick.getState(JAxis::RightStickVertical));
-    uav.setVerticalSpeed(-joystick.getState(JAxis::LeftStickVertical));
-    uav.setYawSpeed(joystick.getState(JAxis::RightTrigger) - joystick.getState(JAxis::LeftTrigger));
+    uav.setRoll(gain * joystick.getState(JAxis::RightStickHorizontal));
+    uav.setPitch(gain * -joystick.getState(JAxis::RightStickVertical));
+    uav.setVerticalSpeed(gain * -joystick.getState(JAxis::LeftStickVertical));
+    uav.setYawSpeed(gain * (joystick.getState(JAxis::RightTrigger) - joystick.getState(JAxis::LeftTrigger)));
 }
 
 template<class UAVType, std::enable_if_t<Robots::IsUAV<UAVType>::value, int> = 0>
 void
-addJoystick(UAVType &uav, JoystickBase<JAxis, JButton> &joystick)
+addJoystick(UAVType &uav, JoystickBase<JAxis, JButton> &joystick,
+            float /*deadZone*/, float gain)
 {
-    auto onAxisEvent = [&uav](auto &, JAxis axis, float value) {
+    auto onAxisEvent = [&uav, gain](auto &, JAxis axis, float value) {
         /*
          * setRoll/Pitch etc. all take values between -1 and 1. We cap these
          * values for the joystick code to make the drone more controllable.
          */
         switch (axis) {
         case JAxis::RightStickHorizontal:
-            uav.setRoll(value);
+            uav.setRoll(gain * value);
             return true;
         case JAxis::RightStickVertical:
-            uav.setPitch(-value);
+            uav.setPitch(gain * -value);
             return true;
         case JAxis::LeftStickVertical:
-            uav.setVerticalSpeed(-value);
+            uav.setVerticalSpeed(gain * -value);
             return true;
         case JAxis::LeftTrigger:
-            uav.setYawSpeed(-value);
+            uav.setYawSpeed(gain * -value);
             return true;
         case JAxis::RightTrigger:
-            uav.setYawSpeed(value);
+            uav.setYawSpeed(gain * value);
             return true;
         default:
             // otherwise signal that we haven't handled event

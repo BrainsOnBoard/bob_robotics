@@ -63,6 +63,7 @@ public:
     virtual units::frequency::hertz_t getFrameRate() const override;
     virtual bool readFrame(cv::Mat &outFrame) override;
     virtual void setOutputSize(const cv::Size &outSize) override;
+    virtual void setFrameRate(units::frequency::hertz_t fps) override;
 
 private:
     cv::VideoCapture m_Device;
