@@ -200,7 +200,7 @@ private:
 
             // If we're in a suitable state, drive motors using joystick
             if(m_Robot && (state == State::WaitToTrain || state == State::Training || state == State::WaitToTest)) {
-                HID::drive(*m_Robot, m_Joystick, m_Config.getJoystickDeadzone());
+                HID::drive(*m_Robot, m_Joystick, m_Config.getJoystickDeadzone(), m_Config.getJoystickGain());
             }
 
             // Capture frame
@@ -470,7 +470,6 @@ private:
                 const auto period = m_Config.getTrainInterval();
                 if (period == Milliseconds(0)) {
                     fps = m_Camera->getFrameRate();
-                    LOGI << fps;
                 } else {
                     fps = 1 / units::time::second_t{ period };
                     if (fps > m_Camera->getFrameRate()) {
