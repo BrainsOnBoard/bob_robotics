@@ -92,7 +92,7 @@ public:
         m_CameraName = std::move(name);
     }
 
-    void setFrameRate(hertz_t frameRate)
+    void setFrameRate(hertz_t frameRate) override
     {
         m_FrameRate = frameRate;
     }
