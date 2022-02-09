@@ -19,7 +19,7 @@ class DummyTank
 public:
     static void tank(float left, float right)
     {
-        LOGI << "Driving: " << left << ", " << right;
+        LOGV << "Driving: " << left << ", " << right;
     }
 
     static constexpr auto getRobotWidth()

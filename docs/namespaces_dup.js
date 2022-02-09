@@ -103,6 +103,17 @@ var namespaces_dup =
       [ "ValidationError", "classCLI_1_1ValidationError.html", null ],
       [ "Validator", "classCLI_1_1Validator.html", "classCLI_1_1Validator" ]
     ] ],
+    [ "conftest", null, [
+      [ "Capture", "classconftest_1_1Capture.html", null ],
+      [ "Output", "classconftest_1_1Output.html", null ],
+      [ "SanitizedString", "classconftest_1_1SanitizedString.html", null ],
+      [ "Unordered", "classconftest_1_1Unordered.html", null ]
+    ] ],
+    [ "exercise_trampoline", null, [
+      [ "SimpleBase", "structexercise__trampoline_1_1SimpleBase.html", null ],
+      [ "SimpleBaseTrampoline", "structexercise__trampoline_1_1SimpleBaseTrampoline.html", null ],
+      [ "SimpleCppDerived", "structexercise__trampoline_1_1SimpleCppDerived.html", null ]
+    ] ],
     [ "filesystem", null, [
       [ "path", "classfilesystem_1_1path.html", null ]
     ] ],
@@ -171,6 +182,13 @@ var namespaces_dup =
       [ "select_npy_type< uint64_t >", "structmatplotlibcpp_1_1select__npy__type_3_01uint64__t_01_4.html", null ],
       [ "select_npy_type< uint8_t >", "structmatplotlibcpp_1_1select__npy__type_3_01uint8__t_01_4.html", null ]
     ] ],
+    [ "pets", null, [
+      [ "Pet", "classpets_1_1Pet.html", null ]
+    ] ],
+    [ "pybind11", "namespacepybind11.html", "namespacepybind11" ],
+    [ "setup", null, [
+      [ "SDist", "classsetup_1_1SDist.html", null ]
+    ] ],
     [ "std", null, [
       [ "experimental", null, [
         [ "detail_", null, [
@@ -193,7 +211,21 @@ var namespaces_dup =
       ] ],
       [ "hash< std::experimental::optional< T & > >", "structstd_1_1hash_3_01std_1_1experimental_1_1optional_3_01T_01_6_01_4_01_4.html", null ],
       [ "hash< std::experimental::optional< T > >", "structstd_1_1hash_3_01std_1_1experimental_1_1optional_3_01T_01_4_01_4.html", null ],
+      [ "hash< TplCtorClass >", "structstd_1_1hash_3_01TplCtorClass_01_4.html", null ],
+      [ "hash< Vector2 >", "structstd_1_1hash_3_01Vector2_01_4.html", null ],
       [ "numeric_limits< units::unit_t< Units, T, NonLinearScale > >", "classstd_1_1numeric__limits_3_01units_1_1unit__t_3_01Units_00_01T_00_01NonLinearScale_01_4_01_4.html", null ]
+    ] ],
+    [ "test_exc_sp", null, [
+      [ "C", "structtest__exc__sp_1_1C.html", null ]
+    ] ],
+    [ "test_interpreter", null, [
+      [ "DerivedWidget", "classtest__interpreter_1_1DerivedWidget.html", null ]
+    ] ],
+    [ "test_pickling", null, [
+      [ "SimplePyDerived", "classtest__pickling_1_1SimplePyDerived.html", null ]
+    ] ],
+    [ "test_thread", null, [
+      [ "Thread", "classtest__thread_1_1Thread.html", null ]
     ] ],
     [ "tk", null, [
       [ "band_matrix", "classtk_1_1band__matrix.html", null ],

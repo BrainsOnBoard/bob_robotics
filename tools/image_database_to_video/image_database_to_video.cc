@@ -105,9 +105,9 @@ convertYAMLFile(const ImageDatabase &inDatabase,
     std::ofstream ofs{ outYamlPath.str(), std::ios::app };
     BOB_ASSERT(ofs.good());
     ofs.exceptions(std::ios::badbit);
-    ofs << "\n  videoFile: " << videoFile.filename() << "\n"
+    ofs << "\n  videoFile: '" << videoFile.filename() << "'\n"
         << "  frameRate: " << frameRate << "\n"
-        << "  image_database_to_video_git_commit: " BOB_ROBOTICS_GIT_COMMIT "\n";
+        << "  image_database_to_video_git_commit: '" BOB_ROBOTICS_GIT_COMMIT "'\n";
     return true;
 }
 

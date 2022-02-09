@@ -43,6 +43,7 @@ var namespaceBoBRobotics =
     [ "Pose2", "classBoBRobotics_1_1Pose2.html", null ],
     [ "Pose3", "classBoBRobotics_1_1Pose3.html", null ],
     [ "PoseBase", "classBoBRobotics_1_1PoseBase.html", null ],
+    [ "ProgressBar", "classBoBRobotics_1_1ProgressBar.html", "classBoBRobotics_1_1ProgressBar" ],
     [ "Semaphore", "classBoBRobotics_1_1Semaphore.html", "classBoBRobotics_1_1Semaphore" ],
     [ "Stopwatch", "classBoBRobotics_1_1Stopwatch.html", "classBoBRobotics_1_1Stopwatch" ],
     [ "Threadable", "classBoBRobotics_1_1Threadable.html", "classBoBRobotics_1_1Threadable" ],

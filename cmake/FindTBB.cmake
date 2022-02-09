@@ -250,14 +250,14 @@ if (TBB_DEBUG)
 endif ()
 
 # ------------------------------------------------------------------------------
-# Find common include directory 
+# Find common include directory
 #
 # Looking for tbb/tbb_stddef.h because we use this path later to read this file
 # in order to extract the version information. The tbb.h header should be in the
 # same directory and is searched for separately as part of the "tbb" and "malloc"
 # component search. The TBB_INCLUDE_DIR is then used as HINTS.
 find_path(TBB_INCLUDE_DIR
-  NAMES tbb/tbb_stddef.h
+  NAMES tbb/tbb_stddef.h oneapi/tbb/version.h
   HINTS ${TBB_ROOT}
   PATH_SUFFIXES ${_TBB_INC_PATH_SUFFIXES}
 )
@@ -456,7 +456,11 @@ if (TBB_INCLUDE_DIR)
       NOT DEFINED TBB_VERSION_MINOR OR
       NOT DEFINED TBB_INTERFACE_VERSION OR
       NOT DEFINED TBB_COMPATIBLE_INTERFACE_VERSION)
-    file(READ "${TBB_INCLUDE_DIR}/tbb/tbb_stddef.h" _TBB_VERSION_CONTENTS LIMIT 2048)
+    if(EXISTS "${TBB_INCLUDE_DIR}/tbb/tbb_stddef.h")
+      file(READ "${TBB_INCLUDE_DIR}/tbb/tbb_stddef.h" _TBB_VERSION_CONTENTS LIMIT 2048)
+    else()
+      file(READ "${TBB_INCLUDE_DIR}/oneapi/tbb/version.h" _TBB_VERSION_CONTENTS LIMIT 2048)
+    endif()
     string(REGEX REPLACE
       ".*#define TBB_VERSION_MAJOR ([0-9]+).*" "\\1"
       TBB_VERSION_MAJOR "${_TBB_VERSION_CONTENTS}"

@@ -17,6 +17,7 @@
 // Standard C++ includes
 #include <algorithm>
 #include <fstream>
+#include <limits>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
@@ -36,6 +37,20 @@ Range::size() const
 {
     return (separation == 0_mm) ? 1 : (1 + ((end - begin) / separation).to<size_t>());
 }
+
+ImageDatabase::Entry::Entry()
+  : pose(Pose3<millimeter_t, degree_t>::nan())
+{}
+
+ImageDatabase::Entry::Entry(const Pose3<millimeter_t, degree_t> &_pose,
+                            filesystem::path _path,
+                            const std::array<size_t, 3> &_gridPosition,
+                            std::unordered_map<std::string, std::string> _extraFields)
+  : pose(_pose)
+  , path(std::move(_path))
+  , gridPosition(_gridPosition)
+  , extraFields(std::move(_extraFields))
+{}
 
 cv::Mat
 ImageDatabase::Entry::load(bool greyscale) const
@@ -69,9 +84,10 @@ ImageDatabase::ImageFileWriter::ImageFileWriter(const ImageDatabase &,
 {}
 
 void
-ImageDatabase::ImageFileWriter::writeFrame(const cv::Mat &frame, Entry &entry)
+ImageDatabase::ImageFileWriter::writeFrame(const cv::Mat &frame, Entry &entry,
+                                           const std::function<std::string()> &getFileName)
 {
-    filesystem::path path = getCurrentFilenameRoot() + "." + m_ImageFormat;
+    filesystem::path path = getFileName() + "." + m_ImageFormat;
     BOB_ASSERT(!path.exists()); // Don't overwrite data by default!
     BOB_ASSERT(cv::imwrite(path.str(), frame));
 
@@ -79,16 +95,15 @@ ImageDatabase::ImageFileWriter::writeFrame(const cv::Mat &frame, Entry &entry)
 }
 
 ImageDatabase::VideoFileWriter::VideoFileWriter(const ImageDatabase &database,
-                                                const std::pair<const std::string &, const std::string &> &format)
-  : m_FileName{ database.getName() + "." + format.first }
+                                                const std::string& extension, std::string codec)
+  : m_FileName{ database.getName() + "." + extension }
 {
     const auto path = database.getPath() / m_FileName;
     BOB_ASSERT(!path.exists()); // Don't overwrite by mistake
 
-    const auto &fourcc = format.second;
-    BOB_ASSERT(fourcc.size() == 4);
+    BOB_ASSERT(codec.size() == 4);
     m_Writer.open(path.str(),
-                  cv::VideoWriter::fourcc(fourcc[0], fourcc[1], fourcc[2], fourcc[3]),
+                  cv::VideoWriter::fourcc(codec[0], codec[1], codec[2], codec[3]),
                   database.getFrameRate().value(),
                   database.getResolution());
     BOB_ASSERT(m_Writer.isOpened());
@@ -101,7 +116,8 @@ ImageDatabase::VideoFileWriter::getVideoFileName() const
 }
 
 void
-ImageDatabase::VideoFileWriter::writeFrame(const cv::Mat &frame, Entry &)
+ImageDatabase::VideoFileWriter::writeFrame(const cv::Mat &frame, Entry &,
+                                           const std::function<std::string()> &)
 {
     m_Writer.write(frame);
 }
@@ -113,8 +129,10 @@ ImageDatabase::GridRecorder::GridRecorder(ImageDatabase &imageDatabase,
                                           degree_t heading,
                                           std::string imageFormat,
                                           std::vector<std::string> extraFieldNames)
-  : Recorder<ImageFileWriter>(imageDatabase, false, std::move(imageFormat),
-                              std::move(extraFieldNames))
+  : Recorder(imageDatabase,
+             false,
+             std::make_unique<ImageFileWriter>(imageDatabase, std::move(imageFormat)),
+             std::move(extraFieldNames))
   , m_Heading(heading)
   , m_Begin(xrange.begin, yrange.begin, zrange.begin)
   , m_Separation(xrange.separation, yrange.separation, zrange.separation)
@@ -133,25 +151,6 @@ ImageDatabase::GridRecorder::GridRecorder(ImageDatabase &imageDatabase,
                  << "size"
                  << "[:" << (int) m_Size[0] << (int) m_Size[1] << (int) m_Size[2] << "]"
                  << "}";
-}
-
-std::string
-ImageDatabase::GridRecorder::getCurrentFilenameRoot() const
-{
-    // Convert to integers
-    std::array<int, 3> iposition;
-    const auto position = getPosition(m_Current);
-    std::transform(position.begin(), position.end(), iposition.begin(), [](auto mm) {
-        return static_cast<int>(units::math::round(mm));
-    });
-
-    // Make filename
-    std::ostringstream ss;
-    ss << "image_" << std::setw(7) << std::setfill('0') << std::showpos << std::internal
-       << std::setw(7) << iposition[0] << "_"
-       << std::setw(7) << iposition[1] << "_"
-       << std::setw(7) << iposition[2];
-    return (this->getImageDatabase().getPath() / ss.str()).str();
 }
 
 Vector3<millimeter_t>
@@ -322,9 +321,9 @@ ImageDatabase::loadCSV()
     std::for_each(fields.begin(), fields.end(), strTrim);
     const size_t numFields = fields.size();
 
-    constexpr std::array<const char *, 8> defaultFieldNames{
+    constexpr std::array<const char *, 10> defaultFieldNames{
         "X [mm]", "Y [mm]", "Z [mm]", "Heading [degrees]", "Filename", "Grid X",
-        "Grid Y", "Grid Z"
+        "Grid Y", "Grid Z", "Pitch [degrees]", "Roll [degrees]"
     };
 
     /*
@@ -393,8 +392,13 @@ ImageDatabase::loadCSV()
             return fields[fieldNameIdx[i]];
         };
 
+        // Treat empty strings as NaNs (this is how pandas encodes them)
+        const auto getDouble = [](const std::string &s) {
+            return s.empty() ? NAN : std::stod(s);
+        };
+
         // Get grid position for grid databases
-        std::array<size_t, 3> gridPosition{0, 0, 0};
+        std::array<size_t, 3> gridPosition{ 0, 0, 0 };
         if (!m_IsRoute) {
             gridPosition[0] = static_cast<size_t>(std::stoul(getDefaultField(5)));
             gridPosition[1] = static_cast<size_t>(std::stoul(getDefaultField(6)));
@@ -403,10 +407,14 @@ ImageDatabase::loadCSV()
 
         // Save details to vector
         Entry entry{
-            { millimeter_t(std::stod(getDefaultField(0))),
-              millimeter_t(std::stod(getDefaultField(1))),
-              millimeter_t(std::stod(getDefaultField(2))) },
-            degree_t(std::stod(getDefaultField(3))),
+            {
+                { millimeter_t(getDouble(getDefaultField(0))),
+                  millimeter_t(getDouble(getDefaultField(1))),
+                  millimeter_t(getDouble(getDefaultField(2))) },
+                { degree_t(getDouble(getDefaultField(3))),
+                  degree_t(fieldNameIdx[8] == -1 ? NAN : getDouble(getDefaultField(8))),
+                  degree_t(fieldNameIdx[9] == -1 ? NAN : getDouble(getDefaultField(9))) }
+            },
             !isVideoType() ? m_Path / getDefaultField(4) : filesystem::path{},
             gridPosition,
             std::move(extraFields)
@@ -467,52 +475,51 @@ ImageDatabase::getCreationTime() const
     return m_CreationTime;
 }
 
-ImageDatabase::GridRecorder
-ImageDatabase::getGridRecorder(const Range &xrange, const Range &yrange,
-                               const Range &zrange, degree_t heading,
-                               std::string imageFormat,
-                               std::vector<std::string> extraFieldNames)
+std::unique_ptr<ImageDatabase::GridRecorder>
+ImageDatabase::createGridRecorder(const Range &xrange, const Range &yrange,
+                                  const Range &zrange, degree_t heading,
+                                  std::string imageFormat,
+                                  std::vector<std::string> extraFieldNames)
 {
-    return ImageDatabase::GridRecorder{ *this, xrange, yrange, zrange, heading,
-                                        std::move(imageFormat),
-                                        std::move(extraFieldNames) };
+    return std::make_unique<GridRecorder>(*this, xrange, yrange, zrange,
+                                          heading, std::move(imageFormat),
+                                          std::move(extraFieldNames));
 }
 
-ImageDatabase::RouteRecorder<ImageDatabase::ImageFileWriter>
-ImageDatabase::getRouteRecorder(std::string imageFormat,
-                                std::vector<std::string> extraFieldNames)
+std::unique_ptr<ImageDatabase::RouteRecorder>
+ImageDatabase::createRouteRecorder(std::string imageFormat,
+                                   std::vector<std::string> extraFieldNames)
 {
-    return ImageDatabase::RouteRecorder<ImageFileWriter>{
-        *this, std::move(imageFormat), std::move(extraFieldNames)
-    };
+    auto writer = std::make_unique<ImageDatabase::ImageFileWriter>(*this, std::move(imageFormat));
+    return std::make_unique<RouteRecorder>(*this, std::move(writer),
+                                           std::move(extraFieldNames));
 }
 
-ImageDatabase::RouteRecorder<ImageDatabase::VideoFileWriter>
-ImageDatabase::getRouteVideoRecorder(const cv::Size &resolution,
-                                     units::frequency::hertz_t fps,
-                                     std::vector<std::string> extraFieldNames)
+std::unique_ptr<ImageDatabase::RouteRecorder>
+ImageDatabase::createVideoRouteRecorder(const cv::Size &resolution,
+                                        units::frequency::hertz_t fps,
+                                        std::vector<std::string> extraFieldNames)
 {
-    return getRouteVideoRecorder(resolution, fps, "avi", "MJPG", std::move(extraFieldNames));
+    return createVideoRouteRecorder(resolution, fps, "avi", "MJPG",
+                                    std::move(extraFieldNames));
 }
 
-ImageDatabase::RouteRecorder<ImageDatabase::VideoFileWriter>
-ImageDatabase::getRouteVideoRecorder(const cv::Size &resolution,
-                                     units::frequency::hertz_t fps,
-                                     const std::string &extension,
-                                     const std::string &codec,
-                                     std::vector<std::string> extraFieldNames)
+std::unique_ptr<ImageDatabase::RouteRecorder>
+ImageDatabase::createVideoRouteRecorder(const cv::Size &resolution,
+                                        units::frequency::hertz_t fps,
+                                        const std::string &extension,
+                                        const std::string &codec,
+                                        std::vector<std::string> extraFieldNames)
 {
     m_Resolution = resolution;
     m_FrameRate = fps;
 
-    const std::pair<const std::string &, const std::string &> format{ extension, codec };
-    RouteRecorder<VideoFileWriter> recorder{
-        *this,
-        format,
-        std::move(extraFieldNames)
-    };
-    recorder.getMetadataWriter() << "videoFile" << recorder.getVideoFileName()
-                                 << "frameRate" << m_FrameRate.value();
+    auto writer = std::make_unique<ImageDatabase::VideoFileWriter>(*this, extension, codec);
+    const auto &fileName = writer->getVideoFileName();
+    auto recorder = std::make_unique<RouteRecorder>(*this, std::move(writer), std::move(extraFieldNames));
+
+    // Save extra metadata
+    recorder->getMetadataWriter() << "videoFile" << fileName << "frameRate" << fps.value();
 
     return recorder;
 }
@@ -614,6 +621,12 @@ ImageDatabase::loadImages(std::vector<cv::Mat> &images, const cv::Size &size,
     }
 }
 
+bool
+ImageDatabase::needsUnwrapping() const
+{
+    return m_NeedsUnwrapping.value();
+}
+
 units::frequency::hertz_t
 ImageDatabase::getFrameRate() const
 {
@@ -711,7 +724,11 @@ ImageDatabase::unwrap(const filesystem::path &destination,
     BOB_ASSERT(!(destination / EntriesFilename).exists());
 
     BOB_ASSERT(frameSkip != 0);
-    BOB_ASSERT(m_NeedsUnwrapping);
+    if (!m_NeedsUnwrapping.has_value()) {
+        LOGW << "Database's metadata doesn't indicate whether it's already unwrapped; unwrapping anyway";
+    } else if (!m_NeedsUnwrapping.value()) {
+        throw std::runtime_error{ "Database is already unwrapped" };
+    }
 
     // Create object for unwrapping images
     std::string camName;
@@ -743,10 +760,19 @@ ImageDatabase::unwrap(const filesystem::path &destination,
          */
         const std::regex regex{ "^(\\s*)(\\w+):.*" };
         std::smatch match;
+        auto indentation = std::numeric_limits<size_t>::max();
         while (std::getline(ifs, line)) {
             if (std::regex_match(line, match, regex)) {
                 const auto &whitespace = match[1];
                 const auto &key = match[2];
+
+                /*
+                 * We need to match the indentation style when we append
+                 * elements below
+                 */
+                if (whitespace.length() != 0) {
+                    indentation = std::min((size_t) whitespace.length(), indentation);
+                }
 
                 // The new database won't need unwrapping anymore
                 if (key == "needsUnwrapping") {
@@ -777,7 +803,8 @@ ImageDatabase::unwrap(const filesystem::path &destination,
         }
 
         // Save this value
-        ofs << "  frameSkip: " << frameSkip << "\n";
+        const std::string whitespace(indentation, ' ');
+        ofs << whitespace << "frameSkip: " << frameSkip << "\n";
 
         // Append info about the unwrapping object, indenting appropriately
         cv::FileStorage fs(".yml", cv::FileStorage::WRITE | cv::FileStorage::MEMORY);
@@ -787,7 +814,7 @@ ImageDatabase::unwrap(const filesystem::path &destination,
         std::getline(ss, line);
         std::getline(ss, line);
         while (std::getline(ss, line)) {
-            ofs << "  " << line << "\n";
+            ofs << whitespace << line << "\n";
         }
     }
 
@@ -865,13 +892,31 @@ ImageDatabase::loadMetadata()
             throw std::runtime_error("Invalid database type \"" + dbtype + "\"");
         }
 
-        // Check whether images are panoramic or not
-        metadata["needsUnwrapping"] >> m_NeedsUnwrapping;
+        /*
+         * Check if the database has been explicitly marked as containing
+         * raw panoramic images.
+         */
+        if (metadata["needsUnwrapping"].type() != cv::FileNode::NONE) {
+            m_NeedsUnwrapping = (int) metadata["needsUnwrapping"];
+        }
 
-        // Get image resolution
-        std::vector<int> size(2);
-        metadata["camera"]["resolution"] >> size;
-        m_Resolution = { size[0], size[1] };
+        if (metadata["camera"].type() == cv::FileNode::MAP) {
+            /*
+             * If needsUnwrapping is not explicitly set then assume that if the
+             * camera used was panoramic then we want to unwrap it.
+             *
+             * Note that these things don't necessarily go together! The
+             * database could already be unwrapped.
+             */
+            if (!m_NeedsUnwrapping && metadata["camera"]["isPanoramic"].type() != cv::FileNode::NONE) {
+                m_NeedsUnwrapping = (int) metadata["camera"]["isPanoramic"];
+            }
+
+            // Get image resolution
+            std::vector<int> size(2);
+            metadata["camera"]["resolution"] >> size;
+            m_Resolution = { size[0], size[1] };
+        }
 
         // These will only be set if database was recorded as a video file
         std::string videoFileName;
@@ -918,7 +963,7 @@ ImageDatabase::addNewEntries(std::vector<ImageDatabase::Entry> &newEntries,
     std::ofstream os;
     os.exceptions(std::ios::badbit | std::ios::failbit);
     os.open(path);
-    os << "X [mm], Y [mm], Z [mm], Heading [degrees]";
+    os << "X [mm], Y [mm], Z [mm], Heading [degrees], Pitch [degrees], Roll [degrees]";
     if (!isVideoType()) {
         os << ", Filename";
     }
@@ -932,8 +977,9 @@ ImageDatabase::addNewEntries(std::vector<ImageDatabase::Entry> &newEntries,
 
     for (auto &e : m_Entries) {
         // These fields are always written...
-        os << e.position[0]() << ", " << e.position[1]() << ", "
-           << e.position[2]() << ", " << e.heading();
+        os << e.pose.x().value() << ", " << e.pose.y().value() << ", "
+           << e.pose.z().value() << ", " << e.pose.yaw().value() << ", "
+           << e.pose.pitch().value() << ", " << e.pose.roll().value();
 
         // ...this is only written if we're not saving as a video
         if (!isVideoType()) {

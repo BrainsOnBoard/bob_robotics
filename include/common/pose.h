@@ -255,6 +255,11 @@ public:
     static constexpr AngleUnit pitch() { return AngleUnit(0); }
     static constexpr AngleUnit roll() { return AngleUnit(0); }
 
+    static constexpr Pose2<LengthUnit, AngleUnit> nan()
+    {
+        return { Vector2<LengthUnit>::nan(), AngleUnit{ NAN } };
+    }
+
 private:
     Vector2<LengthUnit> m_Position;
     AngleUnit m_Angle{};
@@ -295,6 +300,12 @@ public:
     const AngleUnit &pitch() const { return m_Attitude[1]; }
     AngleUnit &roll() { return m_Attitude[2]; }
     const AngleUnit &roll() const { return m_Attitude[2]; }
+
+    static constexpr Pose3<LengthUnit, AngleUnit> nan()
+    {
+        constexpr auto nan = AngleUnit{ NAN };
+        return { Vector3<LengthUnit>::nan(), { nan, nan, nan } };
+    }
 
 private:
     Vector3<LengthUnit> m_Position;

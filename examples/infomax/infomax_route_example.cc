@@ -91,8 +91,8 @@ int bobMain(int argc, char **argv)
             cv::resize(image, images.back(), imSize);
 
             // Save x and y in metres
-            x.push_back(routeImages[i].position[0].value() / 1000.0);
-            y.push_back(routeImages[i].position[1].value() / 1000.0);
+            x.push_back(routeImages[i].pose.x().value() / 1000.0);
+            y.push_back(routeImages[i].pose.y().value() / 1000.0);
         }
     }
 

@@ -1,4 +1,4 @@
-find_package(PythonLibs)
+find_package(PythonLibs 3.0)
 if(PYTHONLIBS_FOUND)
     list(APPEND INCLUDE_DIRS ${PYTHON_INCLUDE_DIRS})
 

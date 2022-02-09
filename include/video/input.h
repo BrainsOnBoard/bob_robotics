@@ -50,6 +50,9 @@ public:
     //! Set the output resolution of this video stream
     virtual void setOutputSize(const cv::Size &);
 
+    //! Set the output framerate for video system
+    virtual void setFrameRate(units::frequency::hertz_t fps);
+
     /*!
      * \brief Try to read a frame in colour from this video source
      *

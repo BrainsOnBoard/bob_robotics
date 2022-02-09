@@ -22,7 +22,7 @@ ImgProc::OpenCVUnwrap360
 Input::createUnwrapper(const cv::Size &unwrapRes) const
 {
     // Create unwrapper and return
-    return ImgProc::OpenCVUnwrap360(getOutputSize(), unwrapRes, getCameraName());
+    return { getOutputSize(), unwrapRes, getCameraName() };
 }
 
 std::string
@@ -32,6 +32,7 @@ Input::getCameraName() const
 }
 
 BOB_NOT_IMPLEMENTED(units::frequency::hertz_t Input::getFrameRate() const)
+BOB_NOT_IMPLEMENTED(void Input::setFrameRate(units::frequency::hertz_t))
 
 bool
 Input::readGreyscaleFrame(cv::Mat &outFrame)

@@ -26,3 +26,17 @@ else()
     add_executable(ardin_mb ${SORUCES})
     target_link_libraries(ardin_mb ${BoBRobotics_LIBRARIES} BoBThirdParty::imgui)
 endif()
+
+if(UNIX)
+    configure_file(run_benchmark.sh.in "${CMAKE_CURRENT_BINARY_DIR}/run_benchmark.sh")
+    execute_process(COMMAND chmod +x "${CMAKE_CURRENT_BINARY_DIR}/run_benchmark.sh")
+endif()
+
+# Disable warning to do with imgui
+include(CheckCXXCompilerFlag)
+foreach(FLAG -Wno-int-to-pointer-cast)
+    check_cxx_compiler_flag(${FLAG} COMPILER_SUPPORTS_${FLAG})
+    if(COMPILER_SUPPORTS_${FLAG})
+        target_compile_options(ardin_mb PRIVATE ${FLAG})
+    endif()
+endforeach()

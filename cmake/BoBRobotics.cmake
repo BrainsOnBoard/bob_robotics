@@ -1,4 +1,12 @@
 function(make_base_target)
+    if(CMAKE_BUILD_TYPE)
+        string(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE)
+    else()
+        # Default to doing a release build
+        set(CMAKE_BUILD_TYPE RELEASE)
+    endif()
+    message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+
     add_library(bob_base INTERFACE)
     add_library(BoBRobotics::base ALIAS bob_base)
 
@@ -6,17 +14,31 @@ function(make_base_target)
                                "${BOB_ROBOTICS_PATH}/include"
                                "${BOB_ROBOTICS_PATH}")
 
-    # Define DEBUG macro
+    # Define DEBUG macro, if appropriate
     target_compile_definitions(bob_base INTERFACE "$<$<CONFIG:DEBUG>:DEBUG>")
 
+    # For some reason, these flags seem not to be applied to targets by default
+    # (maybe because we're setting target_compile_options explicitly below?) so
+    # add them here. All targets linking to bob_base will then inherit these
+    # options.
+    string(REPLACE " " ";" _BOB_FLAGS "${CMAKE_CXX_FLAGS};${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}}")
+    target_compile_options(bob_base INTERFACE ${_BOB_FLAGS})
+
     if(NOT MSVC)
-        # Use ccache if present to speed up repeat builds
-        find_program(CCACHE ccache)
-        if(CCACHE)
-            set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-            set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-        else()
-            message(WARNING "ccache not found. Install for faster repeat builds.")
+        # Build with debug symbols even on release builds. It's useful.
+        target_compile_options(bob_base INTERFACE -g)
+
+        # Let user explicitly disable ccache if desired (e.g. for comparing
+        # compile times)
+        if(NOT DEFINED USE_CCACHE OR USE_CCACHE)
+            # Use ccache if present to speed up repeat builds
+            find_program(CCACHE ccache)
+            if(CCACHE)
+                set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+                set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+            else()
+                message(WARNING "ccache not found. Install for faster repeat builds.")
+            endif()
         endif()
 
         # Irritatingly, neither GCC nor Clang produce nice ANSI-coloured output if they detect
@@ -55,8 +77,8 @@ function(make_base_target)
         include(CheckCXXCompilerFlag)
         foreach(FLAG IN LISTS DEFAULT_COMPILER_FLAGS)
             check_cxx_compiler_flag(${FLAG} COMPILER_SUPPORTS_${FLAG})
-            if(${VARNAME})
-                target_compile_options(bob_base INTERFACE -${FLAG})
+            if(COMPILER_SUPPORTS_${FLAG})
+                target_compile_options(bob_base INTERFACE ${FLAG})
             endif()
         endforeach(FLAG IN LISTS DEFAULT_COMPILER_FLAGS)
     endif(NOT MSVC)

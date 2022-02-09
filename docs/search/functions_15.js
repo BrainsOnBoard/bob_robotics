@@ -1,7 +1,8 @@
 var searchData=
 [
-  ['wait_0',['wait',['../classBoBRobotics_1_1Semaphore.html#a31a4aa8947d52d9b92768ad795f53b2e',1,'BoBRobotics::Semaphore']]],
-  ['waitonce_1',['waitOnce',['../classBoBRobotics_1_1Semaphore.html#ac00ad101ae1e2d74135c454e62207782',1,'BoBRobotics::Semaphore']]],
-  ['waittostopmoving_2',['waitToStopMoving',['../classBoBRobotics_1_1Robots_1_1Gantry.html#a3b2b2528c996771649ea9d25380f177d',1,'BoBRobotics::Robots::Gantry']]],
-  ['write_3',['write',['../classBoBRobotics_1_1ImgProc_1_1OpenCVUnwrap360.html#a4b7a71a2aa2f7430025fb3979bf2b2e7',1,'BoBRobotics::ImgProc::OpenCVUnwrap360::write()'],['../classBoBRobotics_1_1Video_1_1Input.html#a40751def5212f7e3eaadd1fe0a4a07ee',1,'BoBRobotics::Video::Input::write()'],['../namespaceBoBRobotics_1_1Video.html#a787176f175254bb6bd8d063a34a1a8e8',1,'BoBRobotics::Video::write()']]]
+  ['validate_5fpositionals_0',['validate_positionals',['../classCLI_1_1App.html#ac7083bfa334d1ca3813e6f051089c746',1,'CLI::App']]],
+  ['validator_1',['Validator',['../classCLI_1_1Validator.html#a71df7c1c94c4abceee930eef957f5b76',1,'CLI::Validator::Validator(std::string validator_desc)'],['../classCLI_1_1Validator.html#aede1b1a51a7f924342a92cbbd3ee41be',1,'CLI::Validator::Validator(std::function&lt; std::string(std::string &amp;)&gt; op, std::string validator_desc, std::string validator_name=&quot;&quot;)']]],
+  ['value_2',['value',['../classpybind11_1_1enum__.html#a938b221f7b3da6b98b3aa05d4a55ae55',1,'pybind11::enum_::value()'],['../classunits_1_1unit__t.html#a5bb6799c6eb6f4cab7b47490ab03b9a1',1,'units::unit_t::value()'],['../structunits_1_1unit__value__add.html#ac99c4648bc63c4b4b279bfd04fc9c33a',1,'units::unit_value_add::value()'],['../structunits_1_1unit__value__subtract.html#a3b45929c57357df36697921646070d0f',1,'units::unit_value_subtract::value()'],['../structunits_1_1unit__value__multiply.html#a8d7d98db5a1f8c7a9fe71879ec46f824',1,'units::unit_value_multiply::value()'],['../structunits_1_1unit__value__divide.html#a768eea041bc1e7d820bb2b9dd1feba33',1,'units::unit_value_divide::value()'],['../structunits_1_1unit__value__power.html#ae9aff90b6fa005ce0346fb4d555511d4',1,'units::unit_value_power::value()'],['../structunits_1_1unit__value__sqrt.html#a5acea4eb6cb4ffec92cd488cadb5f5f6',1,'units::unit_value_sqrt::value()']]],
+  ['valueseparator_3',['valueSeparator',['../classCLI_1_1ConfigBase.html#aabc033545dea919028ae5997e59866fc',1,'CLI::ConfigBase']]],
+  ['view_4',['view',['../classpybind11_1_1array.html#a0df117513c1b24547f72dadf995ef792',1,'pybind11::array']]]
 ];
