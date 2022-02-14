@@ -197,36 +197,6 @@ struct CorrCoefficient {
             }
             return std[0];
         }
-
-        float getVariance(cv::InputArray &in, cv::Mat &out)
-        {
-            in.getMat().convertTo(out, CV_8U);
-            const float mean = cv::mean(in, m_CombinedMask.get())[0];
-            out -= mean;
-
-            // Square the contents of "out", applying a mask if one is specified
-            unsigned int sse = 0;
-            unsigned int count;
-            const auto numPixels = static_cast<size_t>(out.size().width * out.size().height);
-            if (m_CombinedMask.empty()) {
-                count = numPixels;
-
-                for (size_t i = 0; i < numPixels; i++) {
-                    sse += out.data[i] * out.data[i];
-                }
-            } else {
-                count = 0;
-
-                for (size_t i = 0; i < numPixels; i++) {
-                    if (m_CombinedMask.get().data[i]) {
-                        sse += out.data[i] * out.data[i];
-                        count++;
-                    }
-                }
-            }
-
-            return static_cast<float>(sse) / static_cast<float>(count);
-        }
     };
 };
 
