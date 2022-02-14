@@ -164,24 +164,39 @@ struct CorrCoefficient {
         {
             mask1.combine(mask2, m_CombinedMask);
 
-            const float var1 = getVariance(src1, m_Scratch1);
-            const float var2 = getVariance(src2, m_Scratch2);
-            if (var1 == 0.f || var2 == 0.f) {
-                throw std::invalid_argument("Vectors src1 and src2 must have "
-                                            "more than one unique value (e.g. "
-                                            "they cannot be all zeros)");
-            }
+            const float std1 = centreAndGetStdDev(src1, m_CombinedMask, m_Scratch1);
+            const float std2 = centreAndGetStdDev(src2, m_CombinedMask, m_Scratch2);
 
             cv::multiply(m_Scratch1, m_Scratch2, m_ScratchMult);
             const float abMean = cv::mean(m_ScratchMult, m_CombinedMask.get())[0];
 
-            const float rho = abMean / sqrtf(var1 * var2);
+            const float rho = abMean / (std1 * std2);
             return 1.f - fabsf(rho);
         }
 
     private:
         cv::Mat m_Scratch1, m_Scratch2, m_ScratchMult;
         ImgProc::Mask m_CombinedMask;
+
+        static float centreAndGetStdDev(cv::InputArray &src,
+                                        const ImgProc::Mask &mask,
+                                        cv::Mat &dst)
+        {
+            /*
+             * Unfortunately we have to use doubles for all this as
+             * cv::meanStdDev only works with double-type matrices.
+             */
+            src.getMat().convertTo(dst, CV_64F);
+            cv::Scalar mean, std;
+            cv::meanStdDev(dst, mean, std, mask.get());
+            cv::subtract(dst, mean[0], dst, mask.get());
+            if (std[0] == 0.0) {
+                throw std::invalid_argument("Vectors src1 and src2 must have "
+                                            "more than one unique value (e.g. "
+                                            "they cannot be all zeros)");
+            }
+            return std[0];
+        }
 
         float getVariance(cv::InputArray &in, cv::Mat &out)
         {
