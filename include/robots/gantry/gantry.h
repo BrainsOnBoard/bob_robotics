@@ -8,7 +8,8 @@
 #include "third_party/units.h"
 
 // Gantry-specifc includes
-#include "C:\Program Files\Advantech\Motion\PCI-1240\Examples\Include\Ads1240.h"
+#include "Windows.h"
+#include "Ads1240.h"
 
 // Standard C++ includes
 #include <algorithm>
