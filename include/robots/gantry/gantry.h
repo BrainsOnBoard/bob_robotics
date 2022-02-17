@@ -207,6 +207,9 @@ public:
         checkEmergencyButton();
     }
 
+    // These are the gantry's upper x, y and z limits (i.e. the size of the "arena")
+    static constexpr std::array<millimeter_t, 3> Limits = { 2996_mm, 1793_mm, 1203_mm };
+
 private:
     BYTE m_BoardId;
     bool m_IsMovingLine = false;
@@ -218,9 +221,6 @@ private:
      * They seem pretty accurate. -- AD
      */
     static constexpr std::array<double, 3> PulsesPerMillimetre = { 7.49625, 8.19672, 13.15789 };
-
-    // These are the gantry's upper x, y and z limits (i.e. the size of the "arena")
-    static constexpr std::array<millimeter_t, 3> Limits = { 2996_mm, 1793_mm, 1203_mm };
 
     void close() const noexcept
     {
