@@ -34,6 +34,8 @@ class Gantry
     using meters_per_second_t = units::velocity::meters_per_second_t;
 
 public:
+    using MMPerSec = units::unit_t<units::compound_unit<units::length::millimeter, units::inverse<units::time::second>>>;
+
     //! Open the PCI device and set drive parameters
     Gantry(BYTE boardId = 0)
       : m_BoardId(boardId)
@@ -144,9 +146,26 @@ public:
             checkError(P1240MotRdMultiReg(m_BoardId, XYZ_Axis, CurV, &pulseRate[0], &pulseRate[1], &pulseRate[2], nullptr), "Error reading velocity");
         }
 
-        using InitialUnit = units::unit_t<units::compound_unit<units::length::millimeter, units::inverse<units::time::second>>>;
-        const auto velocity = pulsesToUnit<meters_per_second_t, InitialUnit, DWORD>(pulseRate);
+        const auto velocity = pulsesToUnit<meters_per_second_t, MMPerSec, DWORD>(pulseRate);
         return velocity;
+    }
+
+    void setVelocity(std::array<MMPerSec, 3> velocities)
+    {
+        std::array<DWORD, 3> pulses;
+        std::transform(velocities.cbegin(), velocities.cend(), PulsesPerMillimetre.cbegin(), pulses.begin(), [](auto vel, auto pulsePerMM) {
+            return std::round(vel.value() * pulsePerMM);
+        });
+
+        checkError(P1240SetDrivingSpeed(m_BoardId, X_Axis, pulses[0]), "Could not set driving speed");
+        checkError(P1240SetDrivingSpeed(m_BoardId, Y_Axis, pulses[1]), "Could not set driving speed");
+        checkError(P1240SetDrivingSpeed(m_BoardId, Z_Axis, pulses[2]), "Could not set driving speed");
+    }
+
+    void setAcceleration()
+    {
+        checkError(P1240SetAcceleration(m_BoardId, XY_Axis, 100), "Could not set acceleration");
+        checkError(P1240SetDeceleration(m_BoardId, XY_Axis, 100, 0), "Could not set deceleration");
     }
 
     /**!
@@ -163,8 +182,8 @@ public:
 
         m_IsMovingLine = true;
         const std::array<LONG, 3> pos = { (LONG) round(x.value() * PulsesPerMillimetre[0]),
-                                    (LONG) round(y.value() * PulsesPerMillimetre[1]),
-                                    (LONG) round(z.value() * PulsesPerMillimetre[2]) };
+                                          (LONG) round(y.value() * PulsesPerMillimetre[1]),
+                                          (LONG) round(z.value() * PulsesPerMillimetre[2]) };
         checkError(P1240MotLine(m_BoardId, XYZ_Axis, TRUE, pos[0], pos[1], pos[2], 0), "Could not move gantry");
     }
 
