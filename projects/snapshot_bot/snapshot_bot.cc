@@ -10,6 +10,7 @@
 #include "common/progress_bar.h"
 #include "common/stopwatch.h"
 #include "common/timer.h"
+#include "common/bn055_imu.h"
 #include "hid/joystick.h"
 #include "hid/robot_control.h"
 #include "imgproc/opencv_unwrap_360.h"
@@ -67,6 +68,7 @@ class RobotFSM : FSM<State>::StateHandler
 {
     using Milliseconds = std::chrono::duration<double, std::milli>;
     using ImageDatabase = Navigation::ImageDatabase;
+    using AngleUnit = units::angle::degree_t;
 
 public:
     RobotFSM(const Config &config, BackgroundExceptionCatcher &backgroundEx)
@@ -259,16 +261,18 @@ private:
                     }
 
                     const double elapsed = static_cast<millisecond_t>(m_RecordingStopwatch.elapsed()).value();
-
                     // If Vicon tracking is available
                     if(m_Config.shouldUseViconTracking()) {
 #ifdef USE_VICON
                         // Get tracking data
                         const auto objectData = m_ViconTracking.getObjectData(m_Config.getViconTrackingObjectName());
+                        const auto imuData = imu.getEulerAngles();
                         m_Recorder->record(objectData.getPose(),
                                            m_Output,
                                            elapsed,
-                                           objectData.getFrameNumber());
+                                           objectData.getFrameNumber(),
+                                           imuData);
+                        
 #endif
                     } else {
                         m_Recorder->record(Pose3<millimeter_t, degree_t>::nan(),
@@ -459,6 +463,9 @@ private:
         // Also log Vicon frame number, if present
         fieldNames.emplace_back("Frame");
 
+        // Also log the imu data
+        fieldNames.emplace_back("IMU [°]");
+        
         // Record as video file or images according to user's preference
         if (m_Config.shouldRecordVideo()) {
             /*
@@ -541,6 +548,7 @@ private:
 #ifdef USE_VICON
     // Vicon tracking interface
     Vicon::UDPClient<Vicon::ObjectData> m_ViconTracking;
+    BN005 imu;
 
     // Vicon capture control interface
     Vicon::CaptureControl m_ViconCaptureControl;
