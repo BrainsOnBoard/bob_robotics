@@ -68,7 +68,7 @@ class RobotFSM : FSM<State>::StateHandler
 {
     using Milliseconds = std::chrono::duration<double, std::milli>;
     using ImageDatabase = Navigation::ImageDatabase;
-    
+
 public:
     RobotFSM(const Config &config, BackgroundExceptionCatcher &backgroundEx)
       : m_Config(config)
@@ -152,6 +152,9 @@ public:
             throw std::runtime_error("You must rebuild with -DUSE_VICON=ON");
 #endif
         }
+if (m_Config.shouldUseIMU()){
+    m_IMU = std::make_unique<BN055>();
+}
 
         // If we should train
         if(m_Config.shouldTrain()) {
@@ -165,7 +168,7 @@ public:
             // Start directly in testing state
             m_StateMachine.transition(State::WaitToTest);
         }
-    
+
     }
 
     //------------------------------------------------------------------------
@@ -264,21 +267,39 @@ private:
                     // If Vicon tracking is available
                     if(m_Config.shouldUseViconTracking()) {
 #ifdef USE_VICON
+
                         // Get tracking data
                         const auto objectData = m_ViconTracking.getObjectData(m_Config.getViconTrackingObjectName());
-                        const std::array<degree_t, 3> imuData = imu->getEulerAngles();
-                        m_Recorder->record(objectData.getPose(),
+                        if (m_Config.shouldUseIMU()) {
+                            const std::array<degree_t, 3> imuData = m_IMU->getEulerAngles();
+                            m_Recorder->record(objectData.getPose(),
+                                               m_Output,
+                                               elapsed,
+                                               objectData.getFrameNumber(),
+                                               imuData[0].value(),
+                                               imuData[1].value(),
+                                               imuData[2].value());
+                        } else {
+                            m_Recorder->record(objectData.getPose(),
+                                               m_Output,
+                                               elapsed,
+                                               objectData.getFrameNumber());
+                        }
+#endif
+                    } else if (m_Config.shouldUseIMU()) {
+                        const std::array<degree_t, 3> imuData = m_IMU->getEulerAngles();
+                        m_Recorder->record(Pose3<millimeter_t, degree_t>::nan(),
                                            m_Output,
                                            elapsed,
-                                           objectData.getFrameNumber(),
+                                           -1,
                                            imuData[0].value(),
                                            imuData[1].value(),
                                            imuData[2].value());
-                        
-#endif
                     } else {
                         m_Recorder->record(Pose3<millimeter_t, degree_t>::nan(),
-                                           m_Output, elapsed, -1);
+                                           m_Output,
+                                           elapsed,
+                                           -1);
                     }
                 }
 
@@ -469,7 +490,7 @@ private:
         fieldNames.emplace_back("IMU yaw [degrees]");
         fieldNames.emplace_back("IMU pitch [degrees]");
         fieldNames.emplace_back("IMU roll [degrees]");
-        
+
         // Record as video file or images according to user's preference
         if (m_Config.shouldRecordVideo()) {
             /*
@@ -549,16 +570,19 @@ private:
     // Index of test image to write
     size_t m_TestImageIndex;
 
+    // IMU device
+    std::unique_ptr<BN055> m_IMU;
+
 #ifdef USE_VICON
     // Vicon tracking interface
     Vicon::UDPClient<Vicon::ObjectData> m_ViconTracking;
-    std::unique_ptr<BN055> imu;
+
 
     // Vicon capture control interface
     Vicon::CaptureControl m_ViconCaptureControl;
 #endif
-    
-    
+
+
     // For training data
     ImageDatabase m_TrainDatabase;
 

@@ -76,6 +76,8 @@ public:
     int getViconCaptureControlPort() const { return m_ViconCaptureControlPort; }
     const std::string &getViconCaptureControlPath() const{ return m_ViconCaptureControlPath; }
 
+    bool shouldUseIMU() const {return m_UseIMU; }
+
     int getServerListenPort() const{ return m_ServerListenPort; }
     int getSnapshotServerListenPort() const{ return m_SnapshotServerListenPort; }
     int getBestSnapshotServerListenPort() const{ return m_BestSnapshotServerListenPort; }
@@ -193,6 +195,9 @@ private:
     std::string m_ViconCaptureControlHost;
     int m_ViconCaptureControlPort;
     std::string m_ViconCaptureControlPath;
+
+    // IMU capture settings
+    bool m_UseIMU;
 };
 
 static inline void write(cv::FileStorage &fs, const std::string&, const Config &config)
