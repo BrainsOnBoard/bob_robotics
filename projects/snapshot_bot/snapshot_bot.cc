@@ -266,7 +266,7 @@ private:
 #ifdef USE_VICON
                         // Get tracking data
                         const auto objectData = m_ViconTracking.getObjectData(m_Config.getViconTrackingObjectName());
-                        const std::array<degree_t, 3> imuData = m_IMU.getEulerAngles();
+                        const std::array<degree_t, 3> imuData = imu->getEulerAngles();
                         m_Recorder->record(objectData.getPose(),
                                            m_Output,
                                            elapsed,
@@ -552,12 +552,12 @@ private:
 #ifdef USE_VICON
     // Vicon tracking interface
     Vicon::UDPClient<Vicon::ObjectData> m_ViconTracking;
-    
+    std::unique_ptr<BN055> imu;
 
     // Vicon capture control interface
     Vicon::CaptureControl m_ViconCaptureControl;
 #endif
-    m_IMU = std::make_unique<BN055>();
+    
     
     // For training data
     ImageDatabase m_TrainDatabase;
