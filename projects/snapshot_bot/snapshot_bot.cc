@@ -68,8 +68,7 @@ class RobotFSM : FSM<State>::StateHandler
 {
     using Milliseconds = std::chrono::duration<double, std::milli>;
     using ImageDatabase = Navigation::ImageDatabase;
-    using AngleUnit = units::angle::degree_t;
-
+    
 public:
     RobotFSM(const Config &config, BackgroundExceptionCatcher &backgroundEx)
       : m_Config(config)
@@ -166,6 +165,7 @@ public:
             // Start directly in testing state
             m_StateMachine.transition(State::WaitToTest);
         }
+    
     }
 
     //------------------------------------------------------------------------
@@ -266,12 +266,14 @@ private:
 #ifdef USE_VICON
                         // Get tracking data
                         const auto objectData = m_ViconTracking.getObjectData(m_Config.getViconTrackingObjectName());
-                        const auto imuData = imu.getEulerAngles();
+                        const std::array<degree_t, 3> imuData = m_IMU.getEulerAngles();
                         m_Recorder->record(objectData.getPose(),
                                            m_Output,
                                            elapsed,
                                            objectData.getFrameNumber(),
-                                           imuData);
+                                           imuData[0].value(),
+                                           imuData[1].value(),
+                                           imuData[2].value());
                         
 #endif
                     } else {
@@ -464,7 +466,9 @@ private:
         fieldNames.emplace_back("Frame");
 
         // Also log the imu data
-        fieldNames.emplace_back("IMU [°]");
+        fieldNames.emplace_back("IMU yaw [degrees]");
+        fieldNames.emplace_back("IMU pitch [degrees]");
+        fieldNames.emplace_back("IMU roll [degrees]");
         
         // Record as video file or images according to user's preference
         if (m_Config.shouldRecordVideo()) {
@@ -548,12 +552,13 @@ private:
 #ifdef USE_VICON
     // Vicon tracking interface
     Vicon::UDPClient<Vicon::ObjectData> m_ViconTracking;
-    BN005 imu;
+    
 
     // Vicon capture control interface
     Vicon::CaptureControl m_ViconCaptureControl;
 #endif
-
+    m_IMU = std::make_unique<BN055>();
+    
     // For training data
     ImageDatabase m_TrainDatabase;
 
