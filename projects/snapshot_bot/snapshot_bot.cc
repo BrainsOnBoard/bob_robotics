@@ -152,9 +152,10 @@ public:
             throw std::runtime_error("You must rebuild with -DUSE_VICON=ON");
 #endif
         }
-if (m_Config.shouldUseIMU()){
-    m_IMU = std::make_unique<BN055>();
-}
+
+        if (m_Config.shouldUseIMU()){
+            m_IMU = std::make_unique<BN055>();
+        }
 
         // If we should train
         if(m_Config.shouldTrain()) {
