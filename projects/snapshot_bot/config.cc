@@ -75,6 +75,7 @@ Config::Config()
   , m_ViconTrackingObjectName("norbot")
   , m_UseViconCaptureControl(false)
   , m_ViconCaptureControlPort(0)
+  , m_UseIMU(false)
 {}
 
 std::pair<float, Milliseconds>
@@ -109,8 +110,10 @@ Config::read(const cv::FileNode &node)
         cv::read(node["shouldUseWebcam"], m_Webcam, m_Webcam);
         cv::read(node["shouldDriveRobot"], m_DriveRobot, m_DriveRobot);
         cv::read(node["shouldRecordVideo"], m_RecordVideo, m_RecordVideo);
+        cv::read(node["shouldUseIMU"], m_UseIMU, m_UseIMU);
         cv::read(node["videoCodec"], m_VideoCodec, m_VideoCodec);
         cv::read(node["videoFileExtension"], m_VideoFileExtension, m_VideoFileExtension);
+
 
         // Assert that configuration is valid
         BOB_ASSERT(!m_UseBinaryImage || !m_UseHorizonVector);
@@ -226,6 +229,7 @@ Config::write(cv::FileStorage &fs) const
     fs << "shouldUseODK2" << shouldUseODK2();
     fs << "shouldUseWebcam" << shouldUseWebcam();
     fs << "shouldDriveRobot" << shouldDriveRobot();
+    fs << "shouldUseIMU" << shouldUseIMU();
     fs << "outputPath" << getOutputPath().str();
     fs << "shouldRecordVideo" << shouldRecordVideo();
     fs << "videoCodec" << getVideoCodec();
