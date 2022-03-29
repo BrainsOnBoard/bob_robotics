@@ -199,8 +199,8 @@ public:
 
     static std::pair<Eigen::MatrixXf, unsigned>
     generateInitialWeights(const cv::Size &size,
-                           optional<int> numHidden = nullopt,
-                           optional<unsigned> seedArg = nullopt)
+                           const optional<int> &numHidden = nullopt,
+                           const optional<unsigned> &seedArg = nullopt)
     {
         const auto seed = seedArg ? seedArg.value() : std::random_device()();
         const auto numInput = size.width * size.height;
