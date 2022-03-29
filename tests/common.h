@@ -1,5 +1,7 @@
 #pragma once
 
+#include "data_path.h"
+
 // BoB robotics includes
 #include "common/path.h"
 
@@ -43,9 +45,4 @@ void compareFloatMatrices(const T &m1, const U &m2, float precision)
         EXPECT_NEAR(a, b, precision);
     };
     compareFloatMatricesPredicate(m1, m2, near);
-}
-
-inline auto getTestsPath()
-{
-    return BoBRobotics::Path::getRepoPath() / "tests";
 }

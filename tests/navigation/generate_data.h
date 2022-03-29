@@ -3,9 +3,9 @@
 #include "generate_images.h"
 
 // BoB robotics includes
-#include "common/path.h"
 #include "common/serialise_matrix.h"
 #include "imgproc/mask.h"
+#include "tests/data_path.h"
 
 // Standard C++ includes
 #include <string>
@@ -21,15 +21,14 @@ generateDataRaw(const std::string &filename, ImgProc::Mask mask, Window window,
                 Ts&&... args)
 {
     Algo algo{ TestImageSize, std::forward<Ts>(args)... };
-    algo.setMask(std::move(mask));
     for (const auto &image : TestImages) {
-        algo.train(image);
+        algo.train(image, mask);
     }
 
     if (window == Window{}) {
         window = algo.getFullWindow();
     }
-    const auto &differences = algo.getImageDifferences(window, TestImages[0]);
+    const auto &differences = algo.getImageDifferences(TestImages[0], mask, window);
     static_assert(std::is_same<const float &, const decltype(differences[0]) &>::value,
                   "Must return floats");
     writeMatrix(getTestsPath() / filename, differences);

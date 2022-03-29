@@ -13,7 +13,7 @@ const auto InitialWeights = InfoMax<>::generateInitialWeights(TestImageSize.widt
 
 TEST(InfoMax, SampleImage)
 {
-    const auto filepath = getTestsPath() / "navigation" / "infomax.bin";
+    const auto filepath = getTestsPath() / "infomax.bin";
     const auto trueDifferences = readMatrix<float>(filepath);
 
     InfoMaxTest algo{ TestImageSize };
@@ -21,7 +21,7 @@ TEST(InfoMax, SampleImage)
         algo.train(image);
     }
 
-    const auto &differences = algo.getImageDifferences(TestImages[0]);
+    const auto differences = algo.getImageDifferences(TestImages[0]);
 
     /*
      * We have reduced precision here as there does seem to be substantial
