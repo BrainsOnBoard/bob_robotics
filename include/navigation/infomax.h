@@ -29,8 +29,19 @@
 namespace BoBRobotics {
 namespace Navigation {
 class WeightsBlewUpError
-  : std::exception
-{};
+  : std::runtime_error
+{
+public:
+    WeightsBlewUpError()
+      : std::runtime_error("InfoMax net's weights blew up")
+    {}
+};
+
+enum class Normalisation
+{
+    None,
+    ZScore
+};
 
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::InfoMax
@@ -42,21 +53,30 @@ class InfoMax
     using VectorType = Eigen::Matrix<FloatType, Eigen::Dynamic, 1>;
 
 public:
+    static constexpr FloatType DefaultLearningRate{ 0.01 };
+    static constexpr FloatType DefaultTanhScalingFactor{ 0.1 };
+
     InfoMax(const cv::Size &unwrapRes,
-            const MatrixType &initialWeights,
-            FloatType learningRate = 0.0001)
+            FloatType learningRate,
+            FloatType tanhScalingFactor,
+            Normalisation normalisation,
+            MatrixType initialWeights)
       : m_UnwrapRes(unwrapRes)
       , m_LearningRate(learningRate)
-      , m_Weights(initialWeights)
+      , m_TanhScalingFactor(tanhScalingFactor)
+      , m_Normalisation(normalisation)
+      , m_Weights(std::move(initialWeights))
     {
-        BOB_ASSERT(initialWeights.cols() == unwrapRes.width * unwrapRes.height);
+        BOB_ASSERT(m_Weights.cols() == unwrapRes.width * unwrapRes.height);
     }
 
-    InfoMax(const cv::Size &unwrapRes, FloatType learningRate = 0.0001)
-      : InfoMax(unwrapRes,
+    InfoMax(const cv::Size &unwrapRes,
+            FloatType learningRate = DefaultLearningRate,
+            FloatType tanhScalingFactor = DefaultTanhScalingFactor,
+            Normalisation normalisation = Normalisation::None)
+      : InfoMax(unwrapRes, learningRate, tanhScalingFactor, normalisation,
                 generateInitialWeights(unwrapRes.width * unwrapRes.height,
-                                       unwrapRes.width * unwrapRes.height),
-                learningRate)
+                                       unwrapRes.width * unwrapRes.height))
     {}
 
     //------------------------------------------------------------------------
@@ -70,7 +90,7 @@ public:
 
     float test(const cv::Mat &image, const ImgProc::Mask& = ImgProc::Mask{}) const
     {
-        const auto decs = m_Weights * getFloatVector(image);
+        const auto decs = m_Weights * getNetInputs(image);
         return decs.array().abs().sum();
     }
 
@@ -147,7 +167,7 @@ public:
         BOB_ASSERT(image.rows == unwrapRes.height);
 
         // Convert image to vector of floats
-        m_U = m_Weights * getFloatVector(image);
+        m_U = m_Weights * getNetInputs(image) * m_TanhScalingFactor;
         m_Y = tanh(m_U.array());
     }
 
@@ -159,17 +179,38 @@ public:
 
 private:
     const cv::Size m_UnwrapRes;
-    size_t m_SnapshotCount = 0;
-    FloatType m_LearningRate;
+    const FloatType m_LearningRate, m_TanhScalingFactor;
+    const Normalisation m_Normalisation;
     MatrixType m_Weights;
     VectorType m_U, m_Y;
 
-    static auto getFloatVector(const cv::Mat &image)
+    template<class T>
+    static auto toZScore(const T &vec)
     {
-        Eigen::Map<Eigen::Matrix<uint8_t, Eigen::Dynamic, 1>> map(image.data, image.cols * image.rows);
-        return map.cast<FloatType>() / 255.0;
+        const FloatType mean = vec.mean();
+
+        const auto vNorm = vec.array() - mean;
+        const FloatType sd = std::sqrt((vNorm * vNorm).mean());
+        return vNorm / sd;
     }
 
+    //! Converts image to VectorType and normalises
+    VectorType getNetInputs(const cv::Mat &image) const
+    {
+        Eigen::Map<Eigen::Matrix<uint8_t, Eigen::Dynamic, 1>> map(image.data, image.cols * image.rows);
+        const auto vec = map.cast<FloatType>();
+
+        switch (m_Normalisation) {
+        case Normalisation::None:
+            return vec / 255.0;
+        case Normalisation::ZScore:
+            return toZScore(vec);
+        default:
+            throw std::runtime_error{ "Invalid normalisation method" };
+        }
+    }
+
+    //! NB: This only works if mat's column means are zero!
     template<class T>
     static auto matrixSD(const T &mat)
     {
@@ -183,17 +224,12 @@ private:
 template<typename FloatType = float>
 class InfoMaxRotater : public InfoMax<FloatType>
 {
+public:
     using MatrixType = Eigen::Matrix<FloatType, Eigen::Dynamic, Eigen::Dynamic>;
 
-public:
-    InfoMaxRotater(const cv::Size &unwrapRes,
-                   const MatrixType &initialWeights,
-                   FloatType learningRate = 0.0001)
-    :   InfoMax<FloatType>(unwrapRes, initialWeights, learningRate)
-    {}
-
-    InfoMaxRotater(const cv::Size &unwrapRes, FloatType learningRate = 0.0001)
-    :   InfoMax<FloatType>(unwrapRes, learningRate)
+    template<class... Ts>
+    InfoMaxRotater(Ts&&... args)
+      : InfoMax<FloatType>(std::forward<Ts>(args)...)
     {}
 
     //------------------------------------------------------------------------
@@ -265,5 +301,11 @@ private:
     //------------------------------------------------------------------------
     mutable std::vector<FloatType> m_RotatedDifferences;
 };
+
+template<class T>
+constexpr T InfoMax<T>::DefaultLearningRate;
+
+template<class T>
+constexpr T InfoMax<T>::DefaultTanhScalingFactor;
 } // Navigation
 } // BoBRobotics
