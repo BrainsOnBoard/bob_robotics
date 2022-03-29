@@ -10,6 +10,7 @@
 #include "common/progress_bar.h"
 #include "common/stopwatch.h"
 #include "common/timer.h"
+#include "common/bn055_imu.h"
 #include "hid/joystick.h"
 #include "hid/robot_control.h"
 #include "imgproc/opencv_unwrap_360.h"
@@ -152,6 +153,10 @@ public:
 #endif
         }
 
+        if (m_Config.shouldUseIMU()){
+            m_IMU = std::make_unique<BN055>();
+        }
+
         // If we should train
         if(m_Config.shouldTrain()) {
             // Start in training state
@@ -164,6 +169,7 @@ public:
             // Start directly in testing state
             m_StateMachine.transition(State::WaitToTest);
         }
+
     }
 
     //------------------------------------------------------------------------
@@ -200,7 +206,7 @@ private:
 
             // If we're in a suitable state, drive motors using joystick
             if(m_Robot && (state == State::WaitToTrain || state == State::Training || state == State::WaitToTest)) {
-                HID::drive(*m_Robot, m_Joystick, m_Config.getJoystickDeadzone());
+                HID::drive(*m_Robot, m_Joystick, m_Config.getJoystickDeadzone(), m_Config.getJoystickGain());
             }
 
             // Capture frame
@@ -259,20 +265,42 @@ private:
                     }
 
                     const double elapsed = static_cast<millisecond_t>(m_RecordingStopwatch.elapsed()).value();
-
                     // If Vicon tracking is available
                     if(m_Config.shouldUseViconTracking()) {
 #ifdef USE_VICON
+
                         // Get tracking data
                         const auto objectData = m_ViconTracking.getObjectData(m_Config.getViconTrackingObjectName());
-                        m_Recorder->record(objectData.getPose(),
+                        if (m_Config.shouldUseIMU()) {
+                            const std::array<degree_t, 3> imuData = m_IMU->getEulerAngles();
+                            m_Recorder->record(objectData.getPose(),
+                                               m_Output,
+                                               elapsed,
+                                               objectData.getFrameNumber(),
+                                               imuData[0].value(),
+                                               imuData[1].value(),
+                                               imuData[2].value());
+                        } else {
+                            m_Recorder->record(objectData.getPose(),
+                                               m_Output,
+                                               elapsed,
+                                               objectData.getFrameNumber());
+                        }
+#endif
+                    } else if (m_Config.shouldUseIMU()) {
+                        const std::array<degree_t, 3> imuData = m_IMU->getEulerAngles();
+                        m_Recorder->record(Pose3<millimeter_t, degree_t>::nan(),
                                            m_Output,
                                            elapsed,
-                                           objectData.getFrameNumber());
-#endif
+                                           -1,
+                                           imuData[0].value(),
+                                           imuData[1].value(),
+                                           imuData[2].value());
                     } else {
                         m_Recorder->record(Pose3<millimeter_t, degree_t>::nan(),
-                                           m_Output, elapsed, -1);
+                                           m_Output,
+                                           elapsed,
+                                           -1);
                     }
                 }
 
@@ -459,6 +487,11 @@ private:
         // Also log Vicon frame number, if present
         fieldNames.emplace_back("Frame");
 
+        // Also log the imu data
+        fieldNames.emplace_back("IMU yaw [degrees]");
+        fieldNames.emplace_back("IMU pitch [degrees]");
+        fieldNames.emplace_back("IMU roll [degrees]");
+
         // Record as video file or images according to user's preference
         if (m_Config.shouldRecordVideo()) {
             /*
@@ -470,7 +503,6 @@ private:
                 const auto period = m_Config.getTrainInterval();
                 if (period == Milliseconds(0)) {
                     fps = m_Camera->getFrameRate();
-                    LOGI << fps;
                 } else {
                     fps = 1 / units::time::second_t{ period };
                     if (fps > m_Camera->getFrameRate()) {
@@ -539,13 +571,18 @@ private:
     // Index of test image to write
     size_t m_TestImageIndex;
 
+    // IMU device
+    std::unique_ptr<BN055> m_IMU;
+
 #ifdef USE_VICON
     // Vicon tracking interface
     Vicon::UDPClient<Vicon::ObjectData> m_ViconTracking;
 
+
     // Vicon capture control interface
     Vicon::CaptureControl m_ViconCaptureControl;
 #endif
+
 
     // For training data
     ImageDatabase m_TrainDatabase;

@@ -653,7 +653,7 @@ ImageDatabase::getName() const
 cv::Size
 ImageDatabase::getResolution() const
 {
-    BOB_ASSERT(!m_Resolution.empty());
+    BOB_ASSERT(m_Resolution != cv::Size());
     return m_Resolution;
 }
 

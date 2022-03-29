@@ -59,6 +59,7 @@ Config::Config()
   , m_CroppedRect(0, 0, 180, 50)
   , m_WatershedMarkerImageFilename("segmentation.png")
   , m_JoystickDeadzone(0.25f)
+  , m_JoystickGain(1.f)
   , m_AutoTrain(true)
   , m_TrainInterval(0.0)
   , m_MotorCommandInterval(500.0)
@@ -74,6 +75,7 @@ Config::Config()
   , m_ViconTrackingObjectName("norbot")
   , m_UseViconCaptureControl(false)
   , m_ViconCaptureControlPort(0)
+  , m_UseIMU(false)
 {}
 
 std::pair<float, Milliseconds>
@@ -108,8 +110,10 @@ Config::read(const cv::FileNode &node)
         cv::read(node["shouldUseWebcam"], m_Webcam, m_Webcam);
         cv::read(node["shouldDriveRobot"], m_DriveRobot, m_DriveRobot);
         cv::read(node["shouldRecordVideo"], m_RecordVideo, m_RecordVideo);
+        cv::read(node["shouldUseIMU"], m_UseIMU, m_UseIMU);
         cv::read(node["videoCodec"], m_VideoCodec, m_VideoCodec);
         cv::read(node["videoFileExtension"], m_VideoFileExtension, m_VideoFileExtension);
+
 
         // Assert that configuration is valid
         BOB_ASSERT(!m_UseBinaryImage || !m_UseHorizonVector);
@@ -143,6 +147,7 @@ Config::read(const cv::FileNode &node)
         m_WatershedMarkerImageFilename = (std::string)watershedMarkerImageFilename;
 
         cv::read(node["joystickDeadzone"], m_JoystickDeadzone, m_JoystickDeadzone);
+        cv::read(node["joystickGain"], m_JoystickGain, m_JoystickGain);
         cv::read(node["serverListenPort"], m_ServerListenPort, m_ServerListenPort);
         cv::read(node["snapshotServerListenPort"], m_SnapshotServerListenPort, m_SnapshotServerListenPort);
         cv::read(node["bestSnapshotServerListenPort"], m_BestSnapshotServerListenPort, m_BestSnapshotServerListenPort);
@@ -224,6 +229,7 @@ Config::write(cv::FileStorage &fs) const
     fs << "shouldUseODK2" << shouldUseODK2();
     fs << "shouldUseWebcam" << shouldUseWebcam();
     fs << "shouldDriveRobot" << shouldDriveRobot();
+    fs << "shouldUseIMU" << shouldUseIMU();
     fs << "outputPath" << getOutputPath().str();
     fs << "shouldRecordVideo" << shouldRecordVideo();
     fs << "videoCodec" << getVideoCodec();
@@ -239,6 +245,7 @@ Config::write(cv::FileStorage &fs) const
     fs << "maskImageFilename" << getMaskImageFilename();
     fs << "watershedMarkerImageFilename" << getWatershedMarkerImageFilename();
     fs << "joystickDeadzone" << getJoystickDeadzone();
+    fs << "joystickGain" << getJoystickGain();
     fs << "autoTrain" << shouldAutoTrain();
     fs << "trainInterval" << getTrainInterval().count();
     fs << "testFrameSkip" << getIntegerSize(getSkipFrames());

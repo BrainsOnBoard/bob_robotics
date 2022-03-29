@@ -55,12 +55,6 @@ TEST(PerfectMemory, SampleImageCCoeffWindow)
     testCCoeff("window_pm_ccoeff.bin", {}, { 0, 10 });
 }
 
-/*
- * There seems to be a bug meaning that non-empty image masks break
- * cv::matchTemplate() when the cv::TM_CCOEFF_NORMED method is used for versions
- * of OpenCV < 4.5.2. Just disable the tests in this case.
- */
-#ifdef BOB_OPENCV_SUPPORTS_CCOEFF_MASKS
 TEST(PerfectMemory, SampleImageCCoeffMask)
 {
     testCCoeff("mask_pm_ccoeff.bin", TestMask, {});
@@ -70,13 +64,6 @@ TEST(PerfectMemory, SampleImageCCoeffWindowMask)
 {
     testCCoeff("window_mask_pm_ccoeff.bin", TestMask, { 0, 10 });
 }
-#else
-TEST(PerfectMemory, DISABLED_SampleImageCCoeffMask)
-{}
-
-TEST(PerfectMemory, DISABLED_SampleImageCCoeffMaskWindow)
-{}
-#endif
 
 template<class Store>
 void

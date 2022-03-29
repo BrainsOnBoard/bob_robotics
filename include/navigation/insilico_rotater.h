@@ -50,7 +50,7 @@ struct InSilicoRotater
             BOB_ASSERT(image.isContinuous());
             BOB_ASSERT(beginRoll < endRoll);
             BOB_ASSERT((distance(endRoll, beginRoll) % scanStep) == 0);
-      }
+        }
 
         template<class Func>
         void rotate(Func func) const
@@ -65,7 +65,7 @@ struct InSilicoRotater
                         func(m_ScratchImage, m_ScratchMask, i);
                     }
                 });
-       }
+        }
 
         units::angle::radian_t columnToHeading(size_t column) const
         {

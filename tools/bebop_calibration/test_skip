@@ -1,0 +1,1 @@
+Skip building Bebop example as it currently fails due to: https://github.com/BrainsOnBoard/bob_robotics/issues/320

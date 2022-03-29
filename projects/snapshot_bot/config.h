@@ -58,6 +58,7 @@ public:
     const std::string &getWatershedMarkerImageFilename() const{ return m_WatershedMarkerImageFilename; }
 
     float getJoystickDeadzone() const{ return m_JoystickDeadzone; }
+    float getJoystickGain() const{ return m_JoystickGain; }
 
     bool shouldAutoTrain() const{ return m_AutoTrain; }
     Milliseconds getTrainInterval() const{ return m_TrainInterval; }
@@ -74,6 +75,8 @@ public:
     const std::string &getViconCaptureControlHost() const{ return m_ViconCaptureControlHost; }
     int getViconCaptureControlPort() const { return m_ViconCaptureControlPort; }
     const std::string &getViconCaptureControlPath() const{ return m_ViconCaptureControlPath; }
+
+    bool shouldUseIMU() const {return m_UseIMU; }
 
     int getServerListenPort() const{ return m_ServerListenPort; }
     int getSnapshotServerListenPort() const{ return m_SnapshotServerListenPort; }
@@ -155,6 +158,9 @@ private:
     // How large should the deadzone be on the analogue joystick?
     float m_JoystickDeadzone;
 
+    // Value to multiply joystick axis values by when driving robot
+    float m_JoystickGain;
+
     // Should we train automatically every train interval
     bool m_AutoTrain;
 
@@ -189,6 +195,9 @@ private:
     std::string m_ViconCaptureControlHost;
     int m_ViconCaptureControlPort;
     std::string m_ViconCaptureControlPath;
+
+    // IMU capture settings
+    bool m_UseIMU;
 };
 
 static inline void write(cv::FileStorage &fs, const std::string&, const Config &config)
