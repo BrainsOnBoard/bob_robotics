@@ -3,9 +3,9 @@
 #include "generate_images.h"
 
 // BoB robotics includes
-#include "common/path.h"
 #include "common/serialise_matrix.h"
 #include "imgproc/mask.h"
+#include "tests/data_path.h"
 
 // Standard C++ includes
 #include <string>
