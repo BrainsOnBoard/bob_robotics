@@ -21,7 +21,7 @@ TEST(InfoMax, SampleImage)
         algo.train(image);
     }
 
-    const auto &differences = algo.getImageDifferences(TestImages[0]);
+    const auto differences = algo.getImageDifferences(TestImages[0]);
 
     /*
      * We have reduced precision here as there does seem to be substantial
