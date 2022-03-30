@@ -50,6 +50,7 @@ struct _interpreter {
     PyObject *s_python_function_fill_between;
     PyObject *s_python_function_hist;
     PyObject *s_python_function_imshow;
+    PyObject *s_python_function_colorbar;
     PyObject *s_python_function_subplot;
     PyObject *s_python_function_legend;
     PyObject *s_python_function_xlim;
@@ -158,6 +159,7 @@ private:
 #ifndef WITHOUT_NUMPY
         s_python_function_imshow = PyObject_GetAttrString(pymod, "imshow");
 #endif
+        s_python_function_colorbar = PyObject_GetAttrString(pymod, "colorbar");
         s_python_function_subplot = PyObject_GetAttrString(pymod, "subplot");
         s_python_function_legend = PyObject_GetAttrString(pymod, "legend");
         s_python_function_ylim = PyObject_GetAttrString(pymod, "ylim");
@@ -201,6 +203,7 @@ private:
 #ifndef WITHOUT_NUMPY
             || !s_python_function_imshow
 #endif
+            || !s_python_function_colorbar
             || !s_python_function_grid
             || !s_python_function_xlim
             || !s_python_function_ion
@@ -234,6 +237,7 @@ private:
 #ifndef WITHOUT_NUMPY
             || !PyFunction_Check(s_python_function_imshow)
 #endif
+            || !PyFunction_Check(s_python_function_colorbar)
             || !PyFunction_Check(s_python_function_title)
             || !PyFunction_Check(s_python_function_axis)
             || !PyFunction_Check(s_python_function_xlabel)
@@ -532,6 +536,18 @@ bool hist(const std::vector<Numeric>& y, long bins=10,std::string color="b", dou
     }
 #endif
 #endif
+
+bool colorbar()
+{
+    PyObject *args = PyTuple_New(0);
+    PyObject *res = PyObject_Call(detail::_interpreter::get().s_python_function_colorbar, args, nullptr);
+
+    Py_DECREF(args);
+    if (res)
+        Py_DECREF(res);
+
+    return res;
+}
 
 template< typename Numeric>
 bool named_hist(std::string label,const std::vector<Numeric>& y, long bins=10, std::string color="b", double alpha=1.0)
