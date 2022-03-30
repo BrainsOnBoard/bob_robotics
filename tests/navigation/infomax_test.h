@@ -3,6 +3,8 @@
 
 namespace BoBRobotics {
 namespace Navigation {
+constexpr size_t NumTrainStepsToTest = 1;
+
 class InfoMaxTest
   : public InfoMaxRotater<> {
 public:
@@ -16,7 +18,7 @@ public:
     {}
 
     template<class... Ts>
-    auto getImageDifferences(Ts&&... args) const
+    const auto getImageDifferences(Ts&&... args) const
     {
         const auto &diffs = InfoMaxRotater<>::getImageDifferences(std::forward<Ts>(args)...);
 
