@@ -176,7 +176,7 @@ public:
         return std::make_pair<>(m_U, m_Y);
     }
 
-    auto getNetOutputs(const cv::Mat &image) const
+    VectorType getNetOutputs(const cv::Mat &image) const
     {
         return m_Weights * getNetInputs(image);
     }
