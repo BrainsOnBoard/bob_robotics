@@ -204,6 +204,8 @@ public:
 
             // Get current date and time
             const auto &creationTime = imageDatabase.getCreationTime();
+            LOGW_IF(creationTime.tm_year < 122) << "Creation time of database is before 2022. If you want decent metadata you should fix your clock.";
+
             std::stringstream ss;
             ss << std::setfill('0')
                << std::setw(4) << (creationTime.tm_year + 1900) << "-"
