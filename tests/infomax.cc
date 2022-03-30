@@ -26,6 +26,25 @@ TEST(InfoMax, Training)
     }
 }
 
+TEST(InfoMax, Decision)
+{
+    const auto filepath = getTestsPath() / "infomax_decision.bin";
+    const auto trueOutputs = readMatrix<float>(filepath);
+
+    InfoMaxTest algo{ TestImageSize };
+    for (const auto &image : TestImages) {
+        algo.train(image);
+    }
+
+    const auto netOutputs = algo.getNetOutputs(TestImages[0]);
+
+    /*
+     * We have reduced precision here as there does seem to be substantial
+     * variation between machines.
+     */
+    compareFloatMatrices(netOutputs, trueOutputs);
+}
+
 TEST(InfoMax, SampleImage)
 {
     const auto filepath = getTestsPath() / "infomax.bin";

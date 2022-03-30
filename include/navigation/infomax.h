@@ -49,10 +49,10 @@ enum class Normalisation
 template<typename FloatType = float>
 class InfoMax
 {
+public:
     using MatrixType = Eigen::Matrix<FloatType, Eigen::Dynamic, Eigen::Dynamic>;
     using VectorType = Eigen::Matrix<FloatType, Eigen::Dynamic, 1>;
 
-public:
     static constexpr FloatType DefaultLearningRate{ 0.01 };
     static constexpr FloatType DefaultTanhScalingFactor{ 0.1 };
 
@@ -90,8 +90,7 @@ public:
 
     float test(const cv::Mat &image, const ImgProc::Mask& = ImgProc::Mask{}) const
     {
-        const auto decs = m_Weights * getNetInputs(image);
-        return decs.array().abs().sum();
+        return getNetOutputs(image).array().abs().sum();
     }
 
     //! Generates new random weights
@@ -175,6 +174,11 @@ public:
     {
         // Copy the vectors
         return std::make_pair<>(m_U, m_Y);
+    }
+
+    auto getNetOutputs(const cv::Mat &image) const
+    {
+        return m_Weights * getNetInputs(image);
     }
 
 private:

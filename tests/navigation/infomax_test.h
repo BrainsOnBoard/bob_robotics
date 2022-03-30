@@ -1,4 +1,5 @@
 // BoB robotics includes
+#define EXPOSE_INFOMAX_INTERNALS
 #include "navigation/infomax.h"
 
 namespace BoBRobotics {
