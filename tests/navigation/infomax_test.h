@@ -3,6 +3,8 @@
 
 namespace BoBRobotics {
 namespace Navigation {
+constexpr size_t NumTrainStepsToTest = 1;
+
 class InfoMaxTest
   : public InfoMaxRotater<> {
 public:

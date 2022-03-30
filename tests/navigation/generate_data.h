@@ -29,7 +29,7 @@ generateDataRaw(const std::string &filename, ImgProc::Mask mask, Window window,
         window = algo.getFullWindow();
     }
     const auto &differences = algo.getImageDifferences(TestImages[0], mask, window);
-    static_assert(std::is_same<const float &, const decltype(differences[0]) &>::value,
+    static_assert(std::is_same<float, std::remove_const_t<std::remove_reference_t<decltype(differences[0])>>>::value,
                   "Must return floats");
     writeMatrix(getTestsPath() / filename, differences);
 }
