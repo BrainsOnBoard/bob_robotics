@@ -17,7 +17,7 @@ generateData(const std::string &filename)
     }
 
     const auto &differences = algo.getImageDifferences(TestImages[0]);
-    static_assert(std::is_same<const float &, const decltype(differences[0]) &>::value,
+    static_assert(std::is_same<float, std::remove_const_t<std::remove_reference_t<decltype(differences[0])>>>::value,
                   "Must return floats");
     writeMatrix(getTestsPath() / filename, differences);
 }
