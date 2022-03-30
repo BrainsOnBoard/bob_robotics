@@ -119,7 +119,7 @@ Config::read(const cv::FileNode &node)
         cv::String outputPath;
         cv::read(node["outputPath"], outputPath, m_OutputPath.str());
         if (outputPath.empty()) {
-            m_OutputPath = filesystem::getcwd() / "training";
+            m_OutputPath = filesystem::path::getcwd() / "training";
         } else {
             m_OutputPath = (std::string)outputPath;
         }
