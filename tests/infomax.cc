@@ -11,9 +11,24 @@ using namespace BoBRobotics::Navigation;
 
 const auto InitialWeights = InfoMax<>::generateInitialWeights(TestImageSize.width * TestImageSize.height, 100, /*seed=*/42);
 
+auto getExpectedWeights(size_t trainStep)
+{
+    const auto filePath = getTestsPath() / ("infomax_train" + std::to_string(trainStep) + ".bin");
+    return readMatrix<float>(filePath);
+}
+
+TEST(InfoMax, Training)
+{
+    InfoMaxTest algo{ TestImageSize };
+    for (size_t i = 0; i < NumTrainStepsToTest; i++) {
+        algo.train(TestImages[i]);
+        compareFloatMatrices(algo.getWeights(), getExpectedWeights(i));
+    }
+}
+
 TEST(InfoMax, SampleImage)
 {
-    const auto filepath = getTestsPath() / "navigation" / "infomax.bin";
+    const auto filepath = getTestsPath() / "infomax.bin";
     const auto trueDifferences = readMatrix<float>(filepath);
 
     InfoMaxTest algo{ TestImageSize };
@@ -21,7 +36,7 @@ TEST(InfoMax, SampleImage)
         algo.train(image);
     }
 
-    const auto &differences = algo.getImageDifferences(TestImages[0]);
+    const auto differences = algo.getImageDifferences(TestImages[0]);
 
     /*
      * We have reduced precision here as there does seem to be substantial
