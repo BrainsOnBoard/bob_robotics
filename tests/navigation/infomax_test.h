@@ -10,8 +10,7 @@ class InfoMaxTest
   : public InfoMaxRotater<> {
 public:
     InfoMaxTest(const cv::Size &unwrapRes)
-      : InfoMaxRotater<>{ unwrapRes, InfoMaxRotater<>::DefaultLearningRate,
-                          InfoMaxRotater<>::DefaultTanhScalingFactor,
+      : InfoMaxRotater<>{ unwrapRes, 0.0001f, 1.f,
                           Normalisation::None,
                           generateInitialWeights(unwrapRes.width * unwrapRes.height,
                                                  unwrapRes.width * unwrapRes.height + 1,
