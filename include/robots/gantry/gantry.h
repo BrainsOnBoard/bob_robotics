@@ -70,6 +70,14 @@ public:
         close();
     }
 
+    //! Checks if either of the emergency buttons are pressed and, if so, throws an error
+    void checkEmergencyButton() const
+    {
+        if (isEmergencyButtonPressed()) {
+            throw std::runtime_error("Gantry error: Emergency button is pressed");
+        }
+    }
+
     /**!
      * \brief Returns the gantry to its home position, raising the gantry head first
      *
@@ -143,8 +151,8 @@ public:
              * values are zero). This value seems to vary sensibly over the course of movements, but it's not clear
              * how to use this value to get x, y, z values.
              */
-            DWORD h_xy_z = 0;
-            checkError(P1240MotRdMultiReg(m_BoardId, XYZ_Axis, CurV, &h_xy_z, &pulseRate[1], &pulseRate[2], nullptr), "Error reading velocity");
+            DWORD h_xy_z;
+            checkError(P1240MotRdReg(m_BoardId, X_Axis, CurV, &h_xy_z), "Error reading velocity");
             std::array<double, 2> angles = calcMoveAngles();
             pulseRate[2] = (DWORD) round((double) h_xy_z * sin(angles[1]));
             DWORD h_x_y = (DWORD) round((double) h_xy_z * cos(angles[1]));
@@ -414,7 +422,7 @@ public:
         P1240MotStop(m_BoardId, XYZ_Axis, XYZ_Axis);
 
         LOGD << "Final position: " << targetDist[0] << " " << targetDist[1]
-             << " " << targetDist[2] << "\n";
+             << " " << targetDist[2];
 
         setPosition(targetDist[0], targetDist[1], targetDist[2]);
     }
@@ -596,14 +604,7 @@ private:
         P1240MotDevClose(m_BoardId);
     }
 
-    inline void checkEmergencyButton() const
-    {
-        if (isEmergencyButtonPressed()) {
-            throw std::runtime_error("Gantry error: Emergency button is pressed");
-        }
-    }
-
-    inline static void checkError(LRESULT res, const std::string &msg)
+    static void checkError(LRESULT res, const std::string &msg)
     {
         if (res) {
             throwError(res, msg);
@@ -611,7 +612,7 @@ private:
     }
 
     template<class T>
-    inline static void throwError(T res, const std::string &msg)
+    static void throwError(T res, const std::string &msg)
     {
         std::stringstream sstream;
         sstream << "Gantry error (0x" << std::hex << res << "): " << msg;
