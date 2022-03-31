@@ -22,7 +22,7 @@ TEST(InfoMax, Training)
     InfoMaxTest algo{ TestImageSize };
     for (size_t i = 0; i < NumTrainStepsToTest; i++) {
         algo.train(TestImages[i]);
-        compareFloatMatrices(algo.getWeights(), getExpectedWeights(i), 0.01f);
+        compareFloatMatrices(algo.getWeights(), getExpectedWeights(i), 0.001f);
     }
 }
 
@@ -42,7 +42,7 @@ TEST(InfoMax, Decision)
      * We have reduced precision here as there does seem to be substantial
      * variation between machines.
      */
-    compareFloatMatrices(netOutputs, trueOutputs, 0.05f);
+    compareFloatMatrices(netOutputs, trueOutputs, 0.001f);
 }
 
 TEST(InfoMax, SampleImage)
@@ -61,7 +61,7 @@ TEST(InfoMax, SampleImage)
      * We have reduced precision here as there does seem to be substantial
      * variation between machines.
      */
-    compareFloatMatrices(differences, trueDifferences, 0.1f);
+    compareFloatMatrices(differences, trueDifferences, 0.005f);
 }
 
 // Check that the columns have means of approx 0 and SDs of approx 1
