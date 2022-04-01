@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "navigation/image_database.h"
 #include "os/keycodes.h"
-#include "robots/gantry.h"
+#include "robots/gantry/gantry.h"
 #include "video/display.h"
 #include "video/opencvinput.h"
 
