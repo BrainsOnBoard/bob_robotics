@@ -38,8 +38,11 @@ foreach(MODULE IN LISTS BoBThirdParty_FIND_COMPONENTS)
             message(WARNING "Checking out git submodule failed")
         endif()
 
-        # If this folder is a cmake project, then build it
-        if(EXISTS ${MODULE_PATH}/CMakeLists.txt)
+        # If this folder is a cmake project, then build it. We don't give the
+        # range-v3 library this treatment as it is a header-only library and
+        # building it just results in the headers being copied to the build
+        # directory.
+        if(EXISTS ${MODULE_PATH}/CMakeLists.txt AND NOT ${MODULE} STREQUAL range-v3)
             add_subdirectory(${MODULE_PATH} "${CMAKE_CURRENT_BINARY_DIR}/BoB/third_party/${MODULE}")
         endif()
     endif()
