@@ -15,7 +15,7 @@ find_package(PythonExtensions REQUIRED)
 find_package(NumPy REQUIRED)  # Not to be confused with our own FindNumpy.cmake!
 include_directories(${NumPy_INCLUDE_DIRS})
 
-pybind11_add_module(_navigation MODULE src/algos.cc src/navigation.cc)
+pybind11_add_module(_navigation MODULE src/algos.cc src/database.cc src/navigation.cc)
 install(TARGETS _navigation LIBRARY DESTINATION bob_robotics/navigation)
 target_link_libraries(_navigation PRIVATE ${BoBRobotics_LIBRARIES})
 
