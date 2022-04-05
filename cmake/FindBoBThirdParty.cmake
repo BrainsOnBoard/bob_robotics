@@ -30,7 +30,7 @@ foreach(MODULE IN LISTS BoBThirdParty_FIND_COMPONENTS)
 
         # Checkout git submodules under this path
         find_package(Git)
-        execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive third_party/${MODULE}
+        execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init third_party/${MODULE}
                         WORKING_DIRECTORY "${BOB_ROBOTICS_PATH}"
                         RESULT_VARIABLE RV
                         OUTPUT_VARIABLE SHELL_OUTPUT)
