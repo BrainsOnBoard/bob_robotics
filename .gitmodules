@@ -16,3 +16,6 @@
 [submodule "third_party/pybind"]
 	path = third_party/pybind11
 	url = https://github.com/pybind/pybind11
+[submodule "third_party/range-v3"]
+	path = third_party/range-v3
+	url = https://github.com/ericniebler/range-v3
