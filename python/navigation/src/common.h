@@ -66,6 +66,18 @@ struct type_caster<T, std::enable_if_t<units::traits::is_angle_unit<T>::value>>
     }
 };
 
+// Coerce all length-unit types into metres
+template<class T>
+struct type_caster<T, std::enable_if_t<units::traits::is_length_unit<T>::value>>
+{
+    PYBIND11_TYPE_CASTER(units::length::meter_t, _("metres"));
+
+    static handle cast(units::length::meter_t src, return_value_policy /* policy */, handle /* parent */)
+    {
+        return PyFloat_FromDouble(src.value());
+    }
+};
+
 template<>
 struct type_caster<cv::Mat>
 {
@@ -82,38 +94,19 @@ struct type_caster<BoBRobotics::Navigation::ImageDatabase::Entry>
 
     static handle cast(const BoBRobotics::Navigation::ImageDatabase::Entry &entry, return_value_policy /* policy */, handle /* parent */)
     {
-        using namespace units::angle;
-        using namespace units::length;
+        using namespace pybind11::literals;
 
-        auto *dict = PyDict_New();
-        BOB_ASSERT(dict);
+        const auto &p = entry.pose;
+        dict dict{ "x"_a = p.x(), "y"_a = p.y(), "z"_a = p.z(),
+                   "yaw"_a = p.yaw(), "pitch"_a = p.pitch(), "roll"_a = p.roll(),
+                   "filepath"_a = entry.path.str() };
 
-        auto setItem = [&dict](const char *key, PyObject *obj) {
-            BOB_ASSERT(PyDict_SetItem(dict, PyUnicode_FromString(key), obj) == 0);
-        };
-        auto setItemLen = [&](const char *key, meter_t length) {
-            setItem(key, PyFloat_FromDouble(length.value()));
-        };
-        auto setItemAng = [&](const char *key, radian_t angle) {
-            setItem(key, PyFloat_FromDouble(angle.value()));
-        };
-        auto setItemStr = [&](const char *key, const std::string &str) {
-            setItem(key,
-                    PyUnicode_FromStringAndSize(str.c_str(), str.size()));
-        };
-
-        setItemLen("x", entry.pose.x());
-        setItemLen("y", entry.pose.y());
-        setItemLen("z", entry.pose.z());
-        setItemAng("yaw", entry.pose.yaw());
-        setItemAng("pitch", entry.pose.pitch());
-        setItemAng("roll", entry.pose.roll());
-        setItemStr("filepath", entry.path.str());
+        // Add extra fields
         for (const auto &item : entry.extraFields) {
-            setItemStr(item.first.c_str(), item.second);
+            dict[item.first.c_str()] = item.second;
         }
 
-        return dict;
+        return dict.release();
     }
 };
 } // detail
