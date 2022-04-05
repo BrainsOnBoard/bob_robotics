@@ -78,6 +78,11 @@ type_caster<cv::Mat>::load(handle src, bool)
 handle
 type_caster<cv::Mat>::cast(const cv::Mat &m, return_value_policy, handle)
 {
+    // Handle empty matrices
+    if (m.empty()) {
+        return array().release();
+    }
+
     // TODO: Handle non-continuous matrices
     BOB_ASSERT(m.isContinuous());
 
