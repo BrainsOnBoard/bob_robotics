@@ -34,8 +34,8 @@ cvTypeToNumpy(int depth)
 py::capsule
 makeCapsule(cv::Mat m)
 {
-    return py::capsule(new cv::Mat(std::move(m)),
-                       [](void *v) { delete reinterpret_cast<cv::Mat *>(v); });
+    return { new cv::Mat(std::move(m)),
+             [](void *v) { delete reinterpret_cast<cv::Mat *>(v); } };
 }
 } // anonymous namespace
 
