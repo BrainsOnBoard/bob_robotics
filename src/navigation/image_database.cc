@@ -588,17 +588,17 @@ ImageDatabase::isVideoType() const
 
 //! Load all of the images in this database into memory and return
 std::vector<cv::Mat>
-ImageDatabase::loadImages(const cv::Size &size, size_t frameSkip,
+ImageDatabase::readImages(const cv::Size &size, size_t frameSkip,
                           bool greyscale) const
 {
     std::vector<cv::Mat> images;
-    loadImages(images, size, frameSkip, greyscale);
+    readImages(images, size, frameSkip, greyscale);
     return images;
 }
 
 //! Load all of the images in this database into the specified std::vector<>
 void
-ImageDatabase::loadImages(std::vector<cv::Mat> &images, const cv::Size &size,
+ImageDatabase::readImages(std::vector<cv::Mat> &images, const cv::Size &size,
                           size_t frameSkip, bool greyscale) const
 {
     size_t oldSize = images.size();

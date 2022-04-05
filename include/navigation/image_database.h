@@ -445,11 +445,11 @@ public:
     bool isGrid() const;
 
     //! Load all of the images in this database into memory and return
-    std::vector<cv::Mat> loadImages(const cv::Size &size = {}, size_t frameSkip = 1,
+    std::vector<cv::Mat> readImages(const cv::Size &size = {}, size_t frameSkip = 1,
                                     bool greyscale = true) const;
 
     //! Load all of the images in this database into the specified std::vector<>
-    void loadImages(std::vector<cv::Mat> &images, const cv::Size &size = {},
+    void readImages(std::vector<cv::Mat> &images, const cv::Size &size = {},
                     size_t frameSkip = 1, bool greyscale = true) const;
 
     //! Whether the database consists of panoramic images which need unwrapping

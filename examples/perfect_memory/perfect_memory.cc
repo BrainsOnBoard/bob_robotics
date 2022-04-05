@@ -37,7 +37,7 @@ int bobMain(int, char **)
     const Eigen::MatrixXf *allDifferences;
 
     const ImageDatabase imdb{ Path::getRepoPath() / "tools/ant_world_db_creator/ant1_route1" };
-    const auto snapshots = imdb.loadImages(imSize);
+    const auto snapshots = imdb.readImages(imSize);
     LOGI << "Loaded " << snapshots.size() << " snapshots";
 
     {

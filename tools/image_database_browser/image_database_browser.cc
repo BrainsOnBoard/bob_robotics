@@ -39,7 +39,7 @@ int bobMain(int argc, char **argv)
 
     // Load images
     std::cout << "Loading images..." << std::endl;
-    const auto images = database.loadImages({}, frameSkip, false);
+    const auto images = database.readImages({}, frameSkip, false);
 
     // Iterate through images with arrow keys
     cv::namedWindow(argv[0]);
