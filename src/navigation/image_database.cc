@@ -531,6 +531,12 @@ ImageDatabase::getPath() const
     return m_Path;
 }
 
+const std::vector<ImageDatabase::Entry> &
+ImageDatabase::getEntries() const
+{
+    return m_Entries;
+}
+
 //! Get one Entry from the database
 const ImageDatabase::Entry &
 ImageDatabase::operator[](size_t i) const

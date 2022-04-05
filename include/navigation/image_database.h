@@ -423,6 +423,8 @@ public:
     //! Get the path of the directory corresponding to this ImageDatabase
     const filesystem::path &getPath() const;
 
+    const std::vector<Entry> &getEntries() const;
+
     //! Get one Entry from the database
     const Entry &operator[](size_t i) const;
 
