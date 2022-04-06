@@ -13,6 +13,11 @@ def _apply_functions(im, funs):
         return im
     return funs(im)
 
+def _to_float(im):
+    # Normalise values
+    info = np.iinfo(im.dtype)
+    return im.astype(float) / info.max
+
 class Database(DatabaseInternal):
     def __init__(self, path):
         super().__init__(path)
@@ -32,8 +37,13 @@ class Database(DatabaseInternal):
         elem_dists = np.hypot(np.diff(self.x), np.diff(self.y))
         self.distance = np.nancumsum([0, *elem_dists])
 
-    def read_images(self, entries=None, preprocess=None, greyscale=True):
+    def read_images(self, entries=None, preprocess=None, to_float=True,
+                    greyscale=True):
         images = super().read_images(entries, greyscale)
+
+        if to_float:
+            # Convert all the images to floats before we use them
+            preprocess = (preprocess, _to_float)
 
         if not preprocess:
             return images
