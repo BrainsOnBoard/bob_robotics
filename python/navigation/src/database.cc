@@ -8,6 +8,13 @@ using namespace py::literals;
 using namespace ranges;
 
 namespace {
+auto
+toIntRange(const py::iterable &iterable)
+{
+    const auto toInt = [](const py::handle &handle) { return handle.cast<int>(); };
+    return views::transform(iterable, toInt);
+}
+
 std::vector<cv::Mat>
 readImages(const BoBRobotics::Navigation::ImageDatabase &db,
            const std::experimental::optional<py::iterable> &entries,
@@ -30,13 +37,17 @@ readImages(const BoBRobotics::Navigation::ImageDatabase &db,
         images.resize(py::len(entries.value()));
 
         // Convert Python iterable into range of ints
-        const auto toInt = [](const py::handle &handle) { return handle.cast<int>(); };
-        db.forEachImage(loadImage,
-                        views::transform(entries.value(), toInt),
-                        greyscale);
+        db.forEachImage(loadImage, toIntRange(entries.value()), greyscale);
     }
 
     return images;
+}
+
+void
+truncateDatabase(BoBRobotics::Navigation::ImageDatabase &db,
+                const py::iterable &entriesToKeep)
+{
+    return db.truncate(toIntRange(entriesToKeep));
 }
 } // anonymous namespace
 
@@ -51,9 +62,8 @@ addDatabaseClass(py::module_ &m)
             .def("__len__", &ImageDatabase::size)
             .def("get_entries", &ImageDatabase::getEntries)
             .def("needs_unwrapping", &ImageDatabase::needsUnwrapping)
-            .def("read_images", &readImages,
-                 "entries"_a = std::experimental::nullopt,
-                 "greyscale"_a = true);
+            .def("read_images", &readImages, "entries"_a = std::experimental::nullopt, "greyscale"_a = true)
+            .def("_truncate", &truncateDatabase, "entries_to_keep"_a);
 }
 } // Navigation
 } // BoBRobotics

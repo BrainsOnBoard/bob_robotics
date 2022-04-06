@@ -1,8 +1,11 @@
-from ._navigation import *
-from pandas import DataFrame
-import numpy as np
+import os.path
 from collections.abc import Iterable
 from warnings import warn
+
+import numpy as np
+from pandas import DataFrame
+
+from ._navigation import *
 
 
 def _apply_functions(im, funs):
@@ -20,7 +23,7 @@ def _to_float(im):
     return im.astype(float) / info.max
 
 class Database(DatabaseInternal):
-    def __init__(self, path):
+    def __init__(self, path, limits_metres=None):
         super().__init__(path)
 
         not_unwrapped = self.needs_unwrapping()
@@ -32,17 +35,40 @@ class Database(DatabaseInternal):
         # Convert from a list of dicts
         df = DataFrame.from_records(self.get_entries())
         self.entries = df
-
         self.position = np.array(df[['x', 'y', 'z']])
+
+        # Calculate distance along route for each position
+        distance = self._calculate_cumdist()
+
+        # User has specified limits
+        if limits_metres is not None:
+            assert len(limits_metres) == 2
+            assert limits_metres[0] >= 0
+            assert limits_metres[0] < limits_metres[1]
+            if limits_metres[1] > distance[-1]:
+                warn(f'{os.path.basename(path)}: Limit of {limits_metres[1]} is greater than route length of {distance[1]}')
+
+            sel = np.logical_and(distance >= limits_metres[0], distance < limits_metres[1])
+            self.position = self.position[sel]
+            distance = distance[sel]
+            df = df[sel]
+
+            # Also delete the relevant entries from the C++ object
+            self._truncate(np.argwhere(sel))
+
+        # Convenient aliases
         self.x = self.position[:, 0]
         self.y = self.position[:, 1]
         self.z = self.position[:, 2]
         self.heading = np.array(df['yaw'])
+        self.distance = distance
         self.filepath = df['filepath']
 
+    def _calculate_cumdist(self):
         # Calculate cumulative distance for each point on route
-        elem_dists = np.hypot(np.diff(self.x), np.diff(self.y))
-        self.distance = np.nancumsum([0, *elem_dists])
+        elem_dists = np.hypot(np.diff(self.position[:, 0]), np.diff(self.position[:, 1]))
+        return np.nancumsum([0, *elem_dists])
+
 
     def read_images(self, entries=None, preprocess=None, to_float=True,
                     greyscale=True):
