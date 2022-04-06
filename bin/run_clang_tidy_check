@@ -44,6 +44,7 @@ EXCLUDE_CHECKS = (
     'bugprone-narrowing-conversions',
     'concurrency-mt-unsafe',
     'clang-analyzer-webkit*',
+    'clang-diagnostic-ignored-optimization-argument',
     'misc-non-private-member-variables-in-classes',
     'modernize-avoid-c-arrays',
     'modernize-concat-nested-namespaces',
