@@ -55,6 +55,7 @@ def _to_float(im):
 class Database(DatabaseInternal):
     def __init__(self, path, limits_metres=None, interpolate_xy=False):
         super().__init__(path)
+        self.name = os.path.basename(path)
 
         not_unwrapped = self.needs_unwrapping()
         if not_unwrapped is None:
@@ -79,7 +80,7 @@ class Database(DatabaseInternal):
             assert limits_metres[0] >= 0
             assert limits_metres[0] < limits_metres[1]
             if limits_metres[1] > distance[-1]:
-                warn(f'{os.path.basename(path)}: Limit of {limits_metres[1]} is greater than route length of {distance[1]}')
+                warn(f'Limit of {limits_metres[1]} is greater than route length of {distance[1]}')
 
             sel = np.logical_and(distance >= limits_metres[0], distance < limits_metres[1])
             self.position = self.position[sel]
