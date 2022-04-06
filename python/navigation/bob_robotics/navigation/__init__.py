@@ -17,13 +17,43 @@ def _apply_functions(im, funs):
         return im
     return funs(im)
 
+def _interpolate_nan_entries(ts, position):
+    def is_idx_nan(idx):
+        return np.isnan(position[idx, 0])
+
+    # FIXME
+    assert not is_idx_nan(0)
+
+    i = j = 0
+    while i < len(position):
+        j = i + 1
+        while j < len(position) and is_idx_nan(j):
+            j += 1
+
+        # If there are trailing NaN entries, fill them with the contents of the
+        # final valid entry
+        if j == len(position):
+            position[i + 1:, :] = position[i, :]
+            break
+
+        t_range = ts[j] - ts[i]
+        for k in range(i + 1, j):
+            t_prop = (ts[k] - ts[i]) / t_range
+            assert t_prop > 0 and t_prop < 1
+            position[k, :] = position[i, :] + t_prop * (position[j, :] - position[i, :])
+
+        i = j
+
+    # Sanity check
+    assert not np.any(np.isnan(position))
+
 def _to_float(im):
     # Normalise values
     info = np.iinfo(im.dtype)
     return im.astype(float) / info.max
 
 class Database(DatabaseInternal):
-    def __init__(self, path, limits_metres=None):
+    def __init__(self, path, limits_metres=None, interpolate_xy=False):
         super().__init__(path)
 
         not_unwrapped = self.needs_unwrapping()
@@ -36,6 +66,9 @@ class Database(DatabaseInternal):
         df = DataFrame.from_records(self.get_entries())
         self.entries = df
         self.position = np.array(df[['x', 'y', 'z']])
+
+        if interpolate_xy:
+            _interpolate_nan_entries(df['Timestamp [ms]'].astype(float), self.position)
 
         # Calculate distance along route for each position
         distance = self._calculate_cumdist()
