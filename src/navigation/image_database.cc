@@ -222,14 +222,6 @@ ImageDatabase::ImageDatabase(const std::tm &creationTime)
 {
 }
 
-ImageDatabase::ImageDatabase(const char *databasePath, bool overwrite)
-  : ImageDatabase(filesystem::path(databasePath), overwrite)
-{}
-
-ImageDatabase::ImageDatabase(const std::string &databasePath, bool overwrite)
-  : ImageDatabase(filesystem::path(databasePath), overwrite)
-{}
-
 ImageDatabase::ImageDatabase(filesystem::path databasePath, bool overwrite)
   : ImageDatabase{ nullptr, std::move(databasePath), overwrite }
 {

@@ -418,8 +418,6 @@ public:
     };
 
     ImageDatabase();
-    ImageDatabase(const char *databasePath, bool overwrite = false);
-    ImageDatabase(const std::string &databasePath, bool overwrite = false);
     ImageDatabase(filesystem::path databasePath, bool overwrite = false);
     ImageDatabase(const std::tm &creationTime);
 
