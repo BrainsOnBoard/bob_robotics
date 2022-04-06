@@ -568,6 +568,27 @@ public:
     }
 
     /**!
+     * \brief Truncate database so it only contains a subset of entries
+     *
+     * Note that this doesn't actually write anything to disk. It just changes
+     * the in-memory representation.
+     */
+    template<class Range>
+    void truncate(const Range &entriesToKeep)
+    {
+        std::vector<Entry> newEntries;
+
+        // Move selected entries into new vector
+        auto moveEntry = [this](auto idx) {
+            return std::move(m_Entries[idx]);
+        };
+        ranges::transform(entriesToKeep, ranges::back_inserter(newEntries), moveEntry);
+
+        // Replace old vector with new
+        m_Entries = std::move(newEntries);
+    }
+
+    /**!
      *  \brief Unwrap all the panoramic images in this database into a new
      *         folder, creating a new database.
      */
