@@ -10,7 +10,8 @@ using namespace ranges;
 namespace {
 std::vector<cv::Mat>
 readImages(const BoBRobotics::Navigation::ImageDatabase &db,
-           const std::experimental::optional<py::iterable> &entries)
+           const std::experimental::optional<py::iterable> &entries,
+           bool greyscale)
 {
     std::vector<cv::Mat> images;
     auto loadImage = [&](size_t i, cv::Mat fr) {
@@ -31,7 +32,8 @@ readImages(const BoBRobotics::Navigation::ImageDatabase &db,
         // Convert Python iterable into range of ints
         const auto toInt = [](const py::handle &handle) { return handle.cast<int>(); };
         db.forEachImage(loadImage,
-                        views::transform(entries.value(), toInt));
+                        views::transform(entries.value(), toInt),
+                        greyscale);
     }
 
     return images;
@@ -49,7 +51,8 @@ addDatabaseClass(py::module_ &m)
             .def("__len__", &ImageDatabase::size)
             .def("get_entries", &ImageDatabase::getEntries)
             .def("read_images", &readImages,
-                 "entries"_a = std::experimental::nullopt);
+                 "entries"_a = std::experimental::nullopt,
+                 "greyscale"_a = true);
 }
 } // Navigation
 } // BoBRobotics
