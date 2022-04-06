@@ -619,10 +619,10 @@ ImageDatabase::readImages(std::vector<cv::Mat> &images, const cv::Size &size,
     }
 }
 
-bool
+std::experimental::optional<bool>
 ImageDatabase::needsUnwrapping() const
 {
-    return m_NeedsUnwrapping.value();
+    return m_NeedsUnwrapping;
 }
 
 units::frequency::hertz_t

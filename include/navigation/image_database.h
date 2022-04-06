@@ -456,7 +456,7 @@ public:
                     size_t frameSkip = 1, bool greyscale = true) const;
 
     //! Whether the database consists of panoramic images which need unwrapping
-    bool needsUnwrapping() const;
+    std::experimental::optional<bool> needsUnwrapping() const;
 
     //! Access the metadata for this database via OpenCV's persistence API
     cv::FileNode getMetadata() const;

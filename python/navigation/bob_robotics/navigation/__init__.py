@@ -2,6 +2,7 @@ from ._navigation import *
 from pandas import DataFrame
 import numpy as np
 from collections.abc import Iterable
+from warnings import warn
 
 
 def _apply_functions(im, funs):
@@ -21,6 +22,12 @@ def _to_float(im):
 class Database(DatabaseInternal):
     def __init__(self, path):
         super().__init__(path)
+
+        not_unwrapped = self.needs_unwrapping()
+        if not_unwrapped is None:
+            warn("Not known whether or not database is unwrapped")
+        elif not_unwrapped:
+            warn("!!!!! This database has not been unwrapped. Analysis may not make sense! !!!!!")
 
         # Convert from a list of dicts
         df = DataFrame.from_records(self.get_entries())

@@ -50,6 +50,7 @@ addDatabaseClass(py::module_ &m)
                  "database_path"_a)
             .def("__len__", &ImageDatabase::size)
             .def("get_entries", &ImageDatabase::getEntries)
+            .def("needs_unwrapping", &ImageDatabase::needsUnwrapping)
             .def("read_images", &readImages,
                  "entries"_a = std::experimental::nullopt,
                  "greyscale"_a = true);
