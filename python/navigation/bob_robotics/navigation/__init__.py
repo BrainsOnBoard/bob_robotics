@@ -106,6 +106,9 @@ class Database(DatabaseInternal):
 
     def read_images(self, entries=None, preprocess=None, to_float=True,
                     greyscale=True):
+        if hasattr(entries, "index"):
+            # ...then it's a subrange of the entries DataFrame
+            entries = entries.index
         images = super().read_images(entries, greyscale)
 
         if to_float:
