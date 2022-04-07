@@ -17,6 +17,16 @@ def _apply_functions(im, funs):
         return im
     return funs(im)
 
+def _calculate_cumdist(position):
+    # Calculate cumulative distance for each point on route
+    elem_dists = np.hypot(np.diff(position[:, 0]), np.diff(position[:, 1]))
+    return np.nancumsum([0, *elem_dists])
+
+def _get_headings_from_xy(x, y):
+    headings = np.arctan2(np.diff(y), np.diff(x))
+    headings = np.append(headings, [headings[-1]])
+    return headings
+
 def _interpolate_nan_entries(ts, position):
     def is_idx_nan(idx):
         return np.isnan(position[idx, 0])
@@ -65,14 +75,15 @@ class Database(DatabaseInternal):
 
         # Convert from a list of dicts
         df = DataFrame.from_records(self.get_entries())
-        self.entries = df
-        self.position = np.array(df[['x', 'y', 'z']])
+        position = np.array(df[['x', 'y', 'z']])
 
         if interpolate_xy:
-            _interpolate_nan_entries(df['Timestamp [ms]'].astype(float), self.position)
+            _interpolate_nan_entries(df['Timestamp [ms]'].astype(float), position)
+            df.x = position[:, 0]
+            df.y = position[:, 1]
 
         # Calculate distance along route for each position
-        distance = self._calculate_cumdist()
+        distance = _calculate_cumdist(position)
 
         # User has specified limits
         if limits_metres is not None:
@@ -83,26 +94,23 @@ class Database(DatabaseInternal):
                 warn(f'Limit of {limits_metres[1]} is greater than route length of {distance[1]}')
 
             sel = np.logical_and(distance >= limits_metres[0], distance < limits_metres[1])
-            self.position = self.position[sel]
+            position = position[sel]
             distance = distance[sel]
             df = df[sel]
 
             # Also delete the relevant entries from the C++ object
             self._truncate(np.argwhere(sel))
 
-        # Convenient aliases
-        self.x = self.position[:, 0]
-        self.y = self.position[:, 1]
-        self.z = self.position[:, 2]
-        self.heading = np.array(df['yaw'])
-        self.distance = distance
-        self.filepath = df['filepath']
+        self.position = position  # NB: This can't be a column in a DataFrame
+        self.entries = df
+        self.entries['heading'] = _get_headings_from_xy(self.x, self.y)
+        self.entries['distance'] = distance
 
-    def _calculate_cumdist(self):
-        # Calculate cumulative distance for each point on route
-        elem_dists = np.hypot(np.diff(self.position[:, 0]), np.diff(self.position[:, 1]))
-        return np.nancumsum([0, *elem_dists])
-
+    def __getattr__(self, name):
+        try:
+            return object.__getattribute__(self, name)
+        except AttributeError:
+            return getattr(self.entries, name)
 
     def read_images(self, entries=None, preprocess=None, to_float=True,
                     greyscale=True):
