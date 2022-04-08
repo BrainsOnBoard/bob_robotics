@@ -111,13 +111,26 @@ class Database(DatabaseInternal):
 
     def read_images(self, entries=None, preprocess=None, to_float=True,
                     greyscale=True):
-        # Load all images (possibly truncated by limits_metres)
         if entries is None:
-            entries = self.entries
-
-        if hasattr(entries, "iloc"):
-            # ...then it's a subrange of the entries DataFrame
+            # ...then load all images (possibly truncated by limits_metres)
+            entries = self.entries.index
+        elif hasattr(entries, "iloc"):
+            # ...then it's a pandas Series/DataFrame
             entries = entries.index
+
+        # Check if entries is a scalar. Unfortunately a DataFrame.index value
+        # isn't an int so we can't just use isinstance() -- instead we try
+        # casting.
+        idx = None
+        try:
+            idx = int(entries)
+        except TypeError:
+            pass
+        if idx is not None:
+            # ...scalar value given
+            return self.read_images([idx], preprocess, to_float, greyscale)[0]
+
+        # Invoke C++ code
         images = super().read_images(entries, greyscale)
 
         if to_float:
