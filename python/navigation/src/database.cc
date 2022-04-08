@@ -42,13 +42,6 @@ readImages(const BoBRobotics::Navigation::ImageDatabase &db,
 
     return images;
 }
-
-void
-truncateDatabase(BoBRobotics::Navigation::ImageDatabase &db,
-                const py::iterable &entriesToKeep)
-{
-    return db.truncate(toIntRange(entriesToKeep));
-}
 } // anonymous namespace
 
 namespace BoBRobotics {
@@ -62,8 +55,7 @@ addDatabaseClass(py::module_ &m)
             .def("__len__", &ImageDatabase::size)
             .def("get_entries", &ImageDatabase::getEntries)
             .def("needs_unwrapping", &ImageDatabase::needsUnwrapping)
-            .def("read_images", &readImages, "entries"_a = std::experimental::nullopt, "greyscale"_a = true)
-            .def("_truncate", &truncateDatabase, "entries_to_keep"_a);
+            .def("read_images", &readImages, "entries"_a = std::experimental::nullopt, "greyscale"_a = true);
 }
 } // Navigation
 } // BoBRobotics

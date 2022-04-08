@@ -98,9 +98,6 @@ class Database(DatabaseInternal):
             distance = distance[sel]
             df = df[sel]
 
-            # Also delete the relevant entries from the C++ object
-            self._truncate(np.argwhere(sel))
-
         self.position = position  # NB: This can't be a column in a DataFrame
         self.entries = df
         self.entries['heading'] = _get_headings_from_xy(self.x, self.y)
@@ -114,6 +111,10 @@ class Database(DatabaseInternal):
 
     def read_images(self, entries=None, preprocess=None, to_float=True,
                     greyscale=True):
+        # Load all images (possibly truncated by limits_metres)
+        if entries is None:
+            entries = self.entries
+
         if hasattr(entries, "iloc"):
             # ...then it's a subrange of the entries DataFrame
             entries = entries.index
