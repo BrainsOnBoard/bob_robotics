@@ -19,6 +19,14 @@ pybind11_add_module(_navigation MODULE src/algos.cc src/database.cc src/navigati
 install(TARGETS _navigation LIBRARY DESTINATION bob_robotics/navigation)
 target_link_libraries(_navigation PRIVATE ${BoBRobotics_LIBRARIES})
 
+# On Linux I found I was getting errors like this: free(): invalid pointer
+# I suspect this is to do with free() and malloc() from libc taking
+# precedence over those in libstdc++ and breaking things. Linking against it
+# explicitly seems to fix things.
+if(NOT MSVC)
+    target_link_libraries(_navigation PRIVATE stdc++)
+endif()
+
 # Suppress clang warning (emitted by clang-tidy)
 set(FLAG -Wno-ignored-optimization-argument)
 check_cxx_compiler_flag(${FLAG} COMPILER_SUPPORTS_${FLAG})
