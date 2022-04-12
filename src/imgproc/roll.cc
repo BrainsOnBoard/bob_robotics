@@ -8,7 +8,7 @@
 namespace BoBRobotics {
 namespace ImgProc {
 void
-roll(const cv::Mat &in, cv::Mat &out, size_t pixelsLeft)
+rollLeft(const cv::Mat &in, cv::Mat &out, size_t pixelsLeft)
 {
     BOB_ASSERT(in.type() == CV_8UC1);
 

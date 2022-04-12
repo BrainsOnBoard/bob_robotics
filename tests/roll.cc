@@ -13,7 +13,7 @@ using namespace ranges;
 TEST(Roll, RollLeft)
 {
     cv::Mat_<uchar> rolled;
-    BoBRobotics::ImgProc::roll(BarImage, rolled, 1);
+    BoBRobotics::ImgProc::rollLeft(BarImage, rolled, 1);
 
     cv::Mat_<uchar> rolledExpected{ rolled.size(), CV_8U };
     rolledExpected = 255;

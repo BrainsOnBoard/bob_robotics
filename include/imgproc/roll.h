@@ -10,6 +10,6 @@ namespace BoBRobotics {
 namespace ImgProc {
 //! Roll a panoramic image leftwards by the specified number of pixels
 void
-roll(const cv::Mat &in, cv::Mat &out, size_t pixelsLeft);
+rollLeft(const cv::Mat &in, cv::Mat &out, size_t pixelsLeft);
 } // ImgProc
 } // BoBRobotics
