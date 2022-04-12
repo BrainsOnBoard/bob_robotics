@@ -59,8 +59,8 @@ struct InSilicoRotater
                 [this, func](const auto &r) {
                     for (size_t i = r.begin(); i != r.end(); ++i) {
                         const auto index = RotaterInternal<IterType>::toIndex(m_BeginRoll + i * m_ScanStep);
-                        ImgProc::rollLeft(m_Image, m_ScratchImage, index);
-                        m_Mask.rollLeft(m_ScratchMask, index);
+                        ImgProc::rollRight(m_Image, m_ScratchImage, index);
+                        m_Mask.rollRight(m_ScratchMask, index);
 
                         func(m_ScratchImage, m_ScratchMask, i);
                     }
