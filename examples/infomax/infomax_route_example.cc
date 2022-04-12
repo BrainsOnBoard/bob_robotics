@@ -65,7 +65,7 @@ int bobMain(int argc, char **argv)
 {
     if (argc < 2) {
         LOGE << "Must specify a route, e.g.:"
-             << "\t" << argv[0] << " ../../tools/ant_world_db_creator/ant1_route1 [num training repititions]";
+             << "\t" << argv[0] << " ../../tools/ant_world_db_creator/ant1_route1 [num training repetitions]";
         return 1;
     }
 
