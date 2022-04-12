@@ -8,7 +8,7 @@ python -m venv virtualenv
 . virtualenv/bin/activate
 
 # Install necessary packages, including BoB navigation module
-pip install wheel numpy scikit-build numpy pandas pytest
+pip install matplotlib numpy pandas pytest scikit-build wheel
 cd "$(dirname $0)"
 python setup.py build install
 
