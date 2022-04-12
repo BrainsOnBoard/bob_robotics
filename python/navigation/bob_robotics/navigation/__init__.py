@@ -6,6 +6,7 @@ import numpy as np
 from pandas import DataFrame
 
 from ._navigation import *
+from .ca import *
 
 
 def _apply_functions(im, funs):
