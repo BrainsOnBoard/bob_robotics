@@ -50,6 +50,7 @@ public:
      * for type safety.
      */
     void rollLeft(Mask &out, size_t pixelsLeft) const;
+    void rollRight(Mask &out, size_t pixelsRight) const;
 
     void set(cv::Mat mask, const cv::Size &size = {});
     void set(const cv::Mat &image, const cv::Scalar &lower, const cv::Scalar &upper, const cv::Size &size = {});

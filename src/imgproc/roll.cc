@@ -15,9 +15,6 @@ rollLeft(const cv::Mat &in, cv::Mat &out, size_t pixelsLeft)
     // Make sure out is big enough
     out.create(in.size(), CV_8UC1);
 
-    // Wrap around
-    pixelsLeft %= in.cols;
-
     // Loop through rows
     for (int y = 0; y < in.rows; y++) {
         // Get pointer to start of row
@@ -27,6 +24,13 @@ rollLeft(const cv::Mat &in, cv::Mat &out, size_t pixelsLeft)
         // Rotate row to left by pixels
         std::rotate_copy(rowPtrIn, rowPtrIn + pixelsLeft, rowPtrIn + in.cols, rowPtrOut);
     }
+}
+
+void
+rollRight(const cv::Mat &in, cv::Mat &out, size_t pixelsRight)
+{
+    pixelsRight %= in.cols;
+    rollLeft(in, out, in.cols - pixelsRight);
 }
 } // ImgProc
 } // BoBRobotics

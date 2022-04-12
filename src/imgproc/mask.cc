@@ -89,6 +89,16 @@ Mask::rollLeft(Mask &out, size_t pixelsLeft) const
 }
 
 void
+Mask::rollRight(Mask &out, size_t pixelsRight) const
+{
+    if (empty()) {
+        out.m_Mask = cv::Mat{};
+    } else {
+        ImgProc::rollRight(m_Mask, out.m_Mask, pixelsRight);
+    }
+}
+
+void
 Mask::set(cv::Mat mask, const cv::Size &size)
 {
     if (mask.empty()) {

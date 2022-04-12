@@ -21,3 +21,15 @@ TEST(Roll, RollLeft)
 
     EXPECT_TRUE(equal(views::all(rolled), views::all(rolledExpected)));
 }
+
+TEST(Roll, RollRight)
+{
+    cv::Mat_<uchar> rolled;
+    BoBRobotics::ImgProc::rollRight(BarImage, rolled, 1);
+
+    cv::Mat_<uchar> rolledExpected{ rolled.size(), CV_8U };
+    rolledExpected = 255;
+    rolledExpected.colRange(2, 4) = 0;
+
+    EXPECT_TRUE(equal(views::all(rolled), views::all(rolledExpected)));
+}
