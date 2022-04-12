@@ -28,24 +28,45 @@
 using namespace BoBRobotics;
 using namespace BoBRobotics::Navigation;
 using namespace std::literals;
+using namespace units::angle;
+using namespace units::length;
+using namespace units::math;
 namespace plt = matplotlibcpp;
 
 using FloatType = float;
 using InfoMaxType = InfoMaxRotater<FloatType>;
 
-void doTesting(const InfoMaxType &infomax, const std::vector<double> &x,
-               const std::vector<double> &y, const std::vector<cv::Mat> &images)
+void doTesting(const InfoMaxType &infomax, const ImageDatabase &route,
+               const std::vector<cv::Mat> &images)
 {
     using namespace units::math;
+    constexpr size_t TestSkip = 20;
 
-    std::vector<double> u, v;
+    std::vector<double> x, y, xAll, yAll, u, v;
+    std::vector<radian_t> thetaAll;
+    for (size_t i = 0; i < route.size() - 1; i++) {
+        const Vector3<meter_t> pos = route[i].pose;
+        xAll.push_back(pos.x().value());
+        yAll.push_back(pos.y().value());
+        thetaAll.push_back(atan2(route[i + 1].pose.y() - pos.y(),
+                                 route[i + 1].pose.x() - pos.x()));
+    }
+    const Vector3<meter_t> pos = route.getEntries().back().pose;
+    xAll.push_back(pos.x().value());
+    yAll.push_back(pos.y().value());
+    thetaAll.push_back(thetaAll.back());
+
     {
         // Test network
         LOGI << "Testing network...";
         Timer<> t{ "Network testing took: " };
-        for (const auto &image : images) {
+        for (size_t i = 0; i < route.size(); i += TestSkip) {
+            const Pose3<meter_t, radian_t> pose = route[i].pose;
+            x.push_back(pose.x().value());
+            y.push_back(pose.y().value());
+
             // Get heading and convert to vector
-            const auto heading = std::get<0>(infomax.getHeading(image));
+            const radian_t heading = std::get<0>(infomax.getHeading(images[i])) + thetaAll[i];
             u.push_back(cos(heading));
             v.push_back(sin(heading));
         }
@@ -54,10 +75,13 @@ void doTesting(const InfoMaxType &infomax, const std::vector<double> &x,
     // Output as quiver plot
     std::map<std::string, std::string> kwargs;
     kwargs["angles"] = "xy"; // This option is needed if you want matplotlib to do a sane plot :-/
+    kwargs["scale_units"] = "xy";
+    plt::plot(x, y);
     plt::quiver(x, y, u, v, kwargs);
     plt::xlabel("x (m)");
     plt::ylabel("y (m)");
     plt::plot({ x[0] }, { y[0] }, "b+");
+    plt::axis("equal");
     plt::show();
 }
 
@@ -77,22 +101,17 @@ int bobMain(int argc, char **argv)
 
     // Load images, resize and cache
     std::vector<cv::Mat> images;
-    std::vector<double> x, y;
+    const ImageDatabase route(routePath);
+    assert(!route.empty());
     {
         LOGI << "Loading images from " << routePath << "...";
         Timer<> loadingTimer{ "Images loaded in: " };
-        const ImageDatabase routeImages(routePath);
-        assert(!routeImages.empty());
 
         cv::Mat image;
-        for (size_t i = 1; i < routeImages.size(); i++) {
-            image = routeImages[i].load();
+        for (size_t i = 1; i < route.size(); i++) {
+            image = route[i].load();
             images.emplace_back(imSize, CV_8UC1);
             cv::resize(image, images.back(), imSize);
-
-            // Save x and y in metres
-            x.push_back(routeImages[i].pose.x().value() / 1000.0);
-            y.push_back(routeImages[i].pose.y().value() / 1000.0);
         }
     }
 
@@ -109,8 +128,8 @@ int bobMain(int argc, char **argv)
         LOGI << "Loading weights from " << netPath;
 
         InfoMaxType infomax(imSize, LearningRate, TanhScalingFactor,
-                            Normalisation::ZScore, readMatrix<FloatType>(netPath));
-        doTesting(infomax, x, y, images);
+                            Normalisation::None, readMatrix<FloatType>(netPath));
+        doTesting(infomax, route, images);
     } else {
         // ...otherwise do the training now
         InfoMaxType infomax(imSize, LearningRate, TanhScalingFactor);
@@ -132,7 +151,7 @@ int bobMain(int argc, char **argv)
             writeMatrix(netPath, infomax.getWeights());
         }
 
-        doTesting(infomax, x, y, images);
+        doTesting(infomax, route, images);
     }
 
     return 0;
