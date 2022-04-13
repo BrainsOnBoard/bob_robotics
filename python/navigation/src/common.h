@@ -20,6 +20,14 @@
 #include <stdexcept>
 
 
+template<class T>
+auto
+toRange(const pybind11::iterable &iterable)
+{
+    const auto doCast = [](const pybind11::handle &handle) { return handle.cast<T>(); };
+    return ranges::views::transform(iterable, doCast);
+}
+
 namespace BoBRobotics {
 namespace Navigation {
 void

@@ -8,13 +8,6 @@ using namespace py::literals;
 using namespace ranges;
 
 namespace {
-auto
-toIntRange(const py::iterable &iterable)
-{
-    const auto toInt = [](const py::handle &handle) { return handle.cast<int>(); };
-    return views::transform(iterable, toInt);
-}
-
 std::vector<cv::Mat>
 readImages(const BoBRobotics::Navigation::ImageDatabase &db,
            const std::experimental::optional<py::iterable> &entries,
@@ -37,7 +30,7 @@ readImages(const BoBRobotics::Navigation::ImageDatabase &db,
         images.resize(py::len(entries.value()));
 
         // Convert Python iterable into range of ints
-        db.forEachImage(loadImage, toIntRange(entries.value()), greyscale);
+        db.forEachImage(loadImage, toRange<int>(entries.value()), greyscale);
     }
 
     return images;

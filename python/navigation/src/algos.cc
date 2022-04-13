@@ -21,6 +21,11 @@ using namespace units::angle;
 using PerfectMemoryType = PerfectMemoryRotater<>;
 using InfoMaxType = InfoMaxRotater<>;
 
+namespace {
+static py::module numpy = py::module::import("numpy");
+static py::function atLeast2d = numpy.attr("atleast_2d");
+} // anonymous namespace
+
 template<class T>
 class PyAlgoWrapperBase
 {
@@ -37,51 +42,30 @@ public:
 
     auto getRIDFData(const cv::Mat &img) const
     {
-        return m_Algo.getHeading(getResizedMat(img));
+        return m_Algo.getHeading(img);
     }
 
     auto test(const cv::Mat &img) const
     {
-        return m_Algo.test(getResizedMat(img));
+        return m_Algo.test(img);
     }
 
-    void train(const cv::Mat &img)
+    void train(py::object imageSet)
     {
-        m_Algo.train(getResizedMat(img));
-    }
-
-    void trainRoute(const char *dbPath)
-    {
-        const ImageDatabase database{ dbPath };
-        BOB_ASSERT(!database.empty());
-
-        for (const auto &entry : database) {
-            train(entry.load());
-
-            // Handle e.g. Ctrl+C during training
-            if (PyErr_CheckSignals()) {
-                return;
-            }
+        const py::array npArray = atLeast2d(imageSet);
+        switch (npArray.ndim()) {
+        case 2:
+            m_Algo.train(npArray.cast<cv::Mat>());
+            break;
+        case 3:
+            ranges::for_each(toRange<cv::Mat>(npArray), [this](const auto &im) { m_Algo.train(im); });
+            break;
+        default : throw std::invalid_argument("Wrong number of dimensions");
         }
     }
 
 protected:
     T m_Algo;
-
-private:
-    mutable cv::Mat m_Resized;
-
-    const auto &getResizedMat(const cv::Mat &img) const
-    {
-        const auto size = m_Algo.getUnwrapResolution();
-        if (img.size() != size) {
-            cv::resize(img, m_Resized, size);
-            return m_Resized;
-        }
-
-        // No resizing needed
-        return img;
-    }
 };
 
 template<class T>
@@ -139,14 +123,13 @@ addAlgo(py::handle scope, const char *name)
             .def("get_heading", &T::getHeading)
             .def("get_ridf_data", &T::getRIDFData)
             .def("test", &T::test)
-            .def("train", &T::train)
-            .def("train_route", &T::trainRoute);
+            .def("train", &T::train);
 }
 } // anonymous namespace
 
 namespace BoBRobotics {
 namespace Navigation {
-void addAlgorithmClasses(py::module_ &m)
+void addAlgorithmClasses(py::module &m)
 {
     py::enum_<Normalisation>(m, "Normalisation")
             .value("none", Normalisation::None)
