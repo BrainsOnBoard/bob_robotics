@@ -35,32 +35,69 @@ public:
       : m_Algo(std::forward<Ts>(args)...)
     {}
 
-    auto getHeading(const cv::Mat &img) const
+    auto getHeading(const py::object &imageSet) const
     {
-        return std::get<0>(getRIDFData(img));
+        return runOneOrMany(imageSet,
+                            [this](const cv::Mat &image) { return std::get<0>(m_Algo.getHeading(image)); });
     }
 
     auto getRIDFData(const cv::Mat &img) const
     {
+        // **TODO**: Make this work with multi-image input
         return m_Algo.getHeading(img);
     }
 
-    auto test(const cv::Mat &img) const
+    auto test(const py::object &imageSet) const
     {
-        return m_Algo.test(img);
+        return runOneOrMany(imageSet,
+                            [this](const cv::Mat &image) { return m_Algo.test(image); });
     }
 
-    void train(py::object imageSet)
+    void train(const py::object &imageSet)
     {
         const py::array npArray = atLeast2d(imageSet);
         switch (npArray.ndim()) {
         case 2:
             m_Algo.train(npArray.cast<cv::Mat>());
             break;
-        case 3:
-            ranges::for_each(toRange<cv::Mat>(npArray), [this](const auto &im) { m_Algo.train(im); });
+        case 3: {
+            auto train = [this](const cv::Mat &image) {
+                m_Algo.train(image);
+
+                // Check for Ctrl+C etc.
+                BOB_ASSERT(!PyErr_CheckSignals());
+            };
+            ranges::for_each(toRange<cv::Mat>(npArray), train);
+        } break;
+        default:
+            throw std::invalid_argument("Wrong number of dimensions");
+        }
+    }
+private:
+    template<class Func>
+    static py::object runOneOrMany(const py::object &imageSet, const Func &func)
+    {
+        const py::array npArray = atLeast2d(imageSet);
+        switch (npArray.ndim()) {
+        case 2:
+            return py::cast(func(npArray.cast<cv::Mat>()));
             break;
-        default : throw std::invalid_argument("Wrong number of dimensions");
+        case 3: {
+            auto pyfunc = [&func](const cv::Mat &image) {
+                // Check for Ctrl+C etc.
+                BOB_ASSERT(!PyErr_CheckSignals());
+
+                return py::cast(func(image));
+            };
+
+            std::vector<py::object> result;
+            ranges::transform(toRange<cv::Mat>(npArray),
+                              ranges::back_inserter(result),
+                              pyfunc);
+            return py::cast(result);
+        } break;
+        default:
+            throw std::invalid_argument("Wrong number of dimensions");
         }
     }
 
