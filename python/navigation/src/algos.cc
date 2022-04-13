@@ -74,6 +74,16 @@ public:
         }
     }
 private:
+    static float toFloat(const radian_t &val)
+    {
+        return val.value();
+    }
+
+    static float toFloat(float val)
+    {
+        return val;
+    }
+
     template<class Func>
     static py::object runOneOrMany(const py::object &imageSet, const Func &func)
     {
@@ -81,21 +91,22 @@ private:
         switch (npArray.ndim()) {
         case 2:
             return py::cast(func(npArray.cast<cv::Mat>()));
-            break;
         case 3: {
-            auto pyfunc = [&func](const cv::Mat &image) {
-                // Check for Ctrl+C etc.
-                BOB_ASSERT(!PyErr_CheckSignals());
+            // Return data as a numpy array for convenience
+            const py::ssize_t len = py::len(npArray);
+            py::array_t<float> result{ len };
 
-                return py::cast(func(image));
-            };
+            // Invoke func for each input image and put the results in result
+            ranges::transform(toRange<cv::Mat>(npArray), result.mutable_data(),
+                [&](const cv::Mat &image) {
+                    // Check for Ctrl+C etc.
+                    BOB_ASSERT(!PyErr_CheckSignals());
 
-            std::vector<py::object> result;
-            ranges::transform(toRange<cv::Mat>(npArray),
-                              ranges::back_inserter(result),
-                              pyfunc);
-            return py::cast(result);
-        } break;
+                    return toFloat(func(image));
+                });
+
+            return result;
+        }
         default:
             throw std::invalid_argument("Wrong number of dimensions");
         }
