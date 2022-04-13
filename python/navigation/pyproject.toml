@@ -1,2 +1,2 @@
 [build-system]
-requires = ["cmake", "matplotlib", "numpy", "pandas", "scikit-build", "setuptools"]
+requires = ["cmake", "matplotlib", "numpy", "pandas", "scikit-build", "scipy", "setuptools"]
