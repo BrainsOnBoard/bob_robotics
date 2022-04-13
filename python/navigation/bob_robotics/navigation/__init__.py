@@ -6,7 +6,9 @@ import numpy as np
 from pandas import DataFrame
 
 from ._navigation import *
+from ._navigation import __version__  # ultimately set by build process
 from .ca import *
+
 
 
 def _apply_functions(im, funs):

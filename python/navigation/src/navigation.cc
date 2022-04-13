@@ -105,6 +105,10 @@ PYBIND11_MODULE(_navigation, m)
         throw std::runtime_error{ "numpy.core.multiarray failed to import" };
     }
 
+#ifdef BOB_VERSION
+    m.attr("__version__") = BOB_VERSION;
+#endif
+
     addAlgorithmClasses(m);
     addDatabaseClass(m);
 }
