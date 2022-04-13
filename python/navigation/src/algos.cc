@@ -172,7 +172,9 @@ void addAlgorithmClasses(py::module_ &m)
                         &PyAlgoWrapper<InfoMaxType>::generateInitialWeights,
                         "size"_a,
                         "num_hidden"_a = ::optional<int>{},
-                        "seed"_a = ::optional<unsigned>{});
+                        "seed"_a = ::optional<unsigned>{})
+            .def_property_readonly_static("DEFAULT_LEARNING_RATE", [](const py::object &) { return InfoMaxType::DefaultLearningRate; })
+            .def_property_readonly_static("DEFAULT_TANH_SCALING_FACTOR", [](const py::object &) { return InfoMaxType::DefaultTanhScalingFactor; });
 }
 } // Navigation
 } // BoBRobotics
