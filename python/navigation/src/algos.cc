@@ -49,20 +49,30 @@ public:
     }
 
     template<size_t NumRetVals>
-    auto getRIDFData(const py::object &imageSet,
+    auto getRIDFData(py::object imageSet,
                      const std::array<const char *, NumRetVals> &labels) const
     {
-        const py::array npArray = atLeast2d(imageSet);
+        // If imageSet is a DataFrame, extract the images and index columns
+        py::object images, indexes;
+        if (py::hasattr(imageSet, "iloc")) {
+            images = imageSet.attr("image").attr("to_list")();
+            indexes = imageSet.attr("index");
+        } else {
+            images = std::move(imageSet);
+            indexes = py::none();
+        }
+
+        const py::array npArray = atLeast2d(images);
         switch (npArray.ndim()) {
         case 2: { // Single image
             // Single-element range
-            const auto rng = ranges::views::single(npArray.cast<cv::Mat>());
+            auto rng = ranges::views::single(npArray.cast<cv::Mat>());
 
             // We call squeeze() to turn DataFrame's array members into scalars
-            return getHeadingDataMany(rng, labels).attr("squeeze")();
+            return getHeadingDataMany(std::move(rng), std::move(indexes), labels).attr("squeeze")();
         } break;
         case 3: // Multiple images
-            return getHeadingDataMany(toRange<cv::Mat>(imageSet), labels);
+            return getHeadingDataMany(toRange<cv::Mat>(images), std::move(indexes), labels);
         default:
             throw std::invalid_argument("Wrong number of dimensions");
         }
@@ -116,6 +126,7 @@ private:
 
     template<class Range, size_t NumRetVals>
     py::object getHeadingDataMany(const Range &range,
+                                  py::object indexes,
                                   const std::array<const char *, NumRetVals> &labels) const
     {
         py::list result;
@@ -133,7 +144,7 @@ private:
         });
 
         // Convert returned data to a pandas DataFrame
-        return dictsToDataFrame(std::move(result));
+        return dictsToDataFrame(std::move(result), "index"_a = std::move(indexes));
     }
 
     static float toFloat(const radian_t &val)
