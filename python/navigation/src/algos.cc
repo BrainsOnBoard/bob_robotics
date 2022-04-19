@@ -42,12 +42,6 @@ public:
       : m_Algo(std::forward<Ts>(args)...)
     {}
 
-    auto getHeading(const py::object &imageSet) const
-    {
-        return runOneOrMany(imageSet,
-                            [this](const cv::Mat &image) { return std::get<0>(m_Algo.getHeading(image)); });
-    }
-
     template<size_t NumRetVals>
     auto doRIDF(py::object imageSet,
                 const std::array<const char *, NumRetVals> &labels) const
@@ -275,6 +269,12 @@ public:
         return m_Algo.getWeights();
     }
 
+    auto doRIDF(py::object imageSet) const
+    {
+        return PyAlgoWrapperBase<InfoMaxType>::doRIDF(std::move(imageSet),
+                                                      std::array<const char *, 2>{ "dheading", "minval" });
+    }
+
     static std::pair<Eigen::MatrixXf, unsigned>
     generateInitialWeights(const cv::Size &size,
                            const optional<int> &numHidden = std::experimental::nullopt,
@@ -295,7 +295,7 @@ addAlgo(py::handle scope, const char *name)
 {
     using T = PyAlgoWrapper<Algo>;
     return py::class_<T>(scope, name)
-            .def("get_heading", &T::getHeading)
+            .def("ridf", &T::doRIDF)
             .def("test", &T::test)
             .def("train", &T::train);
 }
@@ -312,11 +312,7 @@ addAlgorithmClasses(py::module &m)
 
     // Add various algorithms as Python classes
     addAlgo<PerfectMemoryType>(m, "PerfectMemory")
-            .def(py::init<const cv::Size &>())
-            .def("ridf", [](const PyAlgoWrapper<PerfectMemoryType> &pm, const py::object &imageSet) {
-                // TODO: Also return RIDFs
-                return pm.doRIDF(imageSet);
-            });
+            .def(py::init<const cv::Size &>());
     addAlgo<InfoMaxType>(m, "InfoMax")
             .def(py::init<const cv::Size &, float, float, Normalisation>(),
                  "size"_a,
@@ -329,9 +325,6 @@ addAlgorithmClasses(py::module &m)
                  "tanh_scaling_factor"_a = InfoMaxType::DefaultTanhScalingFactor,
                  "normalisation"_a = Normalisation::None,
                  "weights"_a)
-            .def("ridf", [](const PyAlgoWrapper<InfoMaxType> &infomax, const py::object &imageSet) {
-                return infomax.doRIDF(imageSet, std::array<const char *, 2>{ "dheading", "minval" });
-            })
             .def("get_weights", &PyAlgoWrapper<InfoMaxType>::getWeights)
             .def_static("generate_initial_weights", &PyAlgoWrapper<InfoMaxType>::generateInitialWeights, "size"_a, "num_hidden"_a = ::optional<int>{}, "seed"_a = ::optional<unsigned>{})
             .def_property_readonly_static("DEFAULT_LEARNING_RATE", [](const py::object &) { return InfoMaxType::DefaultLearningRate; })
