@@ -211,7 +211,7 @@ public:
 
     auto getRIDFData(py::object imageSet) const
     {
-        auto df = PyAlgoWrapperBase<PerfectMemoryType>::getRIDFData(std::move(imageSet), std::array<const char *, 3>{ "heading", "best_snap", "minval" });
+        auto df = PyAlgoWrapperBase<PerfectMemoryType>::getRIDFData(std::move(imageSet), std::array<const char *, 3>{ "dheading", "best_snap", "minval" });
 
         if (m_Indexes.empty()) {
             // ...then snapshots were loaded without giving indexes
@@ -306,7 +306,7 @@ addAlgorithmClasses(py::module &m)
                  "normalisation"_a = Normalisation::None,
                  "weights"_a)
             .def("get_ridf_data", [](const PyAlgoWrapper<InfoMaxType> &infomax, const py::object &imageSet) {
-                return infomax.getRIDFData(imageSet, std::array<const char *, 2>{ "heading", "minval" });
+                return infomax.getRIDFData(imageSet, std::array<const char *, 2>{ "dheading", "minval" });
             })
             .def("get_weights", &PyAlgoWrapper<InfoMaxType>::getWeights)
             .def_static("generate_initial_weights", &PyAlgoWrapper<InfoMaxType>::generateInitialWeights, "size"_a, "num_hidden"_a = ::optional<int>{}, "seed"_a = ::optional<unsigned>{})
