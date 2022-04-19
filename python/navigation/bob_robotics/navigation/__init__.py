@@ -115,7 +115,7 @@ class Database(DatabaseInternal):
     def read_images(self, entries=None, preprocess=None, to_float=True,
                     greyscale=True):
         if entries is None:
-            # ...then load all images (possibly truncated by limits_metres)
+            # ...then load all images
             entries = self.entries.index
         elif hasattr(entries, "iloc"):
             # ...then it's a pandas Series/DataFrame
@@ -143,3 +143,19 @@ class Database(DatabaseInternal):
         if not preprocess:
             return images
         return [_apply_functions(im, preprocess) for im in images]
+
+    def read_image_entries(self, entries=None, preprocess=None, to_float=True,
+                           greyscale=True):
+        if entries is None:
+            # ...then load all images
+            entries = self.entries
+
+        # We make a copy as pandas is funny about assigning to slices
+        entries = entries.copy()
+
+        # Check that we're not overwriting images
+        assert not hasattr(entries, "image")
+
+        entries["image"] = self.read_images(entries, preprocess, to_float, greyscale)
+
+        return entries
