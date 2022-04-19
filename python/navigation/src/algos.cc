@@ -106,18 +106,13 @@ public:
     }
 
 private:
-    template<size_t Index, size_t NumRetVals, class TupleType,
-             std::enable_if_t<Index < NumRetVals, int> = 0>
-    static void assignToDict(py::dict &dict,
-                             const std::array<const char *, NumRetVals> &labels,
-                             TupleType &data)
+    template<size_t Index, size_t NumRetVals, class TupleType, std::enable_if_t<Index<NumRetVals, int> = 0> static void assignToDict(py::dict &dict, const std::array<const char *, NumRetVals> &labels, TupleType &data)
     {
         dict[labels[Index]] = std::move(std::get<Index>(data));
         assignToDict<Index + 1>(dict, labels, data);
     }
 
-    template<size_t Index, size_t NumRetVals, class TupleType,
-             std::enable_if_t<Index == NumRetVals, int> = 0>
+    template<size_t Index, size_t NumRetVals, class TupleType, std::enable_if_t<Index == NumRetVals, int> = 0>
     static void assignToDict(const py::dict &,
                              const std::array<const char *, NumRetVals> &,
                              const TupleType &)
@@ -170,13 +165,12 @@ private:
             py::array_t<float> result{ len };
 
             // Invoke func for each input image and put the results in result
-            ranges::transform(toRange<cv::Mat>(npArray), result.mutable_data(),
-                [&](const cv::Mat &image) {
-                    // Check for Ctrl+C etc.
-                    BOB_ASSERT(!PyErr_CheckSignals());
+            ranges::transform(toRange<cv::Mat>(npArray), result.mutable_data(), [&](const cv::Mat &image) {
+                // Check for Ctrl+C etc.
+                BOB_ASSERT(!PyErr_CheckSignals());
 
-                    return toFloat(func(image));
-                });
+                return toFloat(func(image));
+            });
 
             return result;
         }
@@ -191,35 +185,71 @@ protected:
 
 template<class T>
 class PyAlgoWrapper
-  : public PyAlgoWrapperBase<T>
+{};
+
+template<>
+class PyAlgoWrapper<PerfectMemoryType>
+  : public PyAlgoWrapperBase<PerfectMemoryType>
 {
 public:
     template<class... Ts>
-    PyAlgoWrapper(Ts&&... args)
-      : PyAlgoWrapperBase<T>(std::forward<Ts>(args)...)
+    PyAlgoWrapper(Ts &&...args)
+      : PyAlgoWrapperBase<PerfectMemoryType>(std::forward<Ts>(args)...)
     {}
-};
 
+    void train(py::object imageSet)
+    {
+        if (py::hasattr(imageSet, "iloc")) {
+            BOB_ASSERT(m_Indexes.size() == m_Algo.getNumSnapshots());
+            PyAlgoWrapperBase<PerfectMemoryType>::train(imageSet.attr("image").attr("to_list")());
+            ranges::copy(toRange<int>(imageSet.attr("index")), ranges::back_inserter(m_Indexes));
+        } else {
+            BOB_ASSERT(m_Indexes.empty());
+            PyAlgoWrapperBase<PerfectMemoryType>::train(imageSet);
+        }
+    }
+
+    auto getRIDFData(py::object imageSet) const
+    {
+        auto df = PyAlgoWrapperBase<PerfectMemoryType>::getRIDFData(std::move(imageSet), std::array<const char *, 3>{ "heading", "best_snap", "minval" });
+
+        if (m_Indexes.empty()) {
+            // ...then snapshots were loaded without giving indexes
+            return df;
+        }
+
+        // Also log the index of the best-matching snapshot in the training database
+        BOB_ASSERT(m_Indexes.size() == m_Algo.getNumSnapshots());
+        py::list bestSnapIdx;
+        ranges::for_each(toRange<size_t>(df["best_snap"]),
+                         [&](size_t snap) {
+                             bestSnapIdx.append(m_Indexes[snap]);
+                         });
+        df["best_snap_idx"] = std::move(bestSnapIdx);
+        return df;
+    }
+
+private:
+    std::vector<size_t> m_Indexes;
+};
 
 template<>
 class PyAlgoWrapper<InfoMaxType>
   : public PyAlgoWrapperBase<InfoMaxType>
 {
 public:
-    PyAlgoWrapper(const cv::Size &size, float learningRate,
-                  float tanhScalingFactor, Normalisation normalisation,
-                  Eigen::MatrixXf weights)
-      : PyAlgoWrapperBase<InfoMaxType>(size, learningRate, tanhScalingFactor,
-                                       normalisation, std::move(weights))
+    PyAlgoWrapper(const cv::Size &size, float learningRate, float tanhScalingFactor, Normalisation normalisation, Eigen::MatrixXf weights)
+      : PyAlgoWrapperBase<InfoMaxType>(size, learningRate, tanhScalingFactor, normalisation, std::move(weights))
     {}
 
-    PyAlgoWrapper(const cv::Size &size, float learningRate,
-                  float tanhScalingFactor, Normalisation normalisation)
-      : PyAlgoWrapper(size, learningRate, tanhScalingFactor, normalisation,
-                      generateInitialWeights(size).first)
+    PyAlgoWrapper(const cv::Size &size, float learningRate, float tanhScalingFactor, Normalisation normalisation)
+      : PyAlgoWrapper(size, learningRate, tanhScalingFactor, normalisation, generateInitialWeights(size).first)
     {}
 
-    const auto &getWeights() const { return m_Algo.getWeights(); }
+    const auto &getWeights() const
+    {
+        return m_Algo.getWeights();
+    }
 
     static std::pair<Eigen::MatrixXf, unsigned>
     generateInitialWeights(const cv::Size &size,
@@ -249,7 +279,8 @@ addAlgo(py::handle scope, const char *name)
 
 namespace BoBRobotics {
 namespace Navigation {
-void addAlgorithmClasses(py::module &m)
+void
+addAlgorithmClasses(py::module &m)
 {
     py::enum_<Normalisation>(m, "Normalisation")
             .value("none", Normalisation::None)
@@ -260,7 +291,7 @@ void addAlgorithmClasses(py::module &m)
             .def(py::init<const cv::Size &>())
             .def("get_ridf_data", [](const PyAlgoWrapper<PerfectMemoryType> &pm, const py::object &imageSet) {
                 // TODO: Also return RIDFs
-                return pm.getRIDFData(imageSet, std::array<const char *, 3>{ "heading", "best_snap", "minval" });
+                return pm.getRIDFData(imageSet);
             });
     addAlgo<InfoMaxType>(m, "InfoMax")
             .def(py::init<const cv::Size &, float, float, Normalisation>(),
