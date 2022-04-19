@@ -47,17 +47,13 @@ public:
                 const std::array<const char *, NumRetVals> &labels) const
     {
         // If imageSet is a DataFrame, extract the images and index columns
-        py::object images, indexes;
-        std::experimental::optional<py::array> headingOffsets;
+        py::object images;
+        std::experimental::optional<py::object> dataFrameIn;
         if (py::hasattr(imageSet, "iloc")) {
             images = imageSet.attr("image").attr("to_list")();
-            indexes = imageSet.attr("index");
-            if (py::hasattr(imageSet, "heading")) {
-                headingOffsets.emplace(imageSet["heading"].attr("to_numpy")());
-            }
+            dataFrameIn.emplace(std::move(imageSet));
         } else {
             images = std::move(imageSet);
-            indexes = py::none();
         }
 
         const py::array npArray = atLeast2d(images);
@@ -67,10 +63,10 @@ public:
             auto rng = ranges::views::single(npArray.cast<cv::Mat>());
 
             // We call squeeze() to turn DataFrame's array members into scalars
-            return doRIDF(std::move(rng), std::move(indexes), headingOffsets, labels).attr("squeeze")();
+            return doRIDF(std::move(rng), dataFrameIn, labels).attr("squeeze")();
         } break;
         case 3: // Multiple images
-            return doRIDF(toRange<cv::Mat>(images), std::move(indexes), headingOffsets, labels);
+            return doRIDF(toRange<cv::Mat>(images), dataFrameIn, labels);
         default:
             throw std::invalid_argument("Wrong number of dimensions");
         }
@@ -126,9 +122,8 @@ private:
 
     template<class Range, size_t NumRetVals>
     py::object doRIDF(const Range &range,
-                             py::object indexes,
-                             const std::experimental::optional<py::array> &headingOffsets,
-                             const std::array<const char *, NumRetVals> &labels) const
+                      const std::experimental::optional<py::object> &dfIn,
+                      const std::array<const char *, NumRetVals> &labels) const
     {
         py::list result;
 
@@ -144,19 +139,25 @@ private:
             BOB_ASSERT(!PyErr_CheckSignals());
         });
 
-        // Convert returned data to a pandas DataFrame
-        auto df = dictsToDataFrame(std::move(result), "index"_a = std::move(indexes));
+        // No input DataFrame given
+        if (!dfIn) {
+            return dictsToDataFrame(std::move(result));
+        }
+
+        // Use the indexes from the input DataFrame
+        auto dfOut = dictsToDataFrame(std::move(result), "index"_a = dfIn->attr("index"));
 
         /*
          * If the test images are tagged with world-centric headings, use
          * these values to calculate the real headings, in addition to the
          * change in headings that we've already computed.
          */
-        if (headingOffsets) {
-            df["estimated_heading"] = df["estimated_dheading"].attr("to_numpy")() + *headingOffsets;
+        if (py::hasattr(*dfIn, "heading")) {
+            dfOut["estimated_heading"] = dfOut["estimated_dheading"].attr("to_numpy")() +
+                                         (*dfIn)["heading"].attr("to_numpy")();
         }
 
-        return df;
+        return dfOut;
     }
 
     static float toFloat(const radian_t &val)
