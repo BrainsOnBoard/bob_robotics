@@ -49,8 +49,8 @@ public:
     }
 
     template<size_t NumRetVals>
-    auto getRIDFData(py::object imageSet,
-                     const std::array<const char *, NumRetVals> &labels) const
+    auto doRIDF(py::object imageSet,
+                const std::array<const char *, NumRetVals> &labels) const
     {
         // If imageSet is a DataFrame, extract the images and index columns
         py::object images, indexes;
@@ -73,10 +73,10 @@ public:
             auto rng = ranges::views::single(npArray.cast<cv::Mat>());
 
             // We call squeeze() to turn DataFrame's array members into scalars
-            return getHeadingDataMany(std::move(rng), std::move(indexes), headingOffsets, labels).attr("squeeze")();
+            return doRIDF(std::move(rng), std::move(indexes), headingOffsets, labels).attr("squeeze")();
         } break;
         case 3: // Multiple images
-            return getHeadingDataMany(toRange<cv::Mat>(images), std::move(indexes), headingOffsets, labels);
+            return doRIDF(toRange<cv::Mat>(images), std::move(indexes), headingOffsets, labels);
         default:
             throw std::invalid_argument("Wrong number of dimensions");
         }
@@ -124,10 +124,10 @@ private:
     }
 
     template<class Range, size_t NumRetVals>
-    py::object getHeadingDataMany(const Range &range,
-                                  py::object indexes,
-                                  const std::experimental::optional<py::array> &headingOffsets,
-                                  const std::array<const char *, NumRetVals> &labels) const
+    py::object doRIDF(const Range &range,
+                             py::object indexes,
+                             const std::experimental::optional<py::array> &headingOffsets,
+                             const std::array<const char *, NumRetVals> &labels) const
     {
         py::list result;
 
@@ -225,9 +225,9 @@ public:
         }
     }
 
-    auto getRIDFData(py::object imageSet) const
+    auto doRIDF(py::object imageSet) const
     {
-        auto df = PyAlgoWrapperBase<PerfectMemoryType>::getRIDFData(std::move(imageSet), std::array<const char *, 3>{ "dheading", "best_snap", "minval" });
+        auto df = PyAlgoWrapperBase<PerfectMemoryType>::doRIDF(std::move(imageSet), std::array<const char *, 3>{ "dheading", "best_snap", "minval" });
 
         if (m_Indexes.empty()) {
             // ...then snapshots were loaded without giving indexes
@@ -305,9 +305,9 @@ addAlgorithmClasses(py::module &m)
     // Add various algorithms as Python classes
     addAlgo<PerfectMemoryType>(m, "PerfectMemory")
             .def(py::init<const cv::Size &>())
-            .def("get_ridf_data", [](const PyAlgoWrapper<PerfectMemoryType> &pm, const py::object &imageSet) {
+            .def("ridf", [](const PyAlgoWrapper<PerfectMemoryType> &pm, const py::object &imageSet) {
                 // TODO: Also return RIDFs
-                return pm.getRIDFData(imageSet);
+                return pm.doRIDF(imageSet);
             });
     addAlgo<InfoMaxType>(m, "InfoMax")
             .def(py::init<const cv::Size &, float, float, Normalisation>(),
@@ -321,8 +321,8 @@ addAlgorithmClasses(py::module &m)
                  "tanh_scaling_factor"_a = InfoMaxType::DefaultTanhScalingFactor,
                  "normalisation"_a = Normalisation::None,
                  "weights"_a)
-            .def("get_ridf_data", [](const PyAlgoWrapper<InfoMaxType> &infomax, const py::object &imageSet) {
-                return infomax.getRIDFData(imageSet, std::array<const char *, 2>{ "dheading", "minval" });
+            .def("ridf", [](const PyAlgoWrapper<InfoMaxType> &infomax, const py::object &imageSet) {
+                return infomax.doRIDF(imageSet, std::array<const char *, 2>{ "dheading", "minval" });
             })
             .def("get_weights", &PyAlgoWrapper<InfoMaxType>::getWeights)
             .def_static("generate_initial_weights", &PyAlgoWrapper<InfoMaxType>::generateInitialWeights, "size"_a, "num_hidden"_a = ::optional<int>{}, "seed"_a = ::optional<unsigned>{})
