@@ -22,8 +22,8 @@ using PerfectMemoryType = PerfectMemoryRotater<>;
 using InfoMaxType = InfoMaxRotater<>;
 
 namespace {
-static py::module numpy = py::module::import("numpy");
-static py::function atLeast2d = numpy.attr("atleast_2d");
+py::module numpy = py::module::import("numpy");
+py::function atLeast2d = numpy.attr("atleast_2d");
 } // anonymous namespace
 
 template<class T>
