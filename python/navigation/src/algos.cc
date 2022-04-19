@@ -54,9 +54,13 @@ public:
     {
         // If imageSet is a DataFrame, extract the images and index columns
         py::object images, indexes;
+        std::experimental::optional<py::array> headingOffsets;
         if (py::hasattr(imageSet, "iloc")) {
             images = imageSet.attr("image").attr("to_list")();
             indexes = imageSet.attr("index");
+            if (py::hasattr(imageSet, "heading")) {
+                headingOffsets.emplace(imageSet["heading"].attr("to_numpy")());
+            }
         } else {
             images = std::move(imageSet);
             indexes = py::none();
@@ -69,10 +73,10 @@ public:
             auto rng = ranges::views::single(npArray.cast<cv::Mat>());
 
             // We call squeeze() to turn DataFrame's array members into scalars
-            return getHeadingDataMany(std::move(rng), std::move(indexes), labels).attr("squeeze")();
+            return getHeadingDataMany(std::move(rng), std::move(indexes), headingOffsets, labels).attr("squeeze")();
         } break;
         case 3: // Multiple images
-            return getHeadingDataMany(toRange<cv::Mat>(images), std::move(indexes), labels);
+            return getHeadingDataMany(toRange<cv::Mat>(images), std::move(indexes), headingOffsets, labels);
         default:
             throw std::invalid_argument("Wrong number of dimensions");
         }
@@ -122,6 +126,7 @@ private:
     template<class Range, size_t NumRetVals>
     py::object getHeadingDataMany(const Range &range,
                                   py::object indexes,
+                                  const std::experimental::optional<py::array> &headingOffsets,
                                   const std::array<const char *, NumRetVals> &labels) const
     {
         py::list result;
@@ -139,7 +144,18 @@ private:
         });
 
         // Convert returned data to a pandas DataFrame
-        return dictsToDataFrame(std::move(result), "index"_a = std::move(indexes));
+        auto df = dictsToDataFrame(std::move(result), "index"_a = std::move(indexes));
+
+        /*
+         * If the test images are tagged with world-centric headings, use
+         * these values to calculate the real headings, in addition to the
+         * change in headings that we've already computed.
+         */
+        if (headingOffsets) {
+            df["heading"] = df["dheading"].attr("to_numpy")() + *headingOffsets;
+        }
+
+        return df;
     }
 
     static float toFloat(const radian_t &val)
