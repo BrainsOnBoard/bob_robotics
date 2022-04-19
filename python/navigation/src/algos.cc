@@ -88,9 +88,16 @@ public:
                             [this](const cv::Mat &image) { return m_Algo.test(image); });
     }
 
-    void train(const py::object &imageSet)
+    void train(py::object imageSet)
     {
-        const py::array npArray = atLeast2d(imageSet);
+        py::object images;
+        if (py::hasattr(imageSet, "iloc")) {
+            images = imageSet["image"].attr("to_list")();
+        } else {
+            images = std::move(imageSet);
+        }
+
+        const py::array npArray = atLeast2d(images);
         switch (npArray.ndim()) {
         case 2:
             m_Algo.train(npArray.cast<cv::Mat>());
@@ -215,14 +222,15 @@ public:
 
     void train(py::object imageSet)
     {
+        // Keep track of the original database indexes of the input data, if provided
         if (py::hasattr(imageSet, "iloc")) {
             BOB_ASSERT(m_Indexes.size() == m_Algo.getNumSnapshots());
-            PyAlgoWrapperBase<PerfectMemoryType>::train(imageSet.attr("image").attr("to_list")());
             ranges::copy(toRange<int>(imageSet.attr("index")), ranges::back_inserter(m_Indexes));
         } else {
             BOB_ASSERT(m_Indexes.empty());
-            PyAlgoWrapperBase<PerfectMemoryType>::train(imageSet);
         }
+
+        PyAlgoWrapperBase<PerfectMemoryType>::train(std::move(imageSet));
     }
 
     auto doRIDF(py::object imageSet) const
