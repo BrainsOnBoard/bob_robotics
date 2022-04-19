@@ -153,7 +153,7 @@ private:
          * change in headings that we've already computed.
          */
         if (headingOffsets) {
-            df["heading"] = df["dheading"].attr("to_numpy")() + *headingOffsets;
+            df["estimated_heading"] = df["estimated_dheading"].attr("to_numpy")() + *headingOffsets;
         }
 
         return df;
@@ -229,7 +229,7 @@ public:
 
     auto doRIDF(py::object imageSet) const
     {
-        auto df = PyAlgoWrapperBase<PerfectMemoryType>::doRIDF(std::move(imageSet), std::array<const char *, 3>{ "dheading", "best_snap", "minval" });
+        auto df = PyAlgoWrapperBase<PerfectMemoryType>::doRIDF(std::move(imageSet), std::array<const char *, 3>{ "estimated_dheading", "best_snap", "minval" });
 
         if (m_Indexes.empty()) {
             // ...then snapshots were loaded without giving indexes
@@ -272,7 +272,7 @@ public:
     auto doRIDF(py::object imageSet) const
     {
         return PyAlgoWrapperBase<InfoMaxType>::doRIDF(std::move(imageSet),
-                                                      std::array<const char *, 2>{ "dheading", "minval" });
+                                                      std::array<const char *, 2>{ "estimated_dheading", "minval" });
     }
 
     static std::pair<Eigen::MatrixXf, unsigned>
