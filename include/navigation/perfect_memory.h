@@ -240,7 +240,7 @@ public:
 
         // Return result
         return std::tuple_cat(RIDFProcessor()(m_BestColumns, m_MinimumDifferences, rotater, window.first),
-                              std::make_tuple(&m_RotatedDifferences));
+                              std::make_tuple(std::cref(m_RotatedDifferences)));
     }
 
     /*!
