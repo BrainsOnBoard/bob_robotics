@@ -116,7 +116,7 @@ private:
         }
 
         // Use the indexes from the input DataFrame
-        auto dfOut = dictsToDataFrame(std::move(result), "index"_a = dfIn->attr("index"));
+        auto dfOut = dictsToDataFrame(std::move(result), "index"_a = dfIn->attr("database_idx"));
 
         /*
          * If the test images are tagged with world-centric headings, use
@@ -221,7 +221,8 @@ public:
         // Keep track of the original database indexes of the input data, if provided
         if (py::hasattr(imageSet, "iloc")) {
             BOB_ASSERT(m_Indexes.size() == m_Algo.getNumSnapshots());
-            ranges::copy(toRange<int>(imageSet.attr("index")), ranges::back_inserter(m_Indexes));
+            ranges::copy(toRange<size_t>(imageSet.attr("database_idx")),
+                         ranges::back_inserter(m_Indexes));
         } else {
             BOB_ASSERT(m_Indexes.empty());
         }

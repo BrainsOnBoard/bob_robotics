@@ -106,6 +106,13 @@ class Database(DatabaseInternal):
         self.entries['heading'] = _get_headings_from_xy(self.x, self.y)
         self.entries['distance'] = distance
 
+        # Unfortunately, index values are discarded when a single element is
+        # extracted from a DataFrame (the column names are then used as the
+        # indexes), but we want to hang onto this so we know which database
+        # entry e.g. a given data point corresponds to. So make our own extra
+        # index column.
+        self.entries['database_idx'] = self.entries.index
+
     def __getattr__(self, name):
         try:
             return object.__getattribute__(self, name)
@@ -119,7 +126,7 @@ class Database(DatabaseInternal):
             entries = self.entries.index
         elif hasattr(entries, "iloc"):
             # ...then it's a pandas Series/DataFrame
-            entries = entries.index
+            entries = entries.database_idx
 
         # Check if entries is a scalar. Unfortunately a DataFrame.index value
         # isn't an int so we can't just use isinstance() -- instead we try
