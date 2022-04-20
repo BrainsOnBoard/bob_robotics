@@ -42,36 +42,6 @@ public:
       : m_Algo(std::forward<Ts>(args)...)
     {}
 
-    template<size_t NumRetVals>
-    auto doRIDF(py::object imageSet,
-                const std::array<const char *, NumRetVals> &labels) const
-    {
-        // If imageSet is a DataFrame, extract the images and index columns
-        py::object images;
-        std::experimental::optional<py::object> dataFrameIn;
-        if (py::hasattr(imageSet, "iloc")) {
-            images = imageSet.attr("image").attr("to_list")();
-            dataFrameIn.emplace(std::move(imageSet));
-        } else {
-            images = std::move(imageSet);
-        }
-
-        const py::array npArray = atLeast2d(images);
-        switch (npArray.ndim()) {
-        case 2: { // Single image
-            // Single-element range
-            auto rng = ranges::views::single(npArray.cast<cv::Mat>());
-
-            // We call squeeze() to turn DataFrame's array members into scalars
-            return doRIDF(std::move(rng), dataFrameIn, labels).attr("squeeze")();
-        } break;
-        case 3: // Multiple images
-            return doRIDF(toRange<cv::Mat>(images), dataFrameIn, labels);
-        default:
-            throw std::invalid_argument("Wrong number of dimensions");
-        }
-    }
-
     auto test(const py::object &imageSet) const
     {
         return runOneOrMany(imageSet,
@@ -107,7 +77,8 @@ public:
     }
 
 private:
-    template<size_t Index, size_t NumRetVals, class TupleType, std::enable_if_t<Index<NumRetVals, int> = 0> static void assignToDict(py::dict &dict, const std::array<const char *, NumRetVals> &labels, TupleType &data)
+    template<size_t Index, size_t NumRetVals, class TupleType, std::enable_if_t<Index<NumRetVals, int> = 0>
+    static void assignToDict(py::dict &dict, const std::array<const char *, NumRetVals> &labels, TupleType &data)
     {
         dict[labels[Index]] = std::move(std::get<Index>(data));
         assignToDict<Index + 1>(dict, labels, data);
@@ -121,9 +92,9 @@ private:
     }
 
     template<class Range, size_t NumRetVals>
-    py::object doRIDF(const Range &range,
-                      const std::experimental::optional<py::object> &dfIn,
-                      const std::array<const char *, NumRetVals> &labels) const
+    py::object doRIDFInternal(const Range &range,
+                              const std::experimental::optional<py::object> &dfIn,
+                              const std::array<const char *, NumRetVals> &labels) const
     {
         py::list result;
 
@@ -199,6 +170,36 @@ private:
 
 protected:
     T m_Algo;
+
+    template<size_t NumRetVals>
+    auto doRIDFInternal(py::object imageSet,
+                        const std::array<const char *, NumRetVals> &labels) const
+    {
+        // If imageSet is a DataFrame, extract the images and index columns
+        py::object images;
+        std::experimental::optional<py::object> dataFrameIn;
+        if (py::hasattr(imageSet, "iloc")) {
+            images = imageSet.attr("image").attr("to_list")();
+            dataFrameIn.emplace(std::move(imageSet));
+        } else {
+            images = std::move(imageSet);
+        }
+
+        const py::array npArray = atLeast2d(images);
+        switch (npArray.ndim()) {
+        case 2: { // Single image
+            // Single-element range
+            auto rng = ranges::views::single(npArray.cast<cv::Mat>());
+
+            // We call squeeze() to turn DataFrame's array members into scalars
+            return doRIDFInternal(std::move(rng), dataFrameIn, labels).attr("squeeze")();
+        } break;
+        case 3: // Multiple images
+            return doRIDFInternal(toRange<cv::Mat>(images), dataFrameIn, labels);
+        default:
+            throw std::invalid_argument("Wrong number of dimensions");
+        }
+    }
 };
 
 template<class T>
@@ -228,9 +229,11 @@ public:
         PyAlgoWrapperBase<PerfectMemoryType>::train(std::move(imageSet));
     }
 
-    auto doRIDF(py::object imageSet) const
+    py::object doRIDF(py::object imageSet) const
     {
-        auto df = PyAlgoWrapperBase<PerfectMemoryType>::doRIDF(std::move(imageSet), std::array<const char *, 3>{ "estimated_dheading", "best_snap", "minval" });
+        static constexpr std::array<const char *, 4> labels{ "estimated_dheading", "best_snap", "minval", "differences" };
+
+        auto df = doRIDFInternal(std::move(imageSet), labels);
 
         if (m_Indexes.empty()) {
             // ...then snapshots were loaded without giving indexes
@@ -272,8 +275,8 @@ public:
 
     auto doRIDF(py::object imageSet) const
     {
-        return PyAlgoWrapperBase<InfoMaxType>::doRIDF(std::move(imageSet),
-                                                      std::array<const char *, 2>{ "estimated_dheading", "minval" });
+        static constexpr std::array<const char *, 2> labels{ "estimated_dheading", "minval" };
+        return doRIDFInternal(std::move(imageSet), labels);
     }
 
     static std::pair<Eigen::MatrixXf, unsigned>
