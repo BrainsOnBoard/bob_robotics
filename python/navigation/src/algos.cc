@@ -232,7 +232,6 @@ public:
     py::object doRIDF(py::object imageSet) const
     {
         static constexpr std::array<const char *, 4> labels{ "estimated_dheading", "best_snap", "minval", "differences" };
-
         auto df = doRIDFInternal(std::move(imageSet), labels);
 
         if (m_Indexes.empty()) {
@@ -240,14 +239,31 @@ public:
             return df;
         }
 
+        const auto dfLen = static_cast<py::ssize_t>(py::len(df));
+
         // Also log the index of the best-matching snapshot in the training database
         BOB_ASSERT(m_Indexes.size() == m_Algo.getNumSnapshots());
-        py::list bestSnapIdx;
-        ranges::for_each(toRange<size_t>(df["best_snap"]),
-                         [&](size_t snap) {
-                             bestSnapIdx.append(m_Indexes[snap]);
-                         });
+        py::array_t<int> bestSnapIdx(dfLen);
+        ranges::transform(toRange<size_t>(df["best_snap"]),
+                          bestSnapIdx.mutable_data(),
+                          [&](size_t snap) {
+                              return m_Indexes[snap];
+                          });
         df["best_snap_idx"] = std::move(bestSnapIdx);
+
+        // Also put the RIDFs for best-matching snaps into their own column, for convenience
+        py::list bestRIDF;
+        ranges::for_each(ranges::views::zip(toRange<py::array_t<float>>(df["differences"]),
+                                            toRange<size_t>(df["best_snap"])),
+                         [&](const auto &data) {
+                             const size_t cols = data.first.shape(1);
+
+                             // Extract the row corresponding to the best-matching snap
+                             py::array_t<float> ridf(cols, &data.first.data()[data.second * cols], data.first);
+                             bestRIDF.append(std::move(ridf));
+                         });
+        df["ridf"] = std::move(bestRIDF);
+
         return df;
     }
 
@@ -275,7 +291,7 @@ public:
 
     auto doRIDF(py::object imageSet) const
     {
-        static constexpr std::array<const char *, 2> labels{ "estimated_dheading", "minval" };
+        static constexpr std::array<const char *, 3> labels{ "estimated_dheading", "minval", "ridf" };
         return doRIDFInternal(std::move(imageSet), labels);
     }
 
