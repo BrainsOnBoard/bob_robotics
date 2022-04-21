@@ -24,14 +24,26 @@ using namespace units::angle;
 using PerfectMemoryType = PerfectMemoryRotater<>;
 using InfoMaxType = InfoMaxRotater<>;
 
-namespace {
 py::module numpy = py::module::import("numpy");
 py::function atLeast2d = numpy.attr("atleast_2d");
 
 py::module pandas = py::module::import("pandas");
 auto dataFrame = pandas.attr("DataFrame");
 py::function dictsToDataFrame = dataFrame.attr("from_records");
-} // anonymous namespace
+
+std::pair<py::object, bool>
+getColumnAsSequence(const py::object &df, const char *name)
+{
+    auto column = df[name];
+
+    // Regular column with multiple values
+    if (py::hasattr(column, "to_list")) {
+        return std::make_pair(column, true);
+    }
+
+    // Scalar value: wrap in tuple
+    return std::make_pair(py::make_tuple(std::move(column)), false);
+}
 
 template<class T>
 class PyAlgoWrapperBase
@@ -116,7 +128,7 @@ private:
         }
 
         // Use the indexes from the input DataFrame
-        auto dfOut = dictsToDataFrame(std::move(result), "index"_a = dfIn->attr("database_idx"));
+        auto dfOut = dictsToDataFrame(std::move(result), "index"_a = getColumnAsSequence(*dfIn, "database_idx").first);
 
         /*
          * If the test images are tagged with world-centric headings, use
@@ -247,22 +259,22 @@ public:
             return df;
         }
 
-        const auto dfLen = static_cast<py::ssize_t>(py::len(df));
-
         // Also log the index of the best-matching snapshot in the training database
         BOB_ASSERT(m_Indexes.size() == m_Algo.getNumSnapshots());
-        py::array_t<int> bestSnapIdx(dfLen);
-        ranges::transform(toRange<size_t>(df["best_snap"]),
+        py::object bestSnap;
+        bool isSequence;
+        std::tie(bestSnap, isSequence) = getColumnAsSequence(df, "best_snap");
+        py::array_t<int> bestSnapIdx(isSequence ? py::len(df) : 1);
+        ranges::transform(toRange<size_t>(bestSnap),
                           bestSnapIdx.mutable_data(),
                           [&](size_t snap) {
                               return m_Indexes[snap];
                           });
-        df["best_snap_idx"] = std::move(bestSnapIdx);
 
         // Put the RIDF for the best-matching snapshot into its own column
         std::vector<py::array_t<float>> bestRIDF;
-        ranges::transform(toRange<py::array_t<float>>(df["differences"]),
-                          toRange<size_t>(df["best_snap"]),
+        ranges::transform(toRange<py::array_t<float>>(getColumnAsSequence(df, "differences").first),
+                          toRange<size_t>(bestSnap),
                           ranges::back_inserter(bestRIDF),
                           [&](const auto &diffs, const auto &bestSnap) {
                               const size_t cols = diffs.shape(1);
@@ -271,7 +283,14 @@ public:
                               const float *ptr = &diffs.data()[bestSnap * cols];
                               return py::array_t<float>(cols, ptr, diffs);
                           });
-        df["ridf"] = std::move(bestRIDF);
+
+        if (isSequence) {
+            df["best_snap_idx"] = std::move(bestSnapIdx);
+            df["ridf"] = std::move(bestRIDF);
+        } else {
+            df["best_snap_idx"] = *bestSnapIdx.begin();
+            df["ridf"] = bestRIDF[0];
+        }
 
         return df;
     }
