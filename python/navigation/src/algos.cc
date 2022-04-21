@@ -245,7 +245,7 @@ public:
         // Keep track of the original database indexes of the input data, if provided
         if (py::hasattr(imageSet, "iloc")) {
             BOB_ASSERT(m_Indexes.size() == m_Algo.getNumSnapshots());
-            ranges::copy(toRange<size_t>(imageSet.attr("database_idx")),
+            ranges::copy(toRange<size_t>(getColumnAsSequence(imageSet, "database_idx").first),
                          ranges::back_inserter(m_Indexes));
         } else {
             BOB_ASSERT(m_Indexes.empty());
