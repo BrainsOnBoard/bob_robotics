@@ -54,10 +54,30 @@ public:
       : m_Algo(std::forward<Ts>(args)...)
     {}
 
-    auto test(const py::object &imageSet) const
+    py::object test(const py::object &imageSet) const
     {
-        return runOneOrMany(imageSet,
-                            [this](const cv::Mat &image) { return m_Algo.test(image); });
+        const py::array npArray = atLeast2d(imageSet);
+        switch (npArray.ndim()) {
+        case 2:
+            return py::cast(m_Algo.test(npArray.cast<cv::Mat>()));
+        case 3: {
+            // Return data as a numpy array for convenience
+            const py::ssize_t len = py::len(npArray);
+            py::array_t<float> result{ len };
+
+            // Invoke func for each input image and put the results in result
+            ranges::transform(toRange<cv::Mat>(npArray), result.mutable_data(), [&](const cv::Mat &image) {
+                // Check for Ctrl+C etc.
+                BOB_ASSERT(!PyErr_CheckSignals());
+
+                return m_Algo.test(image);
+            });
+
+            return result;
+        }
+        default:
+            throw std::invalid_argument("Wrong number of dimensions");
+        }
     }
 
     void train(py::object imageSet)
@@ -147,43 +167,6 @@ private:
 
         // Concatenate with input DataFrame for convenience
         return dfOut.attr("join")(*dfIn);
-    }
-
-    static float toFloat(const radian_t &val)
-    {
-        return val.value();
-    }
-
-    static float toFloat(float val)
-    {
-        return val;
-    }
-
-    template<class Func>
-    static py::object runOneOrMany(const py::object &imageSet, const Func &func)
-    {
-        const py::array npArray = atLeast2d(imageSet);
-        switch (npArray.ndim()) {
-        case 2:
-            return py::cast(func(npArray.cast<cv::Mat>()));
-        case 3: {
-            // Return data as a numpy array for convenience
-            const py::ssize_t len = py::len(npArray);
-            py::array_t<float> result{ len };
-
-            // Invoke func for each input image and put the results in result
-            ranges::transform(toRange<cv::Mat>(npArray), result.mutable_data(), [&](const cv::Mat &image) {
-                // Check for Ctrl+C etc.
-                BOB_ASSERT(!PyErr_CheckSignals());
-
-                return toFloat(func(image));
-            });
-
-            return result;
-        }
-        default:
-            throw std::invalid_argument("Wrong number of dimensions");
-        }
     }
 
 protected:
