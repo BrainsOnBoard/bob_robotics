@@ -180,7 +180,13 @@ protected:
         py::object images;
         std::experimental::optional<py::object> dataFrameIn;
         if (py::hasattr(imageSet, "iloc")) {
-            images = imageSet.attr("image").attr("to_list")();
+            images = imageSet.attr("image");
+
+            // If it's a column with multiple values
+            if (py::hasattr(images, "to_list")) {
+                images = images.attr("to_list")();
+            }
+
             dataFrameIn.emplace(std::move(imageSet));
         } else {
             images = std::move(imageSet);
