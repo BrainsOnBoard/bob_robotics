@@ -124,8 +124,8 @@ private:
          * change in headings that we've already computed.
          */
         if (py::hasattr(*dfIn, "heading")) {
-            dfOut["estimated_heading"] = dfOut["estimated_dheading"].attr("to_numpy")() +
-                                         (*dfIn)["heading"].attr("to_numpy")();
+            dfOut["estimated_heading"] = dfOut["estimated_dheading"] +
+                                         (*dfIn)["heading"];
         }
 
         // Concatenate with input DataFrame for convenience
