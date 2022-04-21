@@ -450,10 +450,11 @@ class DTHW {
 
     HashMatrix m_long_sequence;
     std::deque<std::bitset<64>> m_short_sequence;
-    std::vector<std::vector<int>> m_cost_matrix;
-    std::vector<std::vector<int>> m_accumulated_cost_matrix;
+    std::deque<std::vector<int>> m_cost_matrix;
+    std::deque<std::vector<int>> m_accumulated_cost_matrix;
     int m_current_sequence_size = 0;
     int m_sequence_limit = 50;
+    bool m_genP = true;
 
     public:
 
@@ -475,12 +476,9 @@ class DTHW {
 
     }
 
-    void appendToCostMatrix(std::vector<int> row) {
-        m_cost_matrix.push_back(row);
-    }
 
-    std::vector<std::vector<int>> calculate_cost_matrix(std::deque<std::bitset<64>> short_sequence, HashMatrix &h_matrix) {
-        std::vector<std::vector<int>> costMatrix;
+    std::deque<std::vector<int>> calculate_cost_matrix(std::deque<std::bitset<64>> short_sequence, HashMatrix &h_matrix) {
+        std::deque<std::vector<int>> costMatrix;
 
         for (int i = 0; i < short_sequence.size(); i++) {
             std::vector<int> differenceMatrix = HashMatrix::calculateHashValues(short_sequence[i],h_matrix.getMatrix());
@@ -498,39 +496,43 @@ class DTHW {
         return new_row;
     }
 
+    // sequence logic
     std::vector<std::pair<int,int>> getBestSequence(std::deque<std::bitset<64>> short_sequence, HashMatrix &hmat) {
 
-        Stopwatch watchGenC, watchGenD, watchGenP;
-        watchGenC.start();
 
         auto C = m_cost_matrix;
-        if (m_cost_matrix.empty()) {
-            // generate cost mat first time
+
+        auto D = m_accumulated_cost_matrix;
+        if (D.empty() || m_genP) { // init D mat
+
+             // init cost mat
             C = calculate_cost_matrix(short_sequence, m_long_sequence);
-        } else {
-            appendToCostMatrix( calculateNewRowDistances (short_sequence.back(), hmat)) ;
-            // append instead of recreating mat
+            D = calculate_accumulated_cost_matrix(m_cost_matrix);
+            m_accumulated_cost_matrix = D;
+            m_genP = false;
+        } else { // append row if exists
+            D = appendRowToD( calculateNewRowDistances (short_sequence.back(), hmat));
         }
 
-        auto c_v = static_cast<second_t>(watchGenC.elapsed()).value();
 
-        watchGenD.start();
-        auto D = calculate_accumulated_cost_matrix(m_cost_matrix);
-        auto d_v = static_cast<second_t>(watchGenD.elapsed()).value();
 
-        watchGenP.start();
         auto P = calculateOptimalWarpingPath(D); // first is last match - what we want
-        auto p_v = static_cast<second_t>(watchGenP.elapsed()).value();
+        if (P[0].second == 0) { // 0 should(?) be error - very hacky
+            m_genP = true;
+        }
 
-        std::cout << " C = " << c_v << " sec, " << " D = " << d_v << " sec, " << " P = " << p_v << " sec, " << std::endl;
         return P;
     }
 
     int getBestMatch(HashMatrix &hmat) {
+        int r_size = hmat.getMatrix().size();
         if (m_current_sequence_size >= m_sequence_limit) {
             auto P = getBestSequence(m_short_sequence, hmat );
            //int match_index =  P[P.size()-1].second;
-            int match_index =  P[0].second + m_sequence_limit; // adding the size to get the correct match (seq start + len)
+            int match_index =  P[0].second;// + m_sequence_limit; // adding the size to get the correct match (seq start + len)
+           // if (match_index >= r_size) {
+           //     match_index = r_size -1;
+           // }
             return match_index;
         } else {
             std::vector<int> differenceMatrix = HashMatrix::calculateHashValues(m_short_sequence.back(),m_long_sequence.getMatrix());
@@ -542,18 +544,44 @@ class DTHW {
 
     }
 
-    std::vector<std::vector<int>> appendRowToD() {
+    //! appends a row to D ----  to debug
+    std::deque<std::vector<int>> appendRowToD(std::vector<int> cost_row) {
+        auto D = m_accumulated_cost_matrix;
+        std::vector<int> D_row(cost_row.size());
+        auto C = m_cost_matrix;
+        C.push_back(cost_row); // append C mat with  new cost row
+        C.pop_front(); // remove first
+        D.push_back(D_row); // push new empty row
+        D.pop_front(); //  remove first
 
+        // copy first element of Cost matrix row
+        int N = D.size()-1;
+        int M = cost_row.size()-1;
+
+        // add 1 to cum sum
+        D[N][0] = D[N-1][0] + C[0][0];
+
+        for (int j = 1; j < M+1; j++) {
+            int up = D[N-1][j]; // up
+            int left = D[N][j-1]; // left
+            int upper_left = D[N-1][j-1]; // upper left
+            std::vector<int> squares({up,left,upper_left});
+            int min_val = *std::min_element( std::begin(squares), std::end(squares) );
+            D.back()[j] = C.back()[j] + min_val;
+        }
+        m_accumulated_cost_matrix = D;
+        m_cost_matrix = C;
+        return D;
     }
 
 
-    std::vector<std::vector<int>> calculate_accumulated_cost_matrix(std::vector<std::vector<int>> C) {
+    std::deque<std::vector<int>> calculate_accumulated_cost_matrix(std::deque<std::vector<int>> C) {
 
         int N, M;
         N = C.size();
         M = C[0].size();
 
-        std::vector<std::vector<int>> D(C.size(),std::vector<int>(C[0].size())); // accumulated cost matrix
+        std::deque<std::vector<int>> D(C.size(),std::vector<int>(C[0].size())); // accumulated cost matrix
         std::vector<int> cum_sum(C.size());
         std::vector<int> first_col;
          // cumulative sum of first column
@@ -566,7 +594,7 @@ class DTHW {
         }
 
 
-        // copy first column of Cost matrix
+        // copy first row of Cost matrix
         for (int i = 0; i < D[0].size(); i++) {
             D[0][i] = C[0][i]; // row 0 of D = C
         }
@@ -582,17 +610,18 @@ class DTHW {
                 D[i][j] = C[i][j] + min_val;
             }
         }
+        m_accumulated_cost_matrix = D;
         return D;
     }
 
 
-    std::vector<std::pair<int,int> > calculateOptimalWarpingPath(std::vector<std::vector<int>> D) {
+    std::vector<std::pair<int,int> > calculateOptimalWarpingPath(std::deque<std::vector<int>> D) {
         int N = D.size(); // row size
         int M = D[0].size(); // col size
         int n = N -1;
         int m = -1;
 
-        int min_index = -1;
+        int min_index = 0;
         int minVal = 1000;
         auto curr_row = D[N-1];
         for (int i = 0; i < curr_row.size(); i++) {  // m = D[N - 1, :].argmin()
@@ -667,7 +696,7 @@ int main(int argc, char **argv) {
     DTHW sequence_matcher(hashmat1); // init sequence matcher with training matrices
 
 
-    int seq_length = 15;
+    int seq_length = 9;
     for (int h = 0; h < route2.nodes.size(); h++) {
         auto hash = route2.nodes[h].image_hash; // current hash of test set
         int min_value;
@@ -684,7 +713,7 @@ int main(int argc, char **argv) {
         cv::imshow("current", route2.nodes[h].image);
         cv::imshow("current match", route1.nodes[min_row].image);
         cv::imshow("current seq match", route1.nodes[seq_index].image);
-        cv::waitKey(20);
+        cv::waitKey(1);
     }
     //HashMatrix::argmin_matrix(hashmat1.calculateHashValues(hash) , 60, height, min_col, min_row, min_value) ;
     //std::cout << " min value " << min_value << " min col " << min_col <<  " min row " << min_row << std::endl;
