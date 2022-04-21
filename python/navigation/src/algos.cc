@@ -128,7 +128,8 @@ private:
                                          (*dfIn)["heading"].attr("to_numpy")();
         }
 
-        return dfOut;
+        // Concatenate with input DataFrame for convenience
+        return dfOut.attr("join")(*dfIn);
     }
 
     static float toFloat(const radian_t &val)
