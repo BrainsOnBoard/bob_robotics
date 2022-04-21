@@ -31,6 +31,8 @@ using meter_t = units::length::meter_t;
 using millimeter_t = units::length::millimeter_t;
 using degree_t = units::angle::degree_t;
 
+// setup a navigation route with these classes
+
 // database entry struct
 struct Database_entry {
     float s_timestamp;

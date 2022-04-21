@@ -20,6 +20,7 @@
 #include <vector>
 
 
+//! struct with the database names for convenience
 struct dataset_paths {
     std::vector<std::string> dataset_path_array;
     std::string root_path = "../../../../rc_car_image_databases/rc_car_big/";
@@ -59,6 +60,7 @@ struct dataset_paths {
     }
 };
 
+//! unwrapping video from panoramic inpout to MP4
 class VideoUnwrapper {
     enum class FileType {
         skip,
@@ -121,49 +123,52 @@ class VideoUnwrapper {
     }
 };
 
-// reading a video file
+//!reading a video file to a vector
 class VideoReader {
     public:
 
-    cv::Size unwrapRes;
-    unsigned int outputScale;
-    VideoUnwrapper uw;
+    cv::Size m_unwrapRes;       // unwrapped resolution
+    unsigned int m_outputScale; // output resolution scale
+    cv::Size m_cameraRes;       // original resolution
+    VideoUnwrapper uw; // unwrapper for the panoramic camera
 
+
+
+    // default constractor - init some variables here
     VideoReader() {
-        unwrapRes = cv::Size(90, 25);
-        outputScale = 10;
+        m_unwrapRes = cv::Size(90, 25);
+        m_outputScale = 10;
+        m_cameraRes = cv::Size(1440,1440);
     }
 
-    // read video to images
+    //! read video to images to a vector
     std::vector<cv::Mat> readImages(int dataset_num, bool unwrap,bool createfile, cv::Size unwrapRes = cv::Size(90,25)) {
         dataset_paths paths;
         std::string video_path = paths.root_path + paths.dataset_path_array[dataset_num] +  "/" + paths.dataset_path_array[dataset_num] + ".mp4";
 
-        if (!unwrap) {
-
-            if (createfile) {
-                uw.unwrapMP4(video_path, unwrapRes, "pixpro_usb");
+        if (!unwrap) { // if we don't unwrap the images
+            if (createfile) { // we might just want to create an unwrapped video
+                uw.unwrapMP4(video_path, unwrapRes, "pixpro_usb"); // save unwrapped video with "unwrapped_" prefix
                 video_path = paths.root_path + paths.dataset_path_array[dataset_num] +  "/unwrapped_" + paths.dataset_path_array[dataset_num] + ".mp4";
-            } else {
+            } else { // if we don't create the file, we just read from it ( it should already be created)
                 video_path = paths.root_path + paths.dataset_path_array[dataset_num] +  "/unwrapped_" + paths.dataset_path_array[dataset_num] + ".mp4";
             }
         }
 
+        // camera device capture
         cv::VideoCapture cap(video_path);
         std::vector<cv::Mat> unwrapped_frames;
 
         if( !cap.isOpened() )
             throw "Error when reading steam_avi";
 
-        const cv::Size cameraRes(1440,1440);
-        const unsigned int outputScale = 10;
-
         // Create panoramic camera and suitable unwrapper
-        BoBRobotics::ImgProc::OpenCVUnwrap360 unwrapper(cameraRes,unwrapRes, "pixpro_usb");
+        BoBRobotics::ImgProc::OpenCVUnwrap360 unwrapper(m_cameraRes,unwrapRes, "pixpro_usb");
 
          // Create images
         cv::Mat originalImage(cv::Size(1440,1440), CV_8UC3);
 
+        // while the video has frames left, save frames
         for( ; ; ) {
             cv::Mat frame;
             cap >> frame;
@@ -174,14 +179,10 @@ class VideoReader {
                 cv::Mat outputImage(unwrapRes, CV_8UC3);
                 unwrapper.unwrap(frame, outputImage);
                 unwrapped_frames.push_back(outputImage);
-
             } else {
-
                 unwrapped_frames.push_back(frame);
             }
-
         }
-
         return unwrapped_frames;
     }
 };

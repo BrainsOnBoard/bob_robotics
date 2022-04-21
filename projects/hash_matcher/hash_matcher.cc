@@ -119,15 +119,18 @@ class HashMatrix
     }
 
     //! matches an images hash against a database (single match)
-    void getSingleMatch(std::bitset<64> hash, HashMatrix hashmat) {
-        int roll_step, height, min_col, min_row, min_value;
+    static std::pair<int,int> getSingleMatch(std::bitset<64> hash, HashMatrix hashmat, int &min_value, int width, int height) {
+        int min_col, min_row;
         std::vector<int> differenceMatrix = HashMatrix::calculateHashValues(hash,hashmat.getMatrix());
-        HashMatrix::argmin_matrix(differenceMatrix , m_width, m_height, min_col, min_row, min_value) ;
+        HashMatrix::argmin_matrix(differenceMatrix , width, height, min_col, min_row, min_value);
+        std::pair<int,int> mat_position({min_col, min_row});
+        return mat_position;
     }
 };
 
 class DTHW {
 
+    private:
     HashMatrix m_long_sequence;
     std::deque<std::bitset<64>> m_short_sequence;
     std::deque<std::vector<int>> m_cost_matrix;
@@ -136,26 +139,6 @@ class DTHW {
     int m_current_sequence_size = 0;
     int m_sequence_limit = 50;
     bool m_genP = true;
-
-    public:
-
-    DTHW(HashMatrix long_sequence, int roll_step) {
-        this->m_long_sequence = long_sequence;
-        this->m_roll_step = roll_step;
-    }
-
-    // add to sequence - if length reached, oldest element is removed
-    void addToShortSequence(std::bitset<64> hashValue,int sequence_size) {
-        m_sequence_limit = sequence_size;
-        if (m_short_sequence.size() < sequence_size) {
-            m_short_sequence.push_back(hashValue);
-        } else {
-            m_short_sequence.pop_front();
-            m_short_sequence.push_back(hashValue);
-
-        }
-        m_current_sequence_size = m_short_sequence.size();
-    }
 
     // calculate C matrix
     std::deque<std::vector<int>> calculate_cost_matrix(std::deque<std::bitset<64>> short_sequence, HashMatrix &h_matrix) {
@@ -202,24 +185,6 @@ class DTHW {
         }
 
         return P;
-    }
-
-    // get best match
-    int getBestMatch(HashMatrix &hmat) {
-        int r_size = hmat.getMatrix().size();
-        if (m_current_sequence_size >= m_sequence_limit) {
-            auto P = getBestSequence(m_short_sequence, hmat );
-            int match_index =  P[0].second;  // get best match index
-
-            return match_index;
-        } else {
-            std::vector<int> differenceMatrix = HashMatrix::calculateHashValues(m_short_sequence.back(),m_long_sequence.getMatrix());
-            int min_col, min_row, min_value;
-            HashMatrix::argmin_matrix(differenceMatrix , m_roll_step, differenceMatrix.size(), min_col, min_row, min_value) ;
-            return min_row;
-        }
-        return 0;
-
     }
 
     //! appends a row to D ----  to debug
@@ -299,6 +264,7 @@ class DTHW {
 
     //! calculate path
     std::vector<std::pair<int,int> > calculateOptimalWarpingPath(std::deque<std::vector<int>> D) {
+
         int N = D.size(); // row size
         int M = D[0].size(); // col size
         int n = N -1;
@@ -349,17 +315,62 @@ class DTHW {
 
         return P;
     }
+
+    public:
+
+    //! default constructor - init with a HashMatrix
+    DTHW(HashMatrix long_sequence, int roll_step) {
+        this->m_long_sequence = long_sequence;
+        this->m_roll_step = roll_step;
+    }
+
+    //! add to sequence - if length reached, oldest element is removed and the function returns true
+    bool addToShortSequence(std::bitset<64> hashValue,int sequence_size) {
+        bool is_limit_reached = false;
+        m_sequence_limit = sequence_size;
+        if (m_short_sequence.size() < sequence_size) {
+            m_short_sequence.push_back(hashValue);
+            is_limit_reached = false;
+        } else {
+            m_short_sequence.pop_front();
+            m_short_sequence.push_back(hashValue);
+            is_limit_reached = true;
+        }
+        m_current_sequence_size = m_short_sequence.size();
+        return is_limit_reached;
+    }
+
+    // get best match
+    int getBestMatch(HashMatrix &hmat) {
+        int r_size = hmat.getMatrix().size();
+        if (m_current_sequence_size >= m_sequence_limit) {
+            auto P = getBestSequence(m_short_sequence, hmat );
+            int match_index =  P[0].second;  // get best match index
+
+            return match_index;
+        } else {
+            std::vector<int> differenceMatrix = HashMatrix::calculateHashValues(m_short_sequence.back(),m_long_sequence.getMatrix());
+            int min_col, min_row, min_value;
+            HashMatrix::argmin_matrix(differenceMatrix , m_roll_step, differenceMatrix.size(), min_col, min_row, min_value) ;
+            return min_row;
+        }
+
+        return 0;
+
+    }
 };
+
 
 //---------------------------------- main  --------------------------------------///
 int main(int argc, char **argv) {
 
-    bool show_images = true;
-    int seq_length = 20;
-    int roll_step = 90;
+    bool show_images = true; // show visual
+    int seq_length = 20;     // sequence length
+    int roll_step = 90;      // number of rotations for a view
     auto route1 = Route::setup(0,roll_step, false, false);
     auto route2 = Route::setup(1,roll_step,false, false);
-    int height = route1.nodes.size();
+    int height = route1.nodes.size(); // number of elements in the dataset
+
 
     // setup Hash matrix with route
     HashMatrix hashmat1(route1); // create a matrix with rotations
@@ -381,9 +392,8 @@ int main(int argc, char **argv) {
         // get the best matching frame using sequence matching
         int seq_index = sequence_matcher.getBestMatch(hashmat1);
 
-        std::vector<int> differenceMatrix = HashMatrix::calculateHashValues(hash,hashmat1.getMatrix());
-        HashMatrix::argmin_matrix(differenceMatrix , roll_step, height, min_col, min_row, min_value) ;
-        std::cout << " current = " << h << " single match " <<  min_row << " seq match " << seq_index << " hash " << hash <<  std::endl;
+        HashMatrix::getSingleMatch(hash,hashmat1,min_value, roll_step, height);
+        std::cout << "curr = " << h << " S_MATCH " <<  min_row << " SEQ_MATCH " << seq_index << std::endl;
 
         if (show_images) {
              cv::Mat conc_img1, conc_img2;
