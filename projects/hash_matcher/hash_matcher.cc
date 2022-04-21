@@ -203,12 +203,32 @@ struct RouteNode {
     degree_t heading;
     std::bitset<64> image_hash;
     cv::Mat image;
+    int node_number;
+
+    //! Eauclidean distance between 2 nodes - to be done
+    static int distance(RouteNode node1, RouteNode node2) {
+        // euclidean distance
+        return 0;
+    }
+
+    static int angle_distance(RouteNode node1, RouteNode node2) {
+        // absolut angle distance between 2 poses
+        return 0;
+    }
 };
 
 // route
 struct Route {
     std::vector<RouteNode> nodes;
     int num_rotated_views;
+
+    //! gets closest node from outer route - to be done
+    RouteNode getClosestNode(Route otherRoute) {
+        RouteNode closestNode;
+        return closestNode;
+    }
+
+
 };
 
 
@@ -561,6 +581,11 @@ class DTHW {
         // add 1 to cum sum
         D[N][0] = D[N-1][0] + C[0][0];
 
+        // copy first row of Cost matrix
+        for (int i = 0; i < D[0].size(); i++) {
+            D[0][i] = C[0][i]; // row 0 of D = C
+        }
+
         for (int j = 1; j < M+1; j++) {
             int up = D[N-1][j]; // up
             int left = D[N][j-1]; // left
@@ -696,6 +721,8 @@ int main(int argc, char **argv) {
     DTHW sequence_matcher(hashmat1); // init sequence matcher with training matrices
 
 
+
+
     int seq_length = 9;
     for (int h = 0; h < route2.nodes.size(); h++) {
         auto hash = route2.nodes[h].image_hash; // current hash of test set
@@ -710,9 +737,15 @@ int main(int argc, char **argv) {
         std::vector<int> bestRots = hashmat1.getBestHashRotationDists(differenceMatrix); // 1 row in cost mat
         HashMatrix::argmin_matrix(differenceMatrix , 60, height, min_col, min_row, min_value) ;
         std::cout << " current = " << h << " single match " <<  min_row << " seq match " << seq_index << " hash " << hash <<  std::endl;
-        cv::imshow("current", route2.nodes[h].image);
-        cv::imshow("current match", route1.nodes[min_row].image);
-        cv::imshow("current seq match", route1.nodes[seq_index].image);
+       // cv::imshow("current", route2.nodes[h].image);
+       // cv::imshow("current match", route1.nodes[min_row].image);
+       // cv::imshow("current seq match", route1.nodes[seq_index].image);
+       // horizontal conc
+        cv::Mat conc_img1, conc_img2;
+        cv::vconcat(route2.nodes[h].image, route1.nodes[min_row].image, conc_img1);
+        cv::vconcat(conc_img1, route1.nodes[seq_index].image, conc_img2);
+        cv::resize(conc_img2, conc_img2, cv::Size(), 10, 10);
+        cv::imshow("testing single vs seq", conc_img2);
         cv::waitKey(1);
     }
     //HashMatrix::argmin_matrix(hashmat1.calculateHashValues(hash) , 60, height, min_col, min_row, min_value) ;
