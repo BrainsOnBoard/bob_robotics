@@ -45,6 +45,30 @@ getColumnAsSequence(const py::object &df, const char *name)
     return std::make_pair(py::make_tuple(std::move(column)), false);
 }
 
+std::pair<py::array, std::experimental::optional<py::object>>
+parseImageArgument(py::object imageSet)
+{
+    py::object images;
+    std::experimental::optional<py::object> dataFrame;
+    if (py::hasattr(imageSet, "iloc")) {
+        // ...then it's a DataFrame/Series
+        images = imageSet["image"];
+
+        // If it's a column with multiple values
+        if (py::hasattr(images, "to_list")) {
+            images = images.attr("to_list")();
+        }
+
+        dataFrame.emplace(std::move(imageSet));
+    } else {
+        images = std::move(imageSet);
+    }
+
+    py::array images2d = atLeast2d(std::move(images));
+    BOB_ASSERT(images2d.ndim() <= 3);
+    return std::make_pair(std::move(images2d), std::move(dataFrame));
+}
+
 template<class T>
 class PyAlgoWrapperBase
 {
@@ -54,63 +78,43 @@ public:
       : m_Algo(std::forward<Ts>(args)...)
     {}
 
-    py::object test(const py::object &imageSet) const
+    py::object test(py::object imageSet) const
     {
-        const py::array npArray = atLeast2d(imageSet);
-        switch (npArray.ndim()) {
-        case 2:
+        const py::array npArray = parseImageArgument(std::move(imageSet)).first;
+        if (npArray.ndim() == 2) {
             return py::cast(m_Algo.test(npArray.cast<cv::Mat>()));
-        case 3: {
-            // Return data as a numpy array for convenience
-            const py::ssize_t len = py::len(npArray);
-            py::array_t<float> result{ len };
-
-            // Invoke func for each input image and put the results in result
-            ranges::transform(toRange<cv::Mat>(npArray), result.mutable_data(), [&](const cv::Mat &image) {
-                // Check for Ctrl+C etc.
-                BOB_ASSERT(!PyErr_CheckSignals());
-
-                return m_Algo.test(image);
-            });
-
-            return result;
         }
-        default:
-            throw std::invalid_argument("Wrong number of dimensions");
-        }
+
+        // Return data as a numpy array for convenience
+        const py::ssize_t len = py::len(npArray);
+        py::array_t<float> result{ len };
+
+        // Invoke func for each input image and put the results in result
+        ranges::transform(toRange<cv::Mat>(npArray), result.mutable_data(), [&](const cv::Mat &image) {
+            // Check for Ctrl+C etc.
+            BOB_ASSERT(!PyErr_CheckSignals());
+
+            return m_Algo.test(image);
+        });
+
+        return result;
     }
 
     void train(py::object imageSet)
     {
-        py::object images;
-        if (py::hasattr(imageSet, "iloc")) {
-            images = imageSet["image"];
-
-            // If it's a column with multiple values
-            if (py::hasattr(images, "to_list")) {
-                images = images.attr("to_list")();
-            }
-        } else {
-            images = std::move(imageSet);
-        }
-
-        const py::array npArray = atLeast2d(images);
-        switch (npArray.ndim()) {
-        case 2:
+        const py::array npArray = parseImageArgument(std::move(imageSet)).first;
+        if (npArray.ndim() == 2) {
             m_Algo.train(npArray.cast<cv::Mat>());
-            break;
-        case 3: {
-            auto train = [this](const cv::Mat &image) {
-                m_Algo.train(image);
-
-                // Check for Ctrl+C etc.
-                BOB_ASSERT(!PyErr_CheckSignals());
-            };
-            ranges::for_each(toRange<cv::Mat>(npArray), train);
-        } break;
-        default:
-            throw std::invalid_argument("Wrong number of dimensions");
+            return;
         }
+
+        auto train = [this](const cv::Mat &image) {
+            m_Algo.train(image);
+
+            // Check for Ctrl+C etc.
+            BOB_ASSERT(!PyErr_CheckSignals());
+        };
+        ranges::for_each(toRange<cv::Mat>(npArray), train);
     }
 
 private:
@@ -176,36 +180,19 @@ protected:
     auto doRIDFInternal(py::object imageSet,
                         const std::array<const char *, NumRetVals> &labels) const
     {
-        // If imageSet is a DataFrame, extract the images and index columns
-        py::object images;
+        py::array npArray;
         std::experimental::optional<py::object> dataFrameIn;
-        if (py::hasattr(imageSet, "iloc")) {
-            images = imageSet.attr("image");
+        std::tie(npArray, dataFrameIn) = parseImageArgument(std::move(imageSet));
 
-            // If it's a column with multiple values
-            if (py::hasattr(images, "to_list")) {
-                images = images.attr("to_list")();
-            }
-
-            dataFrameIn.emplace(std::move(imageSet));
-        } else {
-            images = std::move(imageSet);
-        }
-
-        const py::array npArray = atLeast2d(images);
-        switch (npArray.ndim()) {
-        case 2: { // Single image
+        if (npArray.ndim() == 2) {
             // Single-element range
             auto rng = ranges::views::single(npArray.cast<cv::Mat>());
 
             // We call squeeze() to turn DataFrame's array members into scalars
             return doRIDFInternal(std::move(rng), dataFrameIn, labels).attr("squeeze")();
-        } break;
-        case 3: // Multiple images
-            return doRIDFInternal(toRange<cv::Mat>(images), dataFrameIn, labels);
-        default:
-            throw std::invalid_argument("Wrong number of dimensions");
         }
+
+        return doRIDFInternal(toRange<cv::Mat>(npArray), dataFrameIn, labels);
     }
 };
 
