@@ -1,6 +1,6 @@
-
+#pragma once;
 // includes
-# include <vector>
+#include <vector>
 #include <algorithm>
 #include <fstream>
 #include <limits>
@@ -12,16 +12,17 @@
 #include <iostream>
 #include <random>
 #include <chrono>
-#include "../include/imgproc/dct_hash.h"
-#include "video_unwrapper.h"
-#include "../include/common/stopwatch.h"
-#include "../third_party/units.h"
-#include "../include/video/panoramic.h"
-#include "../include/imgproc/roll.h"
-#include "../include/common/string.h"
-#include "../include/common/macros.h"
-#include <opencv2/opencv.hpp>
 
+#include "video/panoramic.h"
+#include "include/common/string.h"
+#include "include/common/macros.h"
+#include "imgproc/dct_hash.h"
+#include "imgproc/roll.h"
+#include "common/stopwatch.h"
+#include "video_unwrapper.h"
+#include "third_party/units.h"
+
+using namespace units;
 using namespace units::literals;
 using namespace units::angle;
 using namespace units::length;
@@ -231,11 +232,9 @@ struct Route {
 
 };
 
-
 // hash matrix
 class HashMatrix
 {
-
     public:
 
     size_t index( int x, int y ) const { return x + m_width * y; }
@@ -245,7 +244,6 @@ class HashMatrix
     std::vector<std::bitset<64> > m_matrix;
     int *m_return_matrix;
     Route route;
-
 
     std::vector<int> getBestHashRotationDists(std::vector<int> matrix) {
         std::vector<int> bestRotVector;
@@ -259,14 +257,11 @@ class HashMatrix
             }
             // save best rotation's hash distance
             bestRotVector.push_back(min);
-
         }
         return bestRotVector;
     }
 
-
     std::vector<std::bitset<64>> getMatrix() { return m_matrix; }
-
 
     // get the image from database with given rotation
     cv::Mat getImage( int node_num, int rotation) {
@@ -302,9 +297,7 @@ class HashMatrix
         }
     }
 
-
-
-    // gets rotations
+    //! gets rotations
     static std::vector<std::bitset<64>> getHashRotations(cv::Mat image, int totalRotations, std::vector<cv::Mat> &img_rotations) {
         // rotate member variable matrix
 
@@ -324,7 +317,7 @@ class HashMatrix
         return rotations;
     }
 
-    // hash all values in matrix with given hash
+    //! hash all values in matrix with given hash
     static std::vector<int> calculateHashValues(std::bitset<64> hash, const std::vector<std::bitset<64>> hashMatrix) {
         std::vector<int> differenceMatrix;
         for (int i =0; i < hashMatrix.size(); i++) {
@@ -472,14 +465,16 @@ class DTHW {
     std::deque<std::bitset<64>> m_short_sequence;
     std::deque<std::vector<int>> m_cost_matrix;
     std::deque<std::vector<int>> m_accumulated_cost_matrix;
+    int m_roll_step;
     int m_current_sequence_size = 0;
     int m_sequence_limit = 50;
     bool m_genP = true;
 
     public:
 
-    DTHW(HashMatrix long_sequence) {
+    DTHW(HashMatrix long_sequence, int roll_step) {
         this->m_long_sequence = long_sequence;
+        this->m_roll_step = roll_step;
     }
 
     // add to sequence - if length reached, oldest element is removed
@@ -493,10 +488,9 @@ class DTHW {
 
         }
         m_current_sequence_size = m_short_sequence.size();
-
     }
 
-
+    // calculate C matrix
     std::deque<std::vector<int>> calculate_cost_matrix(std::deque<std::bitset<64>> short_sequence, HashMatrix &h_matrix) {
         std::deque<std::vector<int>> costMatrix;
 
@@ -509,6 +503,7 @@ class DTHW {
         return costMatrix;
     }
 
+    // calculate row distances
     std::vector<int> calculateNewRowDistances(std::bitset<64> last_hash_val, HashMatrix &matrix) {
         auto hashmat = matrix.getMatrix();
         std::vector<int> differenceMatrix = HashMatrix::calculateHashValues(last_hash_val,hashmat);
@@ -521,7 +516,6 @@ class DTHW {
 
 
         auto C = m_cost_matrix;
-
         auto D = m_accumulated_cost_matrix;
         if (D.empty() || m_genP) { // init D mat
 
@@ -534,8 +528,7 @@ class DTHW {
             D = appendRowToD( calculateNewRowDistances (short_sequence.back(), hmat));
         }
 
-
-
+        // calculate path
         auto P = calculateOptimalWarpingPath(D); // first is last match - what we want
         if (P[0].second == 0) { // 0 should(?) be error - very hacky
             m_genP = true;
@@ -544,20 +537,18 @@ class DTHW {
         return P;
     }
 
+    // get best match
     int getBestMatch(HashMatrix &hmat) {
         int r_size = hmat.getMatrix().size();
         if (m_current_sequence_size >= m_sequence_limit) {
             auto P = getBestSequence(m_short_sequence, hmat );
-           //int match_index =  P[P.size()-1].second;
-            int match_index =  P[0].second;// + m_sequence_limit; // adding the size to get the correct match (seq start + len)
-           // if (match_index >= r_size) {
-           //     match_index = r_size -1;
-           // }
+            int match_index =  P[0].second;  // get best match index
+
             return match_index;
         } else {
             std::vector<int> differenceMatrix = HashMatrix::calculateHashValues(m_short_sequence.back(),m_long_sequence.getMatrix());
             int min_col, min_row, min_value;
-            HashMatrix::argmin_matrix(differenceMatrix , 60, differenceMatrix.size(), min_col, min_row, min_value) ;
+            HashMatrix::argmin_matrix(differenceMatrix , m_roll_step, differenceMatrix.size(), min_col, min_row, min_value) ;
             return min_row;
         }
         return 0;
@@ -599,8 +590,8 @@ class DTHW {
         return D;
     }
 
-
-    std::deque<std::vector<int>> calculate_accumulated_cost_matrix(std::deque<std::vector<int>> C) {
+    //! calculate D matrix
+    std::deque<std::vector<int>> calculate_accumulated_cost_matrix(std::deque<std::vector<int>> &C) {
 
         int N, M;
         N = C.size();
@@ -639,7 +630,7 @@ class DTHW {
         return D;
     }
 
-
+    // calculate path
     std::vector<std::pair<int,int> > calculateOptimalWarpingPath(std::deque<std::vector<int>> D) {
         int N = D.size(); // row size
         int M = D[0].size(); // col size
@@ -700,8 +691,13 @@ int main(int argc, char **argv) {
 
     Stopwatch watchGen;
     watchGen.start();
-    auto route1 = setup(0,60, false, false);
-    auto route2 = setup(1,60,false, false);
+
+    bool show_images = false;
+    int roll_step = 90;
+
+
+    auto route1 = setup(0,roll_step, false, false);
+    auto route2 = setup(1,roll_step,false, false);
 
     // setup Hash matrix with route
     HashMatrix hashmat1(route1); // create a matrix with rotations
@@ -713,17 +709,13 @@ int main(int argc, char **argv) {
               <<  static_cast<second_t>(watchGen.elapsed()).value()
               << " seconds\n";
 
-
     Stopwatch watchGen1;
     watchGen1.start();
 
 
-    DTHW sequence_matcher(hashmat1); // init sequence matcher with training matrices
+    DTHW sequence_matcher(hashmat1,roll_step); // init sequence matcher with training matrices
 
-
-
-
-    int seq_length = 9;
+    int seq_length = 20;
     for (int h = 0; h < route2.nodes.size(); h++) {
         auto hash = route2.nodes[h].image_hash; // current hash of test set
         int min_value;
@@ -734,22 +726,20 @@ int main(int argc, char **argv) {
 
         int seq_index = sequence_matcher.getBestMatch(hashmat1);
         std::vector<int> differenceMatrix = HashMatrix::calculateHashValues(hash,hashmat1.getMatrix());
-        std::vector<int> bestRots = hashmat1.getBestHashRotationDists(differenceMatrix); // 1 row in cost mat
-        HashMatrix::argmin_matrix(differenceMatrix , 60, height, min_col, min_row, min_value) ;
+        HashMatrix::argmin_matrix(differenceMatrix , roll_step, height, min_col, min_row, min_value) ;
         std::cout << " current = " << h << " single match " <<  min_row << " seq match " << seq_index << " hash " << hash <<  std::endl;
-       // cv::imshow("current", route2.nodes[h].image);
-       // cv::imshow("current match", route1.nodes[min_row].image);
-       // cv::imshow("current seq match", route1.nodes[seq_index].image);
-       // horizontal conc
-        cv::Mat conc_img1, conc_img2;
-        cv::vconcat(route2.nodes[h].image, route1.nodes[min_row].image, conc_img1);
-        cv::vconcat(conc_img1, route1.nodes[seq_index].image, conc_img2);
-        cv::resize(conc_img2, conc_img2, cv::Size(), 10, 10);
-        cv::imshow("testing single vs seq", conc_img2);
-        cv::waitKey(1);
+
+        if (show_images) {
+             cv::Mat conc_img1, conc_img2;
+            cv::vconcat(route2.nodes[h].image, route1.nodes[min_row].image, conc_img1);
+            cv::vconcat(conc_img1, route1.nodes[seq_index].image, conc_img2);
+            cv::resize(conc_img2, conc_img2, cv::Size(), 10, 10);
+            cv::imshow("testing single vs seq", conc_img2);
+            cv::waitKey(1);
+        }
+
     }
-    //HashMatrix::argmin_matrix(hashmat1.calculateHashValues(hash) , 60, height, min_col, min_row, min_value) ;
-    //std::cout << " min value " << min_value << " min col " << min_col <<  " min row " << min_row << std::endl;
+
     std::cout << " hashing the database took "
               <<  static_cast<second_t>(watchGen1.elapsed()).value()
               << " seconds\n";
