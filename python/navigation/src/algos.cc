@@ -259,17 +259,18 @@ public:
                           });
         df["best_snap_idx"] = std::move(bestSnapIdx);
 
-        // Also put the RIDFs for best-matching snaps into their own column, for convenience
-        py::list bestRIDF;
-        ranges::for_each(ranges::views::zip(toRange<py::array_t<float>>(df["differences"]),
-                                            toRange<size_t>(df["best_snap"])),
-                         [&](const auto &data) {
-                             const size_t cols = data.first.shape(1);
+        // Put the RIDF for the best-matching snapshot into its own column
+        std::vector<py::array_t<float>> bestRIDF;
+        ranges::transform(toRange<py::array_t<float>>(df["differences"]),
+                          toRange<size_t>(df["best_snap"]),
+                          ranges::back_inserter(bestRIDF),
+                          [&](const auto &diffs, const auto &bestSnap) {
+                              const size_t cols = diffs.shape(1);
 
-                             // Extract the row corresponding to the best-matching snap
-                             py::array_t<float> ridf(cols, &data.first.data()[data.second * cols], data.first);
-                             bestRIDF.append(std::move(ridf));
-                         });
+                              // Extract the row corresponding to the best-matching snap
+                              const float *ptr = &diffs.data()[bestSnap * cols];
+                              return py::array_t<float>(cols, ptr, diffs);
+                          });
         df["ridf"] = std::move(bestRIDF);
 
         return df;
