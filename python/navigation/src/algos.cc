@@ -64,7 +64,12 @@ public:
     {
         py::object images;
         if (py::hasattr(imageSet, "iloc")) {
-            images = imageSet["image"].attr("to_list")();
+            images = imageSet["image"];
+
+            // If it's a column with multiple values
+            if (py::hasattr(images, "to_list")) {
+                images = images.attr("to_list")();
+            }
         } else {
             images = std::move(imageSet);
         }
