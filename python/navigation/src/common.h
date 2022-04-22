@@ -60,6 +60,11 @@ struct type_caster<cv::Size>
     {
         return PyArg_ParseTuple(src.ptr(), "ii", &value.width, &value.height);
     }
+
+    static handle cast(const cv::Size &size, return_value_policy /* policy */, handle /* parent */)
+    {
+        return make_tuple(size.width, size.height).release();
+    }
 };
 
 // Coerce all angle-unit types into radians

@@ -99,6 +99,20 @@ public:
         m_Weights = generateInitialWeights(m_Weights.cols(), m_Weights.rows());
     }
 
+    float getLearningRate() const
+    {
+        return m_LearningRate;
+    }
+
+    float getTanhScalingFactor() const
+    {
+        return m_TanhScalingFactor;
+    }
+
+    Normalisation getNormalisationMethod() const
+    {
+        return m_Normalisation;
+    }
 
     const MatrixType &getWeights() const
     {

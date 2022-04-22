@@ -78,6 +78,8 @@ public:
       : m_Algo(std::forward<Ts>(args)...)
     {}
 
+    const T &getAlgo() const { return m_Algo; }
+
     py::object test(py::object imageSet) const
     {
         const py::array npArray = parseImageArgument(std::move(imageSet)).first;
@@ -349,6 +351,25 @@ addAlgorithmClasses(py::module &m)
                  "tanh_scaling_factor"_a = InfoMaxType::DefaultTanhScalingFactor,
                  "normalisation"_a = Normalisation::None,
                  "weights"_a)
+            .def(py::pickle(
+                    [](const PyAlgoWrapper<InfoMaxType> &wrapper) {
+                        const auto &infomax = wrapper.getAlgo();
+                        return py::make_tuple(
+                                infomax.getUnwrapResolution(),
+                                infomax.getLearningRate(),
+                                infomax.getTanhScalingFactor(),
+                                infomax.getNormalisationMethod(),
+                                infomax.getWeights());
+                    },
+                    [](py::tuple state) {
+                        return PyAlgoWrapper<InfoMaxType>{
+                            state[0].cast<cv::Size>(),
+                            state[1].cast<float>(),
+                            state[2].cast<float>(),
+                            state[3].cast<Normalisation>(),
+                            state[4].cast<InfoMaxType::MatrixType>()
+                        };
+                    }))
             .def("get_weights", &PyAlgoWrapper<InfoMaxType>::getWeights)
             .def_static("generate_initial_weights", &PyAlgoWrapper<InfoMaxType>::generateInitialWeights, "size"_a, "num_hidden"_a = ::optional<int>{}, "seed"_a = ::optional<unsigned>{})
             .def_property_readonly_static("DEFAULT_LEARNING_RATE", [](const py::object &) { return InfoMaxType::DefaultLearningRate; })
