@@ -283,8 +283,8 @@ public:
       : PyAlgoWrapperBase<InfoMaxType>(size, learningRate, tanhScalingFactor, normalisation, std::move(weights))
     {}
 
-    PyAlgoWrapper(const cv::Size &size, float learningRate, float tanhScalingFactor, Normalisation normalisation)
-      : PyAlgoWrapper(size, learningRate, tanhScalingFactor, normalisation, generateInitialWeights(size).first)
+    PyAlgoWrapper(const cv::Size &size, float learningRate, const std::experimental::optional<unsigned> &seed, float tanhScalingFactor, Normalisation normalisation)
+      : PyAlgoWrapper(size, learningRate, tanhScalingFactor, normalisation, generateInitialWeights(size, std::experimental::nullopt, seed).first)
     {}
 
     const auto &getWeights() const
@@ -337,9 +337,10 @@ addAlgorithmClasses(py::module &m)
     addAlgo<PerfectMemoryType>(m, "PerfectMemory")
             .def(py::init<const cv::Size &>());
     addAlgo<InfoMaxType>(m, "InfoMax")
-            .def(py::init<const cv::Size &, float, float, Normalisation>(),
+            .def(py::init<const cv::Size &, float, const std::experimental::optional<unsigned> &, float, Normalisation>(),
                  "size"_a,
                  "learning_rate"_a = InfoMaxType::DefaultLearningRate,
+                 "seed"_a = std::experimental::nullopt,
                  "tanh_scaling_factor"_a = InfoMaxType::DefaultTanhScalingFactor,
                  "normalisation"_a = Normalisation::None)
             .def(py::init<const cv::Size &, float, float, Normalisation, Eigen::MatrixXf>(),
