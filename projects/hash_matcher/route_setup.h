@@ -1,4 +1,4 @@
-#pragma once;
+#pragma once
 // includes
 #include <vector>
 #include <algorithm>
@@ -12,7 +12,6 @@
 #include <iostream>
 #include <random>
 #include <chrono>
-
 
 #include "video/panoramic.h"
 #include "include/common/string.h"
@@ -65,16 +64,34 @@ struct RouteNode {
     cv::Mat image;
     int node_number;
 
-    //! Eauclidean distance between 2 nodes - to be done
-    static int distance(RouteNode node1, RouteNode node2) {
-        // euclidean distance
-        return 0;
+    //! Eauclidean distance between two 3d coordinates
+    static millimeter_t distance(RouteNode node1, RouteNode node2) {
+
+        using namespace units::math;
+        auto x1 = node1.x;
+        auto y1 = node1.y;
+        auto z1 = node1.z;
+
+        auto x2 = node2.x;
+        auto y2 = node2.y;
+        auto z2 = node2.z;
+
+        millimeter_t d = sqrt( pow<2>(x2 - x1) + pow<2>(y2 - y1) + pow<2>(z2 - z1) );
+        return d;
+
     }
 
-    static int angle_distance(RouteNode node1, RouteNode node2) {
-        // absolut angle distance between 2 poses
-        return 0;
+    //! gets the angular difference between 2 nodes
+    static degree_t angle_distance(RouteNode node1, RouteNode node2) {
+        auto angle1 = node1.heading;
+        auto angle2 = node2.heading;
+
+        degree_t delta_theta = (angle1 > angle2) * (360_deg - angle2 - angle1)
+              + (angle2 > angle1) * (angle2 - angle1);
+
+        return delta_theta;
     }
+
 };
 
 // a csv reader to read database files
@@ -101,33 +118,6 @@ struct CSVReader {
         BoBRobotics::strSplit(line, ',', fields);
         std::for_each(fields.begin(), fields.end(), BoBRobotics::strTrim);
         const size_t numFields = fields.size();
-        std::cout << " fields = " <<  numFields << std::endl;
-
-        // strings to parse csv
-        const char * s_timestamp = "Timestamp [ms]";
-        const char * s_x = "X [mm]";
-        const char * s_y = "Y [mm]";
-        const char * s_z = "Z [mm]";
-        const char * s_heading = "Heading [degrees]";
-        const char * s_pitch = "Pitch [degrees]";
-        const char * s_roll = "Roll [degrees]";
-        const char * s_speed = "Speed";
-        const char * s_steering = "Steering angle [degrees]";
-        const char * s_filename = "Filename";
-        const char * s_gps_quality = "GPS quality";
-        const char * s_utm_zone = "UTM zone";
-        const char * s_fx = "fitted x deg 1";
-        const char * s_fy = "fitted y deg 1";
-        const char * s_fz = "fitted z deg 1";
-        const char * s_gps_h = "gps_h deg 1";
-        const char * s_corr_heading = "corrected IMU heading [degrees]";
-
-        // field names
-        std::array<const char *, 17> defaultFieldNames{
-            s_x, s_y, s_z, s_heading, s_pitch, s_roll, s_speed,
-            s_steering, s_filename, s_gps_quality, s_utm_zone,
-            s_fx, s_fy, s_fz, s_gps_h, s_corr_heading
-        };
 
         std::cout << "parsing csv file" << std::endl;
          // Read data line by line
@@ -179,25 +169,37 @@ struct Route {
     std::vector<RouteNode> nodes;
     int num_rotated_views;
 
-    //! gets closest node from outer route - to be done
-    RouteNode getClosestNode(Route otherRoute) {
-        RouteNode closestNode;
-        return closestNode;
+    //! gets closest node from outer route and it's distance
+    static RouteNode getClosestNode(Route route_train, Route route_test, int node_to_find, millimeter_t &distance ) {
+
+        // get test node by index
+        RouteNode toFind = route_test.nodes[node_to_find];
+        // go through train values to pick closest node
+        auto train_nodes = route_train.nodes;
+        millimeter_t min_dist = 1000_m;
+        int min_index = 0;
+        for ( size_t i = 0; i < train_nodes.size();i++) {
+            auto curr_dist = RouteNode::distance(train_nodes[i], toFind);
+            if (curr_dist < min_dist) {
+                min_dist = curr_dist;
+                min_index = i;
+            }
+        }
+        distance = min_dist;
+        RouteNode retNode = route_test.nodes[min_index];
+        return retNode;
     }
 
-    static Route setup(int dataset_num, int num_rotations, bool unwrap, bool createvideo) {
-
+    static Route setup(int dataset_num, int num_rotations, bool unwrap, bool createvideo, cv::Size unwrapRes) {
         auto db_entries = CSVReader::loadCSV(dataset_num);
-        // read images
-
         std::cout << "Loading images..." << std::endl;
         VideoReader reader;
-        std::vector<cv::Mat> images = reader.readImages(dataset_num, unwrap, createvideo);
+        std::vector<cv::Mat> images = reader.readImages(dataset_num, unwrap, createvideo, unwrapRes);
 
         // create route
         Route rc_car_route;
         rc_car_route.num_rotated_views = num_rotations; // rotations
-        for (int i = 0; i < db_entries.size();i++) {
+        for (size_t i = 0; i < db_entries.size();i++) {
         // create route node
             if (db_entries[i].s_utm_zone != "" ) {
                 RouteNode node;
@@ -210,7 +212,7 @@ struct Route {
                 auto fileName = db_entries[i].s_filename;
                 // extracting the number from the filename to match with video frame numbers
                 std::stringstream digits;
-                for(int i=0;i<fileName.length();i++){
+                for(size_t i=0;i<fileName.length();i++){
                     if(isdigit(fileName[i])) {
                         digits << fileName[i];
                     }

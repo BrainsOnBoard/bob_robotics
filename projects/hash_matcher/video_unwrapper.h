@@ -62,11 +62,6 @@ struct dataset_paths {
 
 //! unwrapping video from panoramic inpout to MP4
 class VideoUnwrapper {
-    enum class FileType {
-        skip,
-        image,
-        video
-    };
 
     public:
     /* unwrap an MP4 video */
@@ -131,7 +126,6 @@ class VideoReader {
     unsigned int m_outputScale; // output resolution scale
     cv::Size m_cameraRes;       // original resolution
     VideoUnwrapper uw; // unwrapper for the panoramic camera
-
 
 
     // default constractor - init some variables here

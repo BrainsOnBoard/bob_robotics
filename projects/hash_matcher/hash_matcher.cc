@@ -17,13 +17,12 @@ class HashMatrix
     int m_height; // width of dataset ( number of rotate views )
     std::vector<cv::Mat> images;
     std::vector<std::bitset<64> > m_matrix; // training examples with pre-calc rotations
-    int *m_return_matrix;
     Route route;
 
     //! get a difference hash vector form the best views ( 1rotation/ element)
     std::vector<int> getBestHashRotationDists(std::vector<int> matrix) {
         std::vector<int> bestRotVector;
-        for (int i=0; i< matrix.size()/m_width; i++) {
+        for (size_t i=0; i< matrix.size()/m_width; i++) {
             int min = 255;
             for (int j = 0; j < m_width; j++ ) {
                 auto current_element = matrix[i*m_width+j];
@@ -59,7 +58,7 @@ class HashMatrix
         this->m_height = route.nodes.size();
         this->route = route;
 
-        for (int i = 0; i < route.nodes.size(); i++) {
+        for (size_t i = 0; i < route.nodes.size(); i++) {
             cv::Mat img1 = route.nodes[i].image; // get current image
             cv::Mat img_gray;
             images.push_back(img1);
@@ -67,7 +66,7 @@ class HashMatrix
             std::vector<cv::Mat> mat;
             cv::cvtColor(img1, img_gray, cv::COLOR_BGR2GRAY);
             auto hash_rotations = HashMatrix::getHashRotations(img_gray, numRotations, mat); // gets all the rotations (and hashes)
-            for (int j = 0; j < hash_rotations.size(); j++) {
+            for (size_t j = 0; j < hash_rotations.size(); j++) {
                 m_matrix.push_back(hash_rotations[j] );
             }
 
@@ -97,17 +96,17 @@ class HashMatrix
     //! hash all values in matrix with given hash
     static std::vector<int> calculateHashValues(std::bitset<64> hash, const std::vector<std::bitset<64>> hashMatrix) {
         std::vector<int> differenceMatrix;
-        for (int i =0; i < hashMatrix.size(); i++) {
+        for (size_t i =0; i < hashMatrix.size(); i++) {
             differenceMatrix.push_back( DCTHash::distance(hashMatrix[i], hash) );
         }
         return differenceMatrix;
     }
 
     //! gets the minimum element of a matrix and it's 2d indices
-    static void argmin_matrix(std::vector<int> &matrix, int width, int height, int &min_col, int &min_row, int &min_value) {
+    static void argmin_matrix(std::vector<int> &matrix, int width, int &min_col, int &min_row, int &min_value) {
         int min = 100000; // init with big number
         int index_min = 0;
-        for (int i=0; i< matrix.size(); i++) {
+        for (size_t i=0; i< matrix.size(); i++) {
             if (matrix[i] < min) {
                 min = matrix[i];
                 index_min = i;
@@ -119,15 +118,16 @@ class HashMatrix
     }
 
     //! matches an images hash against a database (single match)
-    static std::pair<int,int> getSingleMatch(std::bitset<64> hash, HashMatrix hashmat, int &min_value, int width, int height) {
+    static std::pair<int,int> getSingleMatch(std::bitset<64> hash, HashMatrix hashmat, int &min_value, int width) {
         int min_col, min_row;
         std::vector<int> differenceMatrix = HashMatrix::calculateHashValues(hash,hashmat.getMatrix());
-        HashMatrix::argmin_matrix(differenceMatrix , width, height, min_col, min_row, min_value);
+        HashMatrix::argmin_matrix(differenceMatrix , width, min_col, min_row, min_value);
         std::pair<int,int> mat_position({min_col, min_row});
         return mat_position;
     }
 };
 
+//! hash sequence matcher
 class DTHW {
 
     private:
@@ -135,16 +135,16 @@ class DTHW {
     std::deque<std::bitset<64>> m_short_sequence;
     std::deque<std::vector<int>> m_cost_matrix;
     std::deque<std::vector<int>> m_accumulated_cost_matrix;
-    int m_roll_step;
-    int m_current_sequence_size = 0;
-    int m_sequence_limit = 50;
+    unsigned int m_roll_step;
+    unsigned int m_current_sequence_size = 0;
+    unsigned m_sequence_limit = 50;
     bool m_genP = true;
 
     // calculate C matrix
     std::deque<std::vector<int>> calculate_cost_matrix(std::deque<std::bitset<64>> short_sequence, HashMatrix &h_matrix) {
         std::deque<std::vector<int>> costMatrix;
 
-        for (int i = 0; i < short_sequence.size(); i++) {
+        for (size_t i = 0; i < short_sequence.size(); i++) {
             std::vector<int> differenceMatrix = HashMatrix::calculateHashValues(short_sequence[i],h_matrix.getMatrix());
             std::vector<int> row_dists = h_matrix.getBestHashRotationDists(differenceMatrix);
             costMatrix.push_back(row_dists);
@@ -205,7 +205,7 @@ class DTHW {
         D[N][0] = D[N-1][0] + C[0][0];
 
         // copy first row of Cost matrix
-        for (int i = 0; i < D[0].size(); i++) {
+        for (size_t i = 0; i < D[0].size(); i++) {
             D[0][i] = C[0][i]; // row 0 of D = C
         }
 
@@ -233,17 +233,17 @@ class DTHW {
         std::vector<int> cum_sum(C.size());
         std::vector<int> first_col;
          // cumulative sum of first column
-        for  (int  i = 0; i < C.size(); i++) {
+        for  (size_t  i = 0; i < C.size(); i++) {
             first_col.push_back(C[i][0]);
         }
         std::partial_sum(first_col.begin(), first_col.end(), cum_sum.begin(), std::plus<int>());
-        for (int i =0;  i < D.size(); i++) {
+        for (size_t i =0;  i < D.size(); i++) {
             D[i][0] = cum_sum[i];
         }
 
 
         // copy first row of Cost matrix
-        for (int i = 0; i < D[0].size(); i++) {
+        for (size_t i = 0; i < D[0].size(); i++) {
             D[0][i] = C[0][i]; // row 0 of D = C
         }
 
@@ -266,14 +266,13 @@ class DTHW {
     std::vector<std::pair<int,int> > calculateOptimalWarpingPath(std::deque<std::vector<int>> D) {
 
         int N = D.size(); // row size
-        int M = D[0].size(); // col size
         int n = N -1;
         int m = -1;
 
         int min_index = 0;
         int minVal = 1000;
         auto curr_row = D[N-1];
-        for (int i = 0; i < curr_row.size(); i++) {  // m = D[N - 1, :].argmin()
+        for (size_t i = 0; i < curr_row.size(); i++) {  // m = D[N - 1, :].argmin()
             if (curr_row[i] < minVal) {
                 minVal = curr_row[i];
                 min_index = i;
@@ -325,7 +324,7 @@ class DTHW {
     }
 
     //! add to sequence - if length reached, oldest element is removed and the function returns true
-    bool addToShortSequence(std::bitset<64> hashValue,int sequence_size) {
+    bool addToShortSequence(std::bitset<64> hashValue,size_t sequence_size) {
         bool is_limit_reached = false;
         m_sequence_limit = sequence_size;
         if (m_short_sequence.size() < sequence_size) {
@@ -342,7 +341,6 @@ class DTHW {
 
     // get best match
     int getBestMatch(HashMatrix &hmat) {
-        int r_size = hmat.getMatrix().size();
         if (m_current_sequence_size >= m_sequence_limit) {
             auto P = getBestSequence(m_short_sequence, hmat );
             int match_index =  P[0].second;  // get best match index
@@ -351,7 +349,7 @@ class DTHW {
         } else {
             std::vector<int> differenceMatrix = HashMatrix::calculateHashValues(m_short_sequence.back(),m_long_sequence.getMatrix());
             int min_col, min_row, min_value;
-            HashMatrix::argmin_matrix(differenceMatrix , m_roll_step, differenceMatrix.size(), min_col, min_row, min_value) ;
+            HashMatrix::argmin_matrix(differenceMatrix , m_roll_step, min_col, min_row, min_value) ;
             return min_row;
         }
 
@@ -360,17 +358,34 @@ class DTHW {
     }
 };
 
+//! checks scores based on frame distance, positional distance, and angular error
+std::pair<millimeter_t,degree_t> scoring(Route &testRoute, int current_frame, Route &referenceRoute, int match_index) {
+    auto currentNode = testRoute.nodes[current_frame]; // the current node in the testted route
+    auto referenceNode = referenceRoute.nodes[match_index]; // matched node in the reference route - single match
+    std::pair<millimeter_t, degree_t> errors;
+
+    millimeter_t dist = RouteNode::distance(currentNode, referenceNode); // distance from the test node in mm - single match
+    degree_t angDiff = RouteNode::angle_distance(currentNode, referenceNode); // angle  angular difference - single match
+
+    errors.first = dist;
+    errors.second = angDiff;
+
+    return errors;
+}
 
 //---------------------------------- main  --------------------------------------///
 int main(int argc, char **argv) {
 
-    bool show_images = true; // show visual
-    int seq_length = 20;     // sequence length
-    int roll_step = 90;      // number of rotations for a view
-    auto route1 = Route::setup(0,roll_step, false, false);
-    auto route2 = Route::setup(1,roll_step,false, false);
-    int height = route1.nodes.size(); // number of elements in the dataset
+    bool show_images = true;    // show visual
+    int seq_length = 5;        // sequence length
+    int roll_step = 90;         // number of rotations for a view
+    cv::Size unwrapRes(180,60); // resolution of the unwrrapped video
+    bool createVideo = false;    // if true, it saves unwrapped video
+    bool unwrap = false;         // if true, videos will be unwrapped
 
+    // init routes - read coordinates from csv, read and unwrap images from video
+    auto route1 = Route::setup(0,roll_step, unwrap, createVideo, unwrapRes);
+    auto route2 = Route::setup(1,roll_step,unwrap, createVideo, unwrapRes);
 
     // setup Hash matrix with route
     HashMatrix hashmat1(route1); // create a matrix with rotations
@@ -380,28 +395,30 @@ int main(int argc, char **argv) {
     DTHW sequence_matcher(hashmat1,roll_step); // init sequence matcher with training matrices
 
     // simulation
-    for (int h = 0; h < route2.nodes.size(); h++) {
+    for (size_t h = 0; h < route2.nodes.size(); h++) {
+
         auto hash = route2.nodes[h].image_hash; // current hash of test set
         int min_value; // best value
-        int min_col;   // best colum (degree)
-        int min_row;   // best row   (frame match)
 
         // add to the memory( short sequence) - we fill the experience vector to the desired level
         sequence_matcher.addToShortSequence(hash,seq_length);
 
         // get the best matching frame using sequence matching
         int seq_index = sequence_matcher.getBestMatch(hashmat1);
+        std::pair<int,int> match_pos = HashMatrix::getSingleMatch(hash, hashmat1, min_value, roll_step);
 
-        HashMatrix::getSingleMatch(hash,hashmat1,min_value, roll_step, height);
-        std::cout << "curr = " << h << " S_MATCH " <<  min_row << " SEQ_MATCH " << seq_index << std::endl;
+        auto seq_match_errors = scoring(route2, h, route1, seq_index);
+        auto single_match_errors = scoring(route2, h, route1, match_pos.first);
+        std::cout << "curr = " << h << " S_MATCH_err " <<  single_match_errors.first << " SEQ_MATCH_err " << seq_match_errors.first << std::endl;
 
         if (show_images) {
-             cv::Mat conc_img1, conc_img2;
-            cv::vconcat(route2.nodes[h].image, route1.nodes[min_row].image, conc_img1);
-            cv::vconcat(conc_img1, route1.nodes[seq_index].image, conc_img2);
-            cv::resize(conc_img2, conc_img2, cv::Size(), 10, 10);
+            cv::Mat conc_img1, conc_img2;
+            std::vector<cv::Mat> concat_imgs({route2.nodes[h].image, route1.nodes[match_pos.first].image, route1.nodes[seq_index].image});
+            cv::vconcat(concat_imgs, conc_img1);
+            cv::resize(conc_img1, conc_img2, cv::Size(), 10, 10);
             cv::imshow("testing single vs seq", conc_img2);
             cv::waitKey(1);
+
         }
 
     }
