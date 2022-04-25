@@ -9,6 +9,7 @@ from ._navigation import *
 from ._navigation import __version__  # ultimately set by build process
 from .ca import *
 from .caching import *
+from .infomax import *
 from .navigation import *
 from .plotting import *
 
