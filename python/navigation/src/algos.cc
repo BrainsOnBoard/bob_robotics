@@ -361,7 +361,7 @@ addAlgorithmClasses(py::module &m)
                                 infomax.getNormalisationMethod(),
                                 infomax.getWeights());
                     },
-                    [](py::tuple state) {
+                    [](const py::tuple &state) {
                         return PyAlgoWrapper<InfoMaxType>{
                             state[0].cast<cv::Size>(),
                             state[1].cast<float>(),
