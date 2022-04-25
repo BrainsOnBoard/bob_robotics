@@ -207,10 +207,18 @@ class PyAlgoWrapper<PerfectMemoryType>
   : public PyAlgoWrapperBase<PerfectMemoryType>
 {
 public:
-    template<class... Ts>
-    PyAlgoWrapper(Ts &&...args)
-      : PyAlgoWrapperBase<PerfectMemoryType>(std::forward<Ts>(args)...)
+    PyAlgoWrapper(const cv::Size &unwrapRes)
+      : PyAlgoWrapperBase<PerfectMemoryType>(unwrapRes)
     {}
+
+    // Invoked when unpickling
+    PyAlgoWrapper(const cv::Size &unwrapRes, py::object imageSet,
+                  std::vector<size_t> indexes)
+      : PyAlgoWrapperBase<PerfectMemoryType>(unwrapRes)
+      , m_Indexes(std::move(indexes))
+    {
+        PyAlgoWrapperBase<PerfectMemoryType>::train(std::move(imageSet));
+    }
 
     void train(py::object imageSet)
     {
@@ -271,6 +279,8 @@ public:
 
         return df;
     }
+
+    const auto &getIndexes() const { return m_Indexes; }
 
 private:
     std::vector<size_t> m_Indexes;
@@ -337,7 +347,32 @@ addAlgorithmClasses(py::module &m)
 
     // Add various algorithms as Python classes
     addAlgo<PerfectMemoryType>(m, "PerfectMemory")
-            .def(py::init<const cv::Size &>());
+            .def(py::init<const cv::Size &>())
+            .def(py::pickle(
+                    [](const PyAlgoWrapper<PerfectMemoryType> &wrapper) {
+                        const auto &pm = wrapper.getAlgo();
+
+                        /*
+                         * NB: This doesn't handle image masks, but we currently
+                         * don't support this with the Python module anyway.
+                         */
+                        py::list snapshots;
+                        for (size_t i = 0; i < pm.getNumSnapshots(); i++) {
+                            snapshots.append(pm.getSnapshot(i));
+                        }
+
+                        return py::make_tuple(
+                                pm.getUnwrapResolution(),
+                                std::move(snapshots),
+                                wrapper.getIndexes());
+                    },
+                    [](py::tuple state) {
+                        return PyAlgoWrapper<PerfectMemoryType>{
+                            state[0].cast<cv::Size>(),
+                            std::move(state[1]),
+                            state[2].cast<std::vector<size_t>>()
+                        };
+                    }));
     addAlgo<InfoMaxType>(m, "InfoMax")
             .def(py::init<const cv::Size &, float, const std::experimental::optional<unsigned> &, float, Normalisation>(),
                  "size"_a,
