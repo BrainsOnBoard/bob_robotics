@@ -13,8 +13,8 @@
 
 namespace {
 
-template<class T>
-using optional = std::experimental::optional<T>;
+// For optional<>
+using namespace std::experimental;
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -45,11 +45,11 @@ getColumnAsSequence(const py::object &df, const char *name)
     return std::make_pair(py::make_tuple(std::move(column)), false);
 }
 
-std::pair<py::array, std::experimental::optional<py::object>>
+std::pair<py::array, optional<py::object>>
 parseImageArgument(py::object imageSet)
 {
     py::object images;
-    std::experimental::optional<py::object> dataFrame;
+    optional<py::object> dataFrame;
     if (py::hasattr(imageSet, "iloc")) {
         // ...then it's a DataFrame/Series
         images = imageSet["image"];
@@ -136,7 +136,7 @@ private:
 
     template<class Range, size_t NumRetVals>
     py::object doRIDFInternal(const Range &range,
-                              const std::experimental::optional<py::object> &dfIn,
+                              const optional<py::object> &dfIn,
                               const std::array<const char *, NumRetVals> &labels) const
     {
         py::list result;
@@ -183,7 +183,7 @@ protected:
                         const std::array<const char *, NumRetVals> &labels) const
     {
         py::array npArray;
-        std::experimental::optional<py::object> dataFrameIn;
+        optional<py::object> dataFrameIn;
         std::tie(npArray, dataFrameIn) = parseImageArgument(std::move(imageSet));
 
         if (npArray.ndim() == 2) {
@@ -295,8 +295,8 @@ public:
       : PyAlgoWrapperBase<InfoMaxType>(size, learningRate, tanhScalingFactor, normalisation, std::move(weights))
     {}
 
-    PyAlgoWrapper(const cv::Size &size, float learningRate, const std::experimental::optional<unsigned> &seed, float tanhScalingFactor, Normalisation normalisation)
-      : PyAlgoWrapper(size, learningRate, tanhScalingFactor, normalisation, generateInitialWeights(size, std::experimental::nullopt, seed).first)
+    PyAlgoWrapper(const cv::Size &size, float learningRate, const optional<unsigned> &seed, float tanhScalingFactor, Normalisation normalisation)
+      : PyAlgoWrapper(size, learningRate, tanhScalingFactor, normalisation, generateInitialWeights(size, nullopt, seed).first)
     {}
 
     const auto &getWeights() const
@@ -312,8 +312,8 @@ public:
 
     static std::pair<Eigen::MatrixXf, unsigned>
     generateInitialWeights(const cv::Size &size,
-                           const optional<int> &numHidden = std::experimental::nullopt,
-                           const optional<unsigned> &seedArg = std::experimental::nullopt)
+                           const optional<int> &numHidden = nullopt,
+                           const optional<unsigned> &seedArg = nullopt)
     {
         const auto seed = seedArg ? seedArg.value() : std::random_device()();
         const auto numInput = size.width * size.height;
@@ -374,10 +374,10 @@ addAlgorithmClasses(py::module &m)
                         };
                     }));
     addAlgo<InfoMaxType>(m, "InfoMax")
-            .def(py::init<const cv::Size &, float, const std::experimental::optional<unsigned> &, float, Normalisation>(),
+            .def(py::init<const cv::Size &, float, const optional<unsigned> &, float, Normalisation>(),
                  "size"_a,
                  "learning_rate"_a = InfoMaxType::DefaultLearningRate,
-                 "seed"_a = std::experimental::nullopt,
+                 "seed"_a = nullopt,
                  "tanh_scaling_factor"_a = InfoMaxType::DefaultTanhScalingFactor,
                  "normalisation"_a = Normalisation::None)
             .def(py::init<const cv::Size &, float, float, Normalisation, Eigen::MatrixXf>(),
