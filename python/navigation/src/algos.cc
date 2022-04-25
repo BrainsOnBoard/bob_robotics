@@ -239,22 +239,9 @@ public:
         static constexpr std::array<const char *, 4> labels{ "estimated_dheading", "best_snap", "minval", "differences" };
         auto df = doRIDFInternal(std::move(imageSet), labels);
 
-        if (m_Indexes.empty()) {
-            // ...then snapshots were loaded without giving indexes
-            return df;
-        }
-
-        // Also log the index of the best-matching snapshot in the training database
-        BOB_ASSERT(m_Indexes.size() == m_Algo.getNumSnapshots());
         py::object bestSnap;
         bool isSequence;
         std::tie(bestSnap, isSequence) = getColumnAsSequence(df, "best_snap");
-        py::array_t<int> bestSnapIdx(isSequence ? py::len(df) : 1);
-        ranges::transform(toRange<size_t>(bestSnap),
-                          bestSnapIdx.mutable_data(),
-                          [&](size_t snap) {
-                              return m_Indexes[snap];
-                          });
 
         // Put the RIDF for the best-matching snapshot into its own column
         std::vector<py::array_t<float>> bestRIDF;
@@ -270,11 +257,29 @@ public:
                           });
 
         if (isSequence) {
-            df["best_snap_idx"] = std::move(bestSnapIdx);
             df["ridf"] = std::move(bestRIDF);
         } else {
-            df["best_snap_idx"] = *bestSnapIdx.begin();
-            df["ridf"] = bestRIDF[0];
+            df["ridf"] = std::move(bestRIDF[0]);
+        }
+
+        if (m_Indexes.empty()) {
+            // ...then snapshots were loaded without giving indexes
+            return df;
+        }
+
+        // Also log the index of the best-matching snapshot in the training database
+        BOB_ASSERT(m_Indexes.size() == m_Algo.getNumSnapshots());
+        py::array_t<int> bestSnapIdx(isSequence ? py::len(df) : 1);
+        ranges::transform(toRange<size_t>(bestSnap),
+                          bestSnapIdx.mutable_data(),
+                          [&](size_t snap) {
+                              return m_Indexes[snap];
+                          });
+
+        if (isSequence) {
+            df["best_snap_idx"] = std::move(bestSnapIdx);
+        } else {
+            df["best_snap_idx"] = std::move(*bestSnapIdx.begin());
         }
 
         return df;
