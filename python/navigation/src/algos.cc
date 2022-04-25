@@ -137,12 +137,13 @@ private:
     template<class Range, size_t NumRetVals>
     py::object doRIDFInternal(const Range &range,
                               const optional<py::object> &dfIn,
-                              const std::array<const char *, NumRetVals> &labels) const
+                              const std::array<const char *, NumRetVals> &labels,
+                              size_t step) const
     {
         py::list result;
 
         ranges::for_each(range, [&](const cv::Mat &image) {
-            auto data = m_Algo.getHeading(image);
+            auto data = m_Algo.getHeading(image, {}, step);
 
             // Use labels to give returned values meaningful names
             py::dict dict;
@@ -180,7 +181,8 @@ protected:
 
     template<size_t NumRetVals>
     auto doRIDFInternal(py::object imageSet,
-                        const std::array<const char *, NumRetVals> &labels) const
+                        const std::array<const char *, NumRetVals> &labels,
+                        size_t step) const
     {
         py::array npArray;
         optional<py::object> dataFrameIn;
@@ -191,10 +193,10 @@ protected:
             auto rng = ranges::views::single(npArray.cast<cv::Mat>());
 
             // We call squeeze() to turn DataFrame's array members into scalars
-            return doRIDFInternal(std::move(rng), dataFrameIn, labels).attr("squeeze")();
+            return doRIDFInternal(std::move(rng), dataFrameIn, labels, step).attr("squeeze")();
         }
 
-        return doRIDFInternal(toRange<cv::Mat>(npArray), dataFrameIn, labels);
+        return doRIDFInternal(toRange<cv::Mat>(npArray), dataFrameIn, labels, step);
     }
 };
 
@@ -234,10 +236,10 @@ public:
         PyAlgoWrapperBase<PerfectMemoryType>::train(std::move(imageSet));
     }
 
-    py::object doRIDF(py::object imageSet) const
+    py::object doRIDF(py::object imageSet, size_t step) const
     {
         static constexpr std::array<const char *, 4> labels{ "estimated_dheading", "best_snap", "minval", "differences" };
-        auto df = doRIDFInternal(std::move(imageSet), labels);
+        auto df = doRIDFInternal(std::move(imageSet), labels, step);
 
         py::object bestSnap;
         bool isSequence;
@@ -309,10 +311,10 @@ public:
         return m_Algo.getWeights();
     }
 
-    auto doRIDF(py::object imageSet) const
+    auto doRIDF(py::object imageSet, size_t step) const
     {
         static constexpr std::array<const char *, 3> labels{ "estimated_dheading", "minval", "ridf" };
-        return doRIDFInternal(std::move(imageSet), labels);
+        return doRIDFInternal(std::move(imageSet), labels, step);
     }
 
     static std::pair<Eigen::MatrixXf, unsigned>
@@ -335,7 +337,7 @@ addAlgo(py::handle scope, const char *name)
 {
     using T = PyAlgoWrapper<Algo>;
     return py::class_<T>(scope, name)
-            .def("ridf", &T::doRIDF)
+            .def("ridf", &T::doRIDF, "image_set"_a, "step"_a = 1)
             .def("test", &T::test)
             .def("train", &T::train);
 }
