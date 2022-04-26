@@ -298,12 +298,10 @@ class PyAlgoWrapper<InfoMaxType>
   : public PyAlgoWrapperBase<InfoMaxType>
 {
 public:
-    PyAlgoWrapper(const cv::Size &size, float learningRate, float tanhScalingFactor, Normalisation normalisation, Eigen::MatrixXf weights)
-      : PyAlgoWrapperBase<InfoMaxType>(size, learningRate, tanhScalingFactor, normalisation, std::move(weights))
-    {}
-
-    PyAlgoWrapper(const cv::Size &size, float learningRate, const optional<unsigned> &seed, float tanhScalingFactor, Normalisation normalisation)
-      : PyAlgoWrapper(size, learningRate, tanhScalingFactor, normalisation, generateInitialWeights(size, nullopt, seed).first)
+    PyAlgoWrapper(const cv::Size &size, float learningRate,
+                  float tanhScalingFactor, Normalisation normalisation,
+                  const optional<unsigned> &seed, optional<Eigen::MatrixXf> weights)
+      : PyAlgoWrapperBase<InfoMaxType>(size, learningRate, tanhScalingFactor, normalisation, createWeights(size, seed, std::move(weights)))
     {}
 
     const auto &getWeights() const
@@ -315,6 +313,20 @@ public:
     {
         static constexpr std::array<const char *, 3> labels{ "estimated_dheading", "minval", "ridf" };
         return doRIDFInternal(std::move(imageSet), labels, step);
+    }
+
+    static Eigen::MatrixXf
+    createWeights(const cv::Size &size, const optional<unsigned> &seed,
+                  optional<Eigen::MatrixXf> weights)
+    {
+        if (weights) {
+            // Can't specify initial weights and a random seed
+            BOB_ASSERT(!seed.has_value());
+
+            return std::move(weights.value());
+        }
+
+        return generateInitialWeights(size, nullopt, seed).first;
     }
 
     static std::pair<Eigen::MatrixXf, unsigned>
@@ -381,18 +393,13 @@ addAlgorithmClasses(py::module &m)
                         };
                     }));
     addAlgo<InfoMaxType>(m, "InfoMax")
-            .def(py::init<const cv::Size &, float, const optional<unsigned> &, float, Normalisation>(),
-                 "size"_a,
-                 "learning_rate"_a = InfoMaxType::DefaultLearningRate,
-                 "seed"_a = nullopt,
-                 "tanh_scaling_factor"_a = InfoMaxType::DefaultTanhScalingFactor,
-                 "normalisation"_a = Normalisation::None)
-            .def(py::init<const cv::Size &, float, float, Normalisation, Eigen::MatrixXf>(),
+            .def(py::init<const cv::Size &, float, float, Normalisation, const optional<unsigned> &, optional<Eigen::MatrixXf>>(),
                  "size"_a,
                  "learning_rate"_a = InfoMaxType::DefaultLearningRate,
                  "tanh_scaling_factor"_a = InfoMaxType::DefaultTanhScalingFactor,
                  "normalisation"_a = Normalisation::None,
-                 "weights"_a)
+                 "seed"_a = nullopt,
+                 "weights"_a = nullopt)
             .def(py::pickle(
                     [](const PyAlgoWrapper<InfoMaxType> &wrapper) {
                         const auto &infomax = wrapper.getAlgo();
@@ -409,6 +416,7 @@ addAlgorithmClasses(py::module &m)
                             state[1].cast<float>(),
                             state[2].cast<float>(),
                             state[3].cast<Normalisation>(),
+                            nullopt,
                             state[4].cast<InfoMaxType::MatrixType>()
                         };
                     }))
