@@ -46,7 +46,10 @@ def ridf(images, snapshots, step=1):
     snapshots = to_images_array(snapshots)
     pm = bobnav.PerfectMemory(snapshots[0].shape[::-1])
     pm.train(snapshots)
-    return np.array(pm.ridf(images, step=step).ridf.to_list())
+    ridf = pm.ridf(images, step=step).ridf
+    if hasattr(ridf, "to_list"):
+        ridf = ridf.to_list()
+    return np.array(ridf)
 
 
 def get_ridf_headings_no_cache(images, snapshots, step=1):
