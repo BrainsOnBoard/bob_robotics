@@ -18,6 +18,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <sstream>
 
 
 //! struct with the database names for convenience
@@ -80,8 +81,13 @@ class VideoUnwrapper {
         // Create unwrapper
         BoBRobotics::ImgProc::OpenCVUnwrap360 unwrapper(fr.size(), unwrappedResolution, cameraName);
 
+        int imgWidth = unwrappedResolution.width;
+        int imgHeight = unwrappedResolution.height;
+        std::stringstream resolution;
+        resolution <<  "[" << imgWidth << "," << imgHeight << "]";
+
         // final filename for unwrapped video
-        filesystem::path outfilename = filepath.parent_path() / ("unwrapped_" + filepath.filename());
+        filesystem::path outfilename = filepath.parent_path() / ("unwrapped_" + resolution.str() + filepath.filename());
 
         // temporary file name to which we write initially
         bool copysound = false;
@@ -139,6 +145,7 @@ class VideoReader {
     std::vector<cv::Mat> readImages(int dataset_num, bool unwrap,bool createfile, cv::Size unwrapRes = cv::Size(90,25)) {
         dataset_paths paths;
         std::string video_path = paths.root_path + paths.dataset_path_array[dataset_num] +  "/" + paths.dataset_path_array[dataset_num] + ".mp4";
+
 
         if (!unwrap) { // if we don't unwrap the images
             if (createfile) { // we might just want to create an unwrapped video
