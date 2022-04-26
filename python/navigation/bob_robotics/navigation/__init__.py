@@ -64,11 +64,6 @@ def _interpolate_nan_entries(ts, position):
     # Sanity check
     assert not np.any(np.isnan(position))
 
-def _to_float(im):
-    # Normalise values
-    info = np.iinfo(im.dtype)
-    return im.astype(float) / info.max
-
 class Database(DatabaseInternal):
     def __init__(self, path, limits_metres=None, interpolate_xy=False):
         super().__init__(path)
@@ -123,8 +118,7 @@ class Database(DatabaseInternal):
         except AttributeError:
             return getattr(self.entries, name)
 
-    def read_images(self, entries=None, preprocess=None, to_float=True,
-                    greyscale=True):
+    def read_images(self, entries=None, preprocess=None, greyscale=True):
         if entries is None:
             # ...then load all images
             entries = self.entries.index
@@ -142,21 +136,16 @@ class Database(DatabaseInternal):
             pass
         if idx is not None:
             # ...scalar value given
-            return self.read_images([idx], preprocess, to_float, greyscale)[0]
+            return self.read_images([idx], preprocess, greyscale)[0]
 
         # Invoke C++ code
         images = super().read_images(entries, greyscale)
-
-        if to_float:
-            # Convert all the images to floats before we use them
-            preprocess = (preprocess, _to_float)
 
         if not preprocess:
             return images
         return [_apply_functions(im, preprocess) for im in images]
 
-    def read_image_entries(self, entries=None, preprocess=None, to_float=True,
-                           greyscale=True):
+    def read_image_entries(self, entries=None, preprocess=None, greyscale=True):
         if entries is None:
             # ...then load all images
             entries = self.entries
@@ -167,7 +156,7 @@ class Database(DatabaseInternal):
         # Check that we're not overwriting images
         assert not hasattr(entries, "image")
 
-        entries["image"] = self.read_images(entries, preprocess, to_float, greyscale)
+        entries["image"] = self.read_images(entries, preprocess, greyscale)
 
         return entries
 
@@ -219,8 +208,8 @@ class Database(DatabaseInternal):
     def load_test_frames(self, ref_entry, frame_dist, preprocess=None, fr_step=1):
         (lower, upper) = (ref_entry - frame_dist, ref_entry + frame_dist)
         entries = range(lower, upper+fr_step, fr_step)
-        snap = self.read_images(ref_entry, preprocess, to_float=False)
-        images = self.read_images(entries, preprocess, to_float=False)
+        snap = self.read_images(ref_entry, preprocess)
+        images = self.read_images(entries, preprocess)
         print("Testing frames %i to %i (n=%i)" %
               (lower, upper, len(images)))
         return (images, snap, entries)
