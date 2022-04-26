@@ -149,6 +149,16 @@ class Database(DatabaseInternal):
         if entries is None:
             # ...then load all images
             entries = self.entries
+        elif not hasattr(entries, "iloc"):
+            # Then it's an index or container of indexes
+            try:
+                idx = None
+                idx = int(entries)
+                if idx is not None:
+                    entries = idx
+            except TypeError:
+                pass
+            entries = self.entries.iloc[entries]
 
         # We make a copy as pandas is funny about assigning to slices
         entries = entries.copy()
