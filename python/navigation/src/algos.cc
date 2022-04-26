@@ -281,7 +281,7 @@ public:
         if (isSequence) {
             df["best_snap_idx"] = std::move(bestSnapIdx);
         } else {
-            df["best_snap_idx"] = std::move(*bestSnapIdx.begin());
+            df["best_snap_idx"] = *bestSnapIdx.begin();
         }
 
         return df;
