@@ -373,10 +373,10 @@ addAlgorithmClasses(py::module &m)
                                 std::move(snapshots),
                                 wrapper.getIndexes());
                     },
-                    [](py::tuple state) {
+                    [](const py::tuple &state) {
                         return PyAlgoWrapper<PerfectMemoryType>{
                             state[0].cast<cv::Size>(),
-                            std::move(state[1]),
+                            state[1],
                             state[2].cast<std::vector<size_t>>()
                         };
                     }));
