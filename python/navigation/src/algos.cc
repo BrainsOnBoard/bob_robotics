@@ -24,50 +24,9 @@ using namespace units::angle;
 using PerfectMemoryType = PerfectMemoryRotater<>;
 using InfoMaxType = InfoMaxRotater<>;
 
-py::module numpy = py::module::import("numpy");
-py::function atLeast2d = numpy.attr("atleast_2d");
-
 py::module pandas = py::module::import("pandas");
 auto dataFrame = pandas.attr("DataFrame");
 py::function dictsToDataFrame = dataFrame.attr("from_records");
-
-std::pair<py::object, bool>
-getColumnAsSequence(const py::object &df, const char *name)
-{
-    auto column = df[name];
-
-    // Regular column with multiple values
-    if (py::hasattr(column, "to_list")) {
-        return std::make_pair(column, true);
-    }
-
-    // Scalar value: wrap in tuple
-    return std::make_pair(py::make_tuple(std::move(column)), false);
-}
-
-std::pair<py::array, optional<py::object>>
-parseImageArgument(py::object imageSet)
-{
-    py::object images;
-    optional<py::object> dataFrame;
-    if (py::hasattr(imageSet, "iloc")) {
-        // ...then it's a DataFrame/Series
-        images = imageSet["image"];
-
-        // If it's a column with multiple values
-        if (py::hasattr(images, "to_list")) {
-            images = images.attr("to_list")();
-        }
-
-        dataFrame.emplace(std::move(imageSet));
-    } else {
-        images = std::move(imageSet);
-    }
-
-    py::array images2d = atLeast2d(std::move(images));
-    BOB_ASSERT(images2d.ndim() <= 3);
-    return std::make_pair(std::move(images2d), std::move(dataFrame));
-}
 
 template<class T>
 class PyAlgoWrapperBase
@@ -80,43 +39,36 @@ public:
 
     const T &getAlgo() const { return m_Algo; }
 
-    py::object test(py::object imageSet) const
+    py::object test(const ImageSet &imageSet) const
     {
-        const py::array npArray = parseImageArgument(std::move(imageSet)).first;
-        if (npArray.ndim() == 2) {
-            return py::cast(m_Algo.test(npArray.cast<cv::Mat>()));
-        }
-
         // Return data as a numpy array for convenience
-        const py::ssize_t len = py::len(npArray);
-        py::array_t<float> result{ len };
+        py::array_t<float> result{ imageSet.size() };
 
         // Invoke func for each input image and put the results in result
-        ranges::transform(toRange<cv::Mat>(npArray), result.mutable_data(), [&](const cv::Mat &image) {
-            // Check for Ctrl+C etc.
-            BOB_ASSERT(!PyErr_CheckSignals());
+        ranges::transform(imageSet.toRange(),
+                          result.mutable_data(),
+                          [&](const cv::Mat &image) {
+                              // Check for Ctrl+C etc.
+                              BOB_ASSERT(!PyErr_CheckSignals());
 
-            return m_Algo.test(image);
-        });
+                              return m_Algo.test(image);
+                          });
 
+        if (imageSet.singleImage) {
+            return (*result.begin()).cast<py::object>();
+        }
         return result;
     }
 
-    void train(py::object imageSet)
+    void train(const ImageSet &imageSet)
     {
-        const py::array npArray = parseImageArgument(std::move(imageSet)).first;
-        if (npArray.ndim() == 2) {
-            m_Algo.train(npArray.cast<cv::Mat>());
-            return;
-        }
-
         auto train = [this](const cv::Mat &image) {
             m_Algo.train(image);
 
             // Check for Ctrl+C etc.
             BOB_ASSERT(!PyErr_CheckSignals());
         };
-        ranges::for_each(toRange<cv::Mat>(npArray), train);
+        ranges::for_each(imageSet.toRange(), train);
     }
 
 private:
@@ -134,15 +86,20 @@ private:
     {
     }
 
-    template<class Range, size_t NumRetVals>
-    py::object doRIDFInternal(const Range &range,
-                              const optional<py::object> &dfIn,
+protected:
+    T m_Algo;
+
+    template<size_t NumRetVals>
+    py::object doRIDFInternal(const ImageSet &imageSet,
                               const std::array<const char *, NumRetVals> &labels,
                               size_t step) const
     {
         py::list result;
 
-        ranges::for_each(range, [&](const cv::Mat &image) {
+        // For some reason using ranges::for_each here yields a crash
+        auto rng = imageSet.toRange();
+        for (auto it = rng.begin(); it != rng.end(); ++it) {
+            const cv::Mat image = *it;
             auto data = m_Algo.getHeading(image, {}, step);
 
             // Use labels to give returned values meaningful names
@@ -152,51 +109,29 @@ private:
 
             // Check for Ctrl+C etc.
             BOB_ASSERT(!PyErr_CheckSignals());
-        });
+        }
 
         // No input DataFrame given
-        if (!dfIn) {
+        if (!imageSet.dataFrame) {
             return dictsToDataFrame(std::move(result));
         }
 
         // Use the indexes from the input DataFrame
-        auto dfOut = dictsToDataFrame(std::move(result), "index"_a = getColumnAsSequence(*dfIn, "database_idx").first);
+        auto dfOut = dictsToDataFrame(std::move(result),
+                                      "index"_a = imageSet.getColumn("database_idx"));
 
         /*
          * If the test images are tagged with world-centric headings, use
          * these values to calculate the real headings, in addition to the
          * change in headings that we've already computed.
          */
-        if (py::hasattr(*dfIn, "heading")) {
+        if (py::hasattr(*imageSet.dataFrame, "heading")) {
             dfOut["estimated_heading"] = dfOut["estimated_dheading"] +
-                                         (*dfIn)["heading"];
+                                         (*imageSet.dataFrame)["heading"];
         }
 
         // Concatenate with input DataFrame for convenience
-        return dfOut.attr("join")(*dfIn);
-    }
-
-protected:
-    T m_Algo;
-
-    template<size_t NumRetVals>
-    auto doRIDFInternal(py::object imageSet,
-                        const std::array<const char *, NumRetVals> &labels,
-                        size_t step) const
-    {
-        py::array npArray;
-        optional<py::object> dataFrameIn;
-        std::tie(npArray, dataFrameIn) = parseImageArgument(std::move(imageSet));
-
-        if (npArray.ndim() == 2) {
-            // Single-element range
-            auto rng = ranges::views::single(npArray.cast<cv::Mat>());
-
-            // We call squeeze() to turn DataFrame's array members into scalars
-            return doRIDFInternal(std::move(rng), dataFrameIn, labels, step).attr("squeeze")();
-        }
-
-        return doRIDFInternal(toRange<cv::Mat>(npArray), dataFrameIn, labels, step);
+        return dfOut.attr("join")(*imageSet.dataFrame);
     }
 };
 
@@ -214,77 +149,68 @@ public:
     {}
 
     // Invoked when unpickling
-    PyAlgoWrapper(const cv::Size &unwrapRes, py::object imageSet,
+    PyAlgoWrapper(const cv::Size &unwrapRes, const ImageSet &imageSet,
                   std::vector<size_t> indexes)
       : PyAlgoWrapperBase<PerfectMemoryType>(unwrapRes)
       , m_Indexes(std::move(indexes))
     {
-        PyAlgoWrapperBase<PerfectMemoryType>::train(std::move(imageSet));
+        PyAlgoWrapperBase<PerfectMemoryType>::train(imageSet);
     }
 
-    void train(py::object imageSet)
+    void train(const ImageSet &imageSet)
     {
         // Keep track of the original database indexes of the input data, if provided
-        if (py::hasattr(imageSet, "iloc")) {
+        if (imageSet.dataFrame) {
             BOB_ASSERT(m_Indexes.size() == m_Algo.getNumSnapshots());
-            ranges::copy(toRange<size_t>(getColumnAsSequence(imageSet, "database_idx").first),
+            ranges::copy(toRange<size_t>(imageSet.getColumn("database_idx")),
                          ranges::back_inserter(m_Indexes));
         } else {
             BOB_ASSERT(m_Indexes.empty());
         }
 
-        PyAlgoWrapperBase<PerfectMemoryType>::train(std::move(imageSet));
+        PyAlgoWrapperBase<PerfectMemoryType>::train(imageSet);
     }
 
-    py::object doRIDF(py::object imageSet, size_t step) const
+    py::object doRIDF(const ImageSet &imageSet, size_t step) const
     {
         static constexpr std::array<const char *, 4> labels{ "estimated_dheading", "best_snap", "minval", "differences" };
-        auto df = doRIDFInternal(std::move(imageSet), labels, step);
+        auto df = doRIDFInternal(imageSet, labels, step);
 
-        py::object bestSnap;
-        bool isSequence;
-        std::tie(bestSnap, isSequence) = getColumnAsSequence(df, "best_snap");
+        auto bestSnap = getColumn(df, "best_snap");
 
-        // Put the RIDF for the best-matching snapshot into its own column
-        std::vector<py::array_t<float>> bestRIDF;
-        ranges::transform(toRange<py::array_t<float>>(getColumnAsSequence(df, "differences").first),
-                          toRange<size_t>(bestSnap),
-                          ranges::back_inserter(bestRIDF),
-                          [&](const auto &diffs, const auto &bestSnap) {
-                              const size_t cols = diffs.shape(1);
+        {
+            // Put the RIDF for the best-matching snapshot into its own column
+            std::vector<py::array_t<float>> bestRIDF;
+            ranges::transform(toRange<py::array_t<float>>(getColumn(df, "differences")),
+                              toRange<size_t>(bestSnap),
+                              ranges::back_inserter(bestRIDF),
+                              [&](const auto &diffs, const auto &bestSnap) {
+                                  const size_t cols = diffs.shape(1);
 
-                              // Extract the row corresponding to the best-matching snap
-                              const float *ptr = &diffs.data()[bestSnap * cols];
-                              return py::array_t<float>(cols, ptr, diffs);
-                          });
-
-        if (isSequence) {
+                                  // Extract the row corresponding to the best-matching snap
+                                  const float *ptr = &diffs.data()[bestSnap * cols];
+                                  return py::array_t<float>(cols, ptr, diffs);
+                              });
             df["ridf"] = std::move(bestRIDF);
-        } else {
-            df["ridf"] = std::move(bestRIDF[0]);
         }
 
-        if (m_Indexes.empty()) {
-            // ...then snapshots were loaded without giving indexes
-            return df;
-        }
-
-        // Also log the index of the best-matching snapshot in the training database
-        BOB_ASSERT(m_Indexes.size() == m_Algo.getNumSnapshots());
-        py::array_t<int> bestSnapIdx(isSequence ? py::len(df) : 1);
-        ranges::transform(toRange<size_t>(bestSnap),
-                          bestSnapIdx.mutable_data(),
-                          [&](size_t snap) {
-                              return m_Indexes[snap];
-                          });
-
-        if (isSequence) {
+        if (!m_Indexes.empty()) {
+            // Also log the index of the best-matching snapshot in the training database
+            BOB_ASSERT(m_Indexes.size() == m_Algo.getNumSnapshots());
+            py::array_t<int> bestSnapIdx(imageSet.size());
+            ranges::transform(toRange<size_t>(bestSnap),
+                              bestSnapIdx.mutable_data(),
+                              [&](size_t snap) {
+                                  return m_Indexes[snap];
+                              });
             df["best_snap_idx"] = std::move(bestSnapIdx);
-        } else {
-            df["best_snap_idx"] = *bestSnapIdx.begin();
         }
 
-        return df;
+        /*
+         * If the user gives a single image as input, make the output data
+         * scalar too.
+         */
+        return imageSet.singleImage ? df.attr("squeeze")() : df;
     }
 
     const auto &getIndexes() const { return m_Indexes; }
@@ -309,10 +235,16 @@ public:
         return m_Algo.getWeights();
     }
 
-    auto doRIDF(py::object imageSet, size_t step) const
+    auto doRIDF(const ImageSet &imageSet, size_t step) const
     {
         static constexpr std::array<const char *, 3> labels{ "estimated_dheading", "minval", "ridf" };
-        return doRIDFInternal(std::move(imageSet), labels, step);
+        auto df = doRIDFInternal(imageSet, labels, step);
+
+        /*
+         * If the user gives a single image as input, make the output data
+         * scalar too.
+         */
+        return imageSet.singleImage ? df.attr("squeeze")() : df;
     }
 
     static Eigen::MatrixXf
@@ -388,7 +320,7 @@ addAlgorithmClasses(py::module &m)
                     [](const py::tuple &state) {
                         return PyAlgoWrapper<PerfectMemoryType>{
                             state[0].cast<cv::Size>(),
-                            state[1],
+                            ImageSet{ state[1] },
                             state[2].cast<std::vector<size_t>>()
                         };
                     }));

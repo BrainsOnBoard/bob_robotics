@@ -30,11 +30,82 @@ toRange(const pybind11::iterable &iterable)
 
 namespace BoBRobotics {
 namespace Navigation {
+
 void
 addAlgorithmClasses(pybind11::module_ &m);
 
 void
 addDatabaseClass(pybind11::module_ &m);
+
+inline pybind11::object
+getColumn(const pybind11::object &df, const char *name)
+{
+    auto column = df[name];
+
+    if (pybind11::hasattr(column, "to_list")) {
+        return column.attr("to_list")();
+    }
+
+    return pybind11::make_tuple(column);
+}
+
+struct ImageSet {
+    pybind11::array images;
+    std::experimental::optional<pybind11::object> dataFrame;
+    bool singleImage = false;
+
+    ImageSet() = default;
+
+    ImageSet(pybind11::object imageSet)
+    {
+        init(std::move(imageSet));
+    }
+
+    void init(pybind11::object imageSet)
+    {
+        using namespace pybind11;
+
+        object imagesObj;
+        if (hasattr(imageSet, "iloc")) {
+            // ...then it's a DataFrame/Series
+            imagesObj = imageSet["image"];
+
+            // If it's a column with multiple values
+            if (hasattr(imagesObj, "to_list")) {
+                imagesObj = imagesObj.attr("to_list")();
+            }
+
+            dataFrame.emplace(std::move(imageSet));
+        } else {
+            imagesObj = std::move(imageSet);
+        }
+
+        static auto atLeast2d = module::import("numpy").attr("atleast_2d");
+        images = atLeast2d(std::move(imagesObj));
+        BOB_ASSERT(images.ndim() <= 3);
+        if (images.ndim() == 2) {
+            images = images.reshape(array::ShapeContainer({ 1, images.shape(0), images.shape(1) }));
+            singleImage = true;
+        }
+    }
+
+    pybind11::object
+    getColumn(const char *name) const
+    {
+        return BoBRobotics::Navigation::getColumn(*dataFrame, name);
+    }
+
+    pybind11::ssize_t
+    size() const
+    {
+        return pybind11::len(images);
+    }
+
+    auto toRange() const
+    {
+        return ::toRange<cv::Mat>(images);
+    }
+};
 } // Navigation
 } // BoBRobotics
 
