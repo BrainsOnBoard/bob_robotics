@@ -83,11 +83,11 @@ class VideoUnwrapper {
 
         int imgWidth = unwrappedResolution.width;
         int imgHeight = unwrappedResolution.height;
-        std::stringstream resolution;
-        resolution <<  "[" << imgWidth << "," << imgHeight << "]";
+        std::stringstream unwrapped_filename;
+        unwrapped_filename <<  "unwrapped_[" << imgWidth << "," << imgHeight << "]_" << filepath.filename();
 
         // final filename for unwrapped video
-        filesystem::path outfilename = filepath.parent_path() / ("unwrapped_" + resolution.str() + filepath.filename());
+        filesystem::path outfilename = filepath.parent_path() / (unwrapped_filename.str());
 
         // temporary file name to which we write initially
         bool copysound = false;
@@ -120,7 +120,6 @@ class VideoUnwrapper {
         cap.release();
         writer.release();
 
-
     }
 };
 
@@ -142,47 +141,44 @@ class VideoReader {
     }
 
     //! read video to images to a vector
-    std::vector<cv::Mat> readImages(int dataset_num, bool unwrap,bool createfile, cv::Size unwrapRes = cv::Size(90,25)) {
+    std::vector<cv::Mat> readImages(int dataset_num, cv::Size unwrapRes = cv::Size(180,60)) {
         dataset_paths paths;
-        std::string video_path = paths.root_path + paths.dataset_path_array[dataset_num] +  "/" + paths.dataset_path_array[dataset_num] + ".mp4";
+
+        // original video path
+        std::string video_path_original = paths.root_path + paths.dataset_path_array[dataset_num] +  "/" + paths.dataset_path_array[dataset_num] + ".mp4";
 
 
-        if (!unwrap) { // if we don't unwrap the images
-            if (createfile) { // we might just want to create an unwrapped video
-                uw.unwrapMP4(video_path, unwrapRes, "pixpro_usb"); // save unwrapped video with "unwrapped_" prefix
-                video_path = paths.root_path + paths.dataset_path_array[dataset_num] +  "/unwrapped_" + paths.dataset_path_array[dataset_num] + ".mp4";
-            } else { // if we don't create the file, we just read from it ( it should already be created)
-                video_path = paths.root_path + paths.dataset_path_array[dataset_num] +  "/unwrapped_" + paths.dataset_path_array[dataset_num] + ".mp4";
-            }
+        int imgWidth = unwrapRes.width;
+        int imgHeight = unwrapRes.height;
+        std::stringstream unwrapped_filename;
+        unwrapped_filename <<  "unwrapped_[" << imgWidth << "," << imgHeight << "]_";
+
+         // check if we have the file already
+        std::string video_path = paths.root_path + paths.dataset_path_array[dataset_num] + "/" + unwrapped_filename.str() + paths.dataset_path_array[dataset_num] + ".mp4";
+        cv::VideoCapture cap(video_path);
+
+        // if there is no unwrapped video with the resolution, create it
+        if( !cap.isOpened() ) {
+            std::cout << "file does not exist, creating it..." << std::endl;
+            uw.unwrapMP4(video_path_original, unwrapRes, "pixpro_usb"); // save unwrapped video with "unwrapped_" prefix
+
+            // recreate videoreader with the now existing file
+            cap =  cv::VideoCapture(video_path);
         }
 
-        // camera device capture
-        cv::VideoCapture cap(video_path);
         std::vector<cv::Mat> unwrapped_frames;
 
         if( !cap.isOpened() )
             throw "Error when reading steam_avi";
 
-        // Create panoramic camera and suitable unwrapper
-        BoBRobotics::ImgProc::OpenCVUnwrap360 unwrapper(m_cameraRes,unwrapRes, "pixpro_usb");
-
-         // Create images
-        cv::Mat originalImage(cv::Size(1440,1440), CV_8UC3);
-
         // while the video has frames left, save frames
         for( ; ; ) {
             cv::Mat frame;
             cap >> frame;
-            if(frame.empty())
+            if(frame.empty()) {
                 break;
-
-            if (unwrap) {
-                cv::Mat outputImage(unwrapRes, CV_8UC3);
-                unwrapper.unwrap(frame, outputImage);
-                unwrapped_frames.push_back(outputImage);
-            } else {
-                unwrapped_frames.push_back(frame);
             }
+            unwrapped_frames.push_back(frame);
         }
         return unwrapped_frames;
     }
