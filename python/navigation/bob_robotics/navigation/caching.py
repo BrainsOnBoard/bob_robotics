@@ -8,11 +8,6 @@ import pickle
 from time import perf_counter
 from warnings import warn
 
-_caching_enabled = True
-
-def disable_caching():
-    _caching_enabled = False
-
 def cache_result(fn):
     '''
     A decorator which caches the result of the function call with a given set of
@@ -48,14 +43,11 @@ def cache_result(fn):
 
         # if cache exists -> load it and return its content
         if os.path.exists(cachefile):
-            if _caching_enabled:
-                with open(cachefile, 'rb') as cachehandle:
-                    print("Using cached result from '%s'" % cachefile)
-                    res, elapsed = pickle.load(cachehandle)
-                    print('%s() took %g s to run (without caching)' % (fn.__name__, elapsed))
-                    return res
-            else:
-                warn('Cache file exists, but caching has been disabled')
+            with open(cachefile, 'rb') as cachehandle:
+                print("Using cached result from '%s'" % cachefile)
+                res, elapsed = pickle.load(cachehandle)
+                print('%s() took %g s to run (without caching)' % (fn.__name__, elapsed))
+                return res
 
         # execute the function with all arguments passed
         print('Starting %s()...' % fn.__name__)
