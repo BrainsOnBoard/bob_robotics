@@ -6,7 +6,7 @@ import inspect
 import os
 import pickle
 from time import perf_counter
-from warnings import warn
+from .build_id import __build_id__
 
 def cache_result(fn):
     '''
@@ -23,8 +23,10 @@ def cache_result(fn):
     '''
     @wraps(fn)
     def wrapped(*args, **kwargs):
-        # Serialise the arguments and take the SHA256 hash
-        arg_hash = hashlib.sha256(pickle.dumps((args, kwargs))).hexdigest()
+        # Serialise the arguments and take the SHA256 hash. Also use the build
+        # ID so that when this Python module is changed the cache is
+        # invalidated.
+        arg_hash = hashlib.sha256(pickle.dumps((__build_id__, *args, kwargs))).hexdigest()
 
         # There doesn't seem to be an easy way to get the current notebook's name :-(
         #

@@ -122,5 +122,17 @@ struct type_caster<BoBRobotics::Navigation::ImageDatabase::Entry>
         return dict.release();
     }
 };
+
+template<>
+struct type_caster<BoBRobotics::Navigation::ImageSet>
+{
+    PYBIND11_TYPE_CASTER(BoBRobotics::Navigation::ImageSet, _("ImageSet"));
+
+    bool load(handle src, bool)
+    {
+        value.init(src.cast<object>());
+        return true;
+    }
+};
 } // detail
 } // pybind11
