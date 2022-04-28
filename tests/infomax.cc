@@ -22,8 +22,27 @@ TEST(InfoMax, Training)
     InfoMaxTest algo{ TestImageSize };
     for (size_t i = 0; i < NumTrainStepsToTest; i++) {
         algo.train(TestImages[i]);
-        compareFloatMatrices(algo.getWeights(), getExpectedWeights(i));
+        compareFloatMatrices(algo.getWeights(), getExpectedWeights(i), 0.001f);
     }
+}
+
+TEST(InfoMax, Decision)
+{
+    const auto filepath = getTestsPath() / "infomax_decision.bin";
+    const auto trueOutputs = readMatrix<float>(filepath);
+
+    InfoMaxTest algo{ TestImageSize };
+    for (const auto &image : TestImages) {
+        algo.train(image);
+    }
+
+    const auto netOutputs = algo.getNetOutputs(TestImages[0]);
+
+    /*
+     * We have reduced precision here as there does seem to be substantial
+     * variation between machines.
+     */
+    compareFloatMatrices(netOutputs, trueOutputs, 0.001f);
 }
 
 TEST(InfoMax, SampleImage)
@@ -42,7 +61,7 @@ TEST(InfoMax, SampleImage)
      * We have reduced precision here as there does seem to be substantial
      * variation between machines.
      */
-    compareFloatMatrices(differences, trueDifferences, 0.01f);
+    compareFloatMatrices(differences, trueDifferences, 0.005f);
 }
 
 // Check that the columns have means of approx 0 and SDs of approx 1
@@ -64,7 +83,10 @@ TEST(InfoMax, RandomWeightsDistribution)
 // Check that too high a learning rate causes weights to blow up
 TEST(InfoMax, ExplodingWeights)
 {
-    InfoMaxRotater<> infomax{ TestImageSize, InitialWeights, /*learningRate=*/0.1f };
+    InfoMaxRotater<> infomax{ TestImageSize, /*learningRate=*/0.1f,
+                              /*tanhScalingFactor=*/1.f,
+                              Normalisation::None,
+                              InitialWeights };
 
     EXPECT_THROW({
         for (const auto &image : TestImages) {
@@ -76,7 +98,10 @@ TEST(InfoMax, ExplodingWeights)
 // Check that using a sensible learning rate doesn't throw an exception
 TEST(InfoMax, NonExplodingWeights)
 {
-    InfoMaxRotater<> infomax{ TestImageSize, InitialWeights, /*learningRate=*/1e-5f };
+    InfoMaxRotater<> infomax{ TestImageSize, /*learningRate=*/1e-5f,
+                              /*tanhScalingFactor=*/1.f,
+                              Normalisation::None,
+                              InitialWeights };
 
     EXPECT_NO_THROW({
         for (const auto &image : TestImages) {

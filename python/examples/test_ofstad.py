@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-import antworld, cv2
+import cv2
+from bob_robotics import antworld
 
 # All coordinates are in metres
 

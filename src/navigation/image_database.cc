@@ -222,14 +222,6 @@ ImageDatabase::ImageDatabase(const std::tm &creationTime)
 {
 }
 
-ImageDatabase::ImageDatabase(const char *databasePath, bool overwrite)
-  : ImageDatabase(filesystem::path(databasePath), overwrite)
-{}
-
-ImageDatabase::ImageDatabase(const std::string &databasePath, bool overwrite)
-  : ImageDatabase(filesystem::path(databasePath), overwrite)
-{}
-
 ImageDatabase::ImageDatabase(filesystem::path databasePath, bool overwrite)
   : ImageDatabase{ nullptr, std::move(databasePath), overwrite }
 {
@@ -531,6 +523,12 @@ ImageDatabase::getPath() const
     return m_Path;
 }
 
+const std::vector<ImageDatabase::Entry> &
+ImageDatabase::getEntries() const
+{
+    return m_Entries;
+}
+
 //! Get one Entry from the database
 const ImageDatabase::Entry &
 ImageDatabase::operator[](size_t i) const
@@ -588,17 +586,17 @@ ImageDatabase::isVideoType() const
 
 //! Load all of the images in this database into memory and return
 std::vector<cv::Mat>
-ImageDatabase::loadImages(const cv::Size &size, size_t frameSkip,
+ImageDatabase::readImages(const cv::Size &size, size_t frameSkip,
                           bool greyscale) const
 {
     std::vector<cv::Mat> images;
-    loadImages(images, size, frameSkip, greyscale);
+    readImages(images, size, frameSkip, greyscale);
     return images;
 }
 
 //! Load all of the images in this database into the specified std::vector<>
 void
-ImageDatabase::loadImages(std::vector<cv::Mat> &images, const cv::Size &size,
+ImageDatabase::readImages(std::vector<cv::Mat> &images, const cv::Size &size,
                           size_t frameSkip, bool greyscale) const
 {
     size_t oldSize = images.size();
@@ -621,10 +619,10 @@ ImageDatabase::loadImages(std::vector<cv::Mat> &images, const cv::Size &size,
     }
 }
 
-bool
+std::experimental::optional<bool>
 ImageDatabase::needsUnwrapping() const
 {
-    return m_NeedsUnwrapping.value();
+    return m_NeedsUnwrapping;
 }
 
 units::frequency::hertz_t

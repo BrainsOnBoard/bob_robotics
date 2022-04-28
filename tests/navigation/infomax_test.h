@@ -1,4 +1,5 @@
 // BoB robotics includes
+#define EXPOSE_INFOMAX_INTERNALS
 #include "navigation/infomax.h"
 
 namespace BoBRobotics {
@@ -9,8 +10,11 @@ class InfoMaxTest
   : public InfoMaxRotater<> {
 public:
     InfoMaxTest(const cv::Size &unwrapRes)
-      : InfoMaxRotater<>{ unwrapRes, generateInitialWeights(unwrapRes.width * unwrapRes.height,
-                                                            unwrapRes.width * unwrapRes.height + 1, /*seed=*/42)}
+      : InfoMaxRotater<>{ unwrapRes, 0.0001f, 1.f,
+                          Normalisation::None,
+                          generateInitialWeights(unwrapRes.width * unwrapRes.height,
+                                                 unwrapRes.width * unwrapRes.height + 1,
+                                                 /*seed=*/42)}
     {}
 
     template<class... Ts>

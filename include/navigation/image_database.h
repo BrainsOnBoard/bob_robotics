@@ -8,6 +8,9 @@
 
 // Third-party includes
 #include "plog/Log.h"
+#include "range/v3/algorithm.hpp"
+#include "range/v3/view.hpp"
+#include "range/v3/iterator.hpp"
 #include "third_party/optional.hpp"
 #include "third_party/path.h"
 #include "third_party/units.h"
@@ -16,7 +19,7 @@
 #include <opencv2/opencv.hpp>
 
 // TBB
-#include <tbb/parallel_for.h>
+#include <tbb/parallel_for_each.h>
 
 // Standard C includes
 #include <ctime>
@@ -415,13 +418,13 @@ public:
     };
 
     ImageDatabase();
-    ImageDatabase(const char *databasePath, bool overwrite = false);
-    ImageDatabase(const std::string &databasePath, bool overwrite = false);
     ImageDatabase(filesystem::path databasePath, bool overwrite = false);
     ImageDatabase(const std::tm &creationTime);
 
     //! Get the path of the directory corresponding to this ImageDatabase
     const filesystem::path &getPath() const;
+
+    const std::vector<Entry> &getEntries() const;
 
     //! Get one Entry from the database
     const Entry &operator[](size_t i) const;
@@ -445,15 +448,15 @@ public:
     bool isGrid() const;
 
     //! Load all of the images in this database into memory and return
-    std::vector<cv::Mat> loadImages(const cv::Size &size = {}, size_t frameSkip = 1,
+    std::vector<cv::Mat> readImages(const cv::Size &size = {}, size_t frameSkip = 1,
                                     bool greyscale = true) const;
 
     //! Load all of the images in this database into the specified std::vector<>
-    void loadImages(std::vector<cv::Mat> &images, const cv::Size &size = {},
+    void readImages(std::vector<cv::Mat> &images, const cv::Size &size = {},
                     size_t frameSkip = 1, bool greyscale = true) const;
 
     //! Whether the database consists of panoramic images which need unwrapping
-    bool needsUnwrapping() const;
+    std::experimental::optional<bool> needsUnwrapping() const;
 
     //! Access the metadata for this database via OpenCV's persistence API
     cv::FileNode getMetadata() const;
@@ -502,25 +505,26 @@ public:
     //! Check if database contains a video file cf. multiple image files
     bool isVideoType() const;
 
-    template<class Func>
-    void forEachImage(const Func &func, size_t frameSkip = 1,
+    template<class Func, class Range>
+    void forEachImage(const Func &func, const Range &range,
                       bool greyscale = true) const
     {
-        BOB_ASSERT(frameSkip > 0);
+        const auto rangeView = ranges::view::all(range);
 
-        if (empty()) {
-            return;
-        }
+        /*
+         * Unfortunately tbb requires that its range argument be a proper
+         * container class -- a range type won't do.
+         */
+        std::vector<std::pair<size_t, size_t>> idx;
+        ranges::copy(rangeView | ranges::view::enumerate, ranges::back_inserter(idx));
 
         // If database consists of individual image files...
         if (m_VideoFilePath.empty()) {
-            tbb::parallel_for(tbb::blocked_range<size_t>(0, m_Entries.size() / frameSkip),
-                              [&](const auto &r) {
-                                  for (size_t i = r.begin(); i != r.end(); ++i) {
-                                      func(i, m_Entries[i * frameSkip].load(greyscale));
-                                  }
-                              });
+            const auto load = [&](const auto &pair) {
+                func(pair.first, m_Entries[pair.second].load(greyscale));
+            };
 
+            tbb::parallel_for_each(idx, load);
             return;
         }
 
@@ -529,22 +533,38 @@ public:
         BOB_ASSERT(cap.isOpened());
 
         cv::Mat img;
-        for (size_t i = 0; i < m_Entries.size() / frameSkip; i++) {
-            BOB_ASSERT(cap.read(img));
+        size_t cur = 0;
+        for (const auto &pair : idx) {
+            /*
+             * It is possible to explicitly jump to a given frame with OpenCV,
+             * but that turns out to be reeeeeeeaaaally slow. Instead we just
+             * grab the frames one by one, discarding those we don't want.
+             * Note: This assumes that the range of values increases monotonically!
+             */
+            BOB_ASSERT(pair.second >= cur);
+            for (; cur <= pair.second && cap.grab(); cur++)
+                ;
+
+            // Copy the grabbed frame into img
+            BOB_ASSERT(cap.retrieve(img));
 
             if (greyscale) {
                 cv::cvtColor(img, img, cv::COLOR_BGR2GRAY);
             }
 
-            func(i, img);
-
-            /*
-             * It is possible to explicitly jump to a given frame with OpenCV,
-             * but that turns out to be reeeeeeeaaaally slow.
-             */
-            for (size_t j = 1; j < frameSkip && cap.grab(); j++)
-                ;
+            func(pair.first, img);
         }
+    }
+
+    template<class Func>
+    void forEachImage(const Func &func, size_t frameSkip = 1,
+                      bool greyscale = true) const
+    {
+        BOB_ASSERT(frameSkip > 0);
+
+        using namespace ranges::view;
+        const auto range = iota(0, (int)size()) | stride(frameSkip);
+        forEachImage(func, range, greyscale);
     }
 
     /**!

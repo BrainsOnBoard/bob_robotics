@@ -30,7 +30,7 @@ foreach(MODULE IN LISTS BoBThirdParty_FIND_COMPONENTS)
 
         # Checkout git submodules under this path
         find_package(Git)
-        execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive third_party/${MODULE}
+        execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init third_party/${MODULE}
                         WORKING_DIRECTORY "${BOB_ROBOTICS_PATH}"
                         RESULT_VARIABLE RV
                         OUTPUT_VARIABLE SHELL_OUTPUT)
@@ -38,8 +38,11 @@ foreach(MODULE IN LISTS BoBThirdParty_FIND_COMPONENTS)
             message(WARNING "Checking out git submodule failed")
         endif()
 
-        # If this folder is a cmake project, then build it
-        if(EXISTS ${MODULE_PATH}/CMakeLists.txt)
+        # If this folder is a cmake project, then build it. We don't give the
+        # range-v3 library this treatment as it is a header-only library and
+        # building it just results in the headers being copied to the build
+        # directory.
+        if(EXISTS ${MODULE_PATH}/CMakeLists.txt AND NOT ${MODULE} STREQUAL range-v3)
             add_subdirectory(${MODULE_PATH} "${CMAKE_CURRENT_BINARY_DIR}/BoB/third_party/${MODULE}")
         endif()
     endif()
