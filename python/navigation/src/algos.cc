@@ -8,9 +8,6 @@
 // Third-party includes
 #include "range/v3/view.hpp"
 
-// Eigen
-#include <Eigen/Core>
-
 // Standard C++ includes
 #include <stdexcept>
 
@@ -188,17 +185,11 @@ public:
                               toRange<size_t>(bestSnap),
                               ranges::back_inserter(bestRIDF),
                               [&](const auto &diffs, const auto &bestSnap) {
-                                  const size_t cols = diffs.shape(1);
-                                  const size_t rows = diffs.shape(0);
+                                  const size_t cols = diffs.shape(0);
 
                                   // Extract the row corresponding to the best-matching snap
-                                  const Eigen::Map<const Eigen::ArrayXXf> diffsMat(diffs.data(), rows, cols);
-                                  py::array_t<float> ridf{ static_cast<py::ssize_t>(cols) };
-                                  auto *outPtr = ridf.mutable_data();
-                                  for (size_t i = 0; i < cols; i++) {
-                                      outPtr[i] = diffsMat(bestSnap, i);
-                                  }
-                                  return ridf;
+                                  const float *ptr = &diffs.data()[bestSnap * cols];
+                                  return py::array_t<float>(cols, ptr, diffs);
                               });
             df["ridf"] = std::move(bestRIDF);
         }

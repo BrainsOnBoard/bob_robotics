@@ -234,7 +234,7 @@ public:
         tbb::parallel_for(tbb::blocked_range<size_t>(0, numSnapshots),
                           [&](const auto &r) {
                               for (size_t i = r.begin(); i != r.end(); ++i) {
-                                  m_MinimumDifferences[i] = m_RotatedDifferences.row(i).minCoeff(&m_BestColumns[i]);
+                                  m_MinimumDifferences[i] = m_RotatedDifferences.col(i).minCoeff(&m_BestColumns[i]);
                               }
                           });
 
@@ -285,7 +285,7 @@ private:
         BOB_ASSERT(window.first < window.second);
 
         // Preallocate snapshot difference vectors
-        m_RotatedDifferences.resize(window.second - window.first, rotater.numRotations());
+        m_RotatedDifferences.resize(rotater.numRotations(), window.second - window.first);
 
         // Scan across image columns
         rotater.rotate(
@@ -293,7 +293,7 @@ private:
                     // Loop through snapshots
                     for (size_t s = window.first; s < window.second; s++) {
                         // Calculate difference
-                        m_RotatedDifferences(s - window.first, i) = this->calcSnapshotDifference(fr, mask, s);
+                        m_RotatedDifferences(i, s - window.first) = this->calcSnapshotDifference(fr, mask, s);
                     }
                 });
     }
