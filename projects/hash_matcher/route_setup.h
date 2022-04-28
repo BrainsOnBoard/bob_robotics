@@ -30,6 +30,11 @@ using meter_t = units::length::meter_t;
 using millimeter_t = units::length::millimeter_t;
 using degree_t = units::angle::degree_t;
 
+
+using namespace BoBRobotics;
+using namespace ImgProc;
+
+
 // setup a navigation route with these classes
 
 // database entry struct
@@ -164,10 +169,173 @@ struct CSVReader {
 
 };
 
+class HashMatrix
+{
+    public:
+
+    size_t index( int x, int y ) const { return x + m_width * y; }
+    int m_width;  // height of the dataset ( number of data elements)
+    int m_height; // width of dataset ( number of rotate views )
+    std::vector<cv::Mat> images;
+    std::vector<std::bitset<64> > m_matrix; // training examples with pre-calc rotations
+
+
+    //! get a difference hash vector form the best views ( 1rotation/ element)
+    std::vector<int> getBestHashRotationDists(std::vector<int> matrix, bool norm = true, int norm_window = 5) {
+        std::vector<int> bestRotVector;
+        for (size_t i=0; i< matrix.size()/m_width; i++) {
+            int min = 255;
+            for (int j = 0; j < m_width; j++ ) {
+                auto current_element = matrix[i*m_width+j];
+                if (current_element < min) {
+                    min = current_element;
+                }
+            }
+            // save best rotation's hash distance
+            bestRotVector.push_back(min);
+        }
+
+        // normalising
+
+
+
+
+
+        return bestRotVector;
+    }
+
+    static void normalise_n(std::vector<int> &vector, int norm_window) {
+
+
+        std::vector<int> vectorC(vector.size());
+        for (int j = 0; j < vector.size(); j++) {
+
+            std::vector<int> window;
+
+            for (int i = 0; i < norm_window; i++) {
+
+                if (j-i >0) {
+                    window.push_back(vector[j-i]);
+                }
+                if (j+i < vector.size()) {
+                    window.push_back(vector[j+i]);
+                }
+
+            }
+
+            double sum = std::accumulate(window.begin(), window.end(), 0.0);
+            double mean = sum / double(window.size());
+            double sq_sum = std::inner_product(window.begin(), window.end(), window.begin(), 0.0);
+            double stdev = std::sqrt(sq_sum / float(window.size()) - mean * mean);
+            vectorC[j] = (vector[j] - mean) / stdev;
+        }
+        vector = vectorC;
+
+
+    }
+
+    //! gets the matrix object
+    std::vector<std::bitset<64>> getMatrix() { return m_matrix; }
+
+    //! get the image from database with given rotation
+    cv::Mat getImage( int node_num, int rotation) {
+        cv::Mat img = images[ node_num ];
+        std::vector<cv::Mat> img_rotations;
+        cv::cvtColor(img, img, cv::COLOR_BGR2GRAY);
+        HashMatrix::getHashRotations(img, m_width, img_rotations );
+        return img_rotations[rotation];
+    }
+
+    HashMatrix() {}
+
+    //! creates a  hash matrix with a route
+    HashMatrix(std::vector<RouteNode> nodes, int numRotations) {
+
+
+        this->m_width = numRotations;
+        this->m_height = nodes.size();
+
+
+        for (size_t i = 0; i < nodes.size(); i++) {
+            cv::Mat img1 = nodes[i].image; // get current image
+            cv::Mat img_gray;
+            images.push_back(img1);
+
+            std::vector<cv::Mat> mat;
+            cv::cvtColor(img1, img_gray, cv::COLOR_BGR2GRAY);
+            auto hash_rotations = HashMatrix::getHashRotations(img_gray, numRotations, mat); // gets all the rotations (and hashes)
+            for (size_t j = 0; j < hash_rotations.size(); j++) {
+                m_matrix.push_back(hash_rotations[j] );
+            }
+
+        }
+    }
+
+    //! gets rotations
+    static std::vector<std::bitset<64>> getHashRotations(cv::Mat image, int totalRotations, std::vector<cv::Mat> &img_rotations) {
+        // rotate member variable matrix
+
+        auto image_width = image.size().width;
+        auto pixel_to_rot = 360 / image_width;
+        std::vector<std::bitset<64>> rotations;
+        cv::Mat rolledImage;
+
+        cv::Mat rolledImageFormatted;
+        for (int i = 0; i < totalRotations;  i++) {
+            ImgProc::roll(image, rolledImage, i * pixel_to_rot);
+            img_rotations.push_back(rolledImage);
+            rolledImage.convertTo(rolledImageFormatted, CV_32F, 1.0 / 255);
+            rotations.push_back(DCTHash::computeHash(rolledImageFormatted));
+        }
+
+        return rotations;
+    }
+
+    //! hash all values in matrix with given hash
+    static std::vector<int> calculateHashValues(std::bitset<64> hash, const std::vector<std::bitset<64>> hashMatrix) {
+        std::vector<int> differenceMatrix;
+        for (size_t i =0; i < hashMatrix.size(); i++) {
+            differenceMatrix.push_back( DCTHash::distance(hashMatrix[i], hash) );
+        }
+        return differenceMatrix;
+    }
+
+    //! gets the minimum element of a matrix and it's 2d indices
+    static void argmin_matrix(std::vector<int> &matrix, int width, int &min_col, int &min_row, int &min_value) {
+        int min = 100000; // init with big number
+        int index_min = 0;
+        for (size_t i=0; i< matrix.size(); i++) {
+            if (matrix[i] < min) {
+                min = matrix[i];
+                index_min = i;
+            }
+        }
+        min_value = min;
+        min_col = index_min % width;    // % is the "modulo operator", the remainder of i / width;
+        min_row = index_min / width;    // where "/" is an integer division
+    }
+
+    //! matches an images hash against a database (single match)
+    static std::pair<int,int> getSingleMatch(std::bitset<64> hash, HashMatrix hashmat, int &min_value, int width) {
+        int min_col, min_row;
+        std::vector<int> differenceMatrix = HashMatrix::calculateHashValues(hash,hashmat.getMatrix());
+        HashMatrix::argmin_matrix(differenceMatrix , width, min_col, min_row, min_value);
+        std::pair<int,int> mat_position({min_col, min_row});
+        return mat_position;
+    }
+};
+
+
+
 // route
-struct Route {
+class Route {
+
+    public:
+
+
     std::vector<RouteNode> nodes;
     int num_rotated_views;
+    HashMatrix m_hash_matrix;
 
     //! gets closest node from outer route and it's distance
     static RouteNode getClosestNode(Route route_train, Route route_test, int node_to_find, millimeter_t &distance ) {
@@ -190,16 +358,17 @@ struct Route {
         return retNode;
     }
 
-    static Route setup(int dataset_num, int num_rotations, bool unwrap, bool createvideo, cv::Size unwrapRes) {
+    Route() {}
+
+    Route(int dataset_num, int num_rotations, int skipstep, bool unwrap, bool createvideo, cv::Size unwrapRes) {
         auto db_entries = CSVReader::loadCSV(dataset_num);
         std::cout << "Loading images..." << std::endl;
         VideoReader reader;
-        std::vector<cv::Mat> images = reader.readImages(dataset_num, unwrap, createvideo, unwrapRes);
+        std::vector<cv::Mat> images = reader.readImages(dataset_num, unwrapRes);
 
         // create route
-        Route rc_car_route;
-        rc_car_route.num_rotated_views = num_rotations; // rotations
-        for (size_t i = 0; i < db_entries.size();i++) {
+        num_rotated_views = num_rotations; // rotations
+        for (size_t i = 0; i < db_entries.size()-skipstep;i+=skipstep) {
         // create route node
             if (db_entries[i].s_utm_zone != "" ) {
                 RouteNode node;
@@ -223,15 +392,26 @@ struct Route {
                 node.image = images[frameNumber];
                 cv::Mat img1,img2;
                 cv::cvtColor(node.image, img1, cv::COLOR_BGR2GRAY);
+                cv::equalizeHist(img1,img1);
                 img1.convertTo(img2, CV_32F, 1.0 / 255);
+
+
                 node.image_hash = BoBRobotics::ImgProc::DCTHash::computeHash(img2);
-                rc_car_route.nodes.push_back(node);
+
+                nodes.push_back(node);
             }
 
         }
         std::cout << " route is successfully read " << std::endl;
-        return rc_car_route;
+
     }
+
+    HashMatrix getHashMatrix() { return m_hash_matrix; }
+
+    void set_hash_matrix(HashMatrix matrix) {
+        m_hash_matrix = matrix;
+    }
+
 };
 
 

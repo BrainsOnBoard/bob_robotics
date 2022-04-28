@@ -141,7 +141,7 @@ class VideoReader {
     }
 
     //! read video to images to a vector
-    std::vector<cv::Mat> readImages(int dataset_num, cv::Size unwrapRes = cv::Size(180,60)) {
+    std::vector<cv::Mat> readImages(int dataset_num, cv::Size unwrapRes = cv::Size(180,60), bool equaliseHist = true) {
         dataset_paths paths;
 
         // original video path
@@ -178,6 +178,8 @@ class VideoReader {
             if(frame.empty()) {
                 break;
             }
+
+
             unwrapped_frames.push_back(frame);
         }
         return unwrapped_frames;
