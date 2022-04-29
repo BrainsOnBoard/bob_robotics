@@ -36,7 +36,7 @@ def mean_absdiff(x, y):
     # Convert back to 2D
     x = np.squeeze(x, axis=0)
 
-    pm = bobnav.PerfectMemory(x.shape[::-1])
+    pm = bobnav.PerfectMemory(x.shape)
     pm.train(x)
     return pm.test(y)
 
@@ -44,7 +44,7 @@ def mean_absdiff(x, y):
 def ridf(images, snapshots, step=1):
     """Return an RIDF for one or more images vs one or more snapshots (as a vector)"""
     snapshots = to_images_array(snapshots)
-    pm = bobnav.PerfectMemory(snapshots[0].shape[::-1])
+    pm = bobnav.PerfectMemory(snapshots[0].shape)
     pm.train(snapshots)
     ridf = pm.ridf(images, step=step).ridf
     if hasattr(ridf, "to_list"):
@@ -58,7 +58,7 @@ def get_ridf_headings_no_cache(images, snapshots, step=1):
     Parameters are the same as for get_ridf_headings().
     """
     snapshots = to_images_array(snapshots)
-    pm = bobnav.PerfectMemory(snapshots[0].shape[::-1])
+    pm = bobnav.PerfectMemory(snapshots[0].shape)
     pm.train(snapshots)
     return pm.ridf(images, step=step).estimated_heading
 

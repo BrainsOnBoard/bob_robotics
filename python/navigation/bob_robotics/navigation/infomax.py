@@ -7,7 +7,7 @@ def get_trained_network(training_images, seed,
                         learning_rate=InfoMax.DEFAULT_LEARNING_RATE):
     assert seed is not None
 
-    infomax = InfoMax(training_images[0].shape[::-1], learning_rate=learning_rate, seed=seed)
+    infomax = InfoMax(training_images[0].shape, learning_rate=learning_rate, seed=seed)
     infomax.train(training_images)
     return infomax
 

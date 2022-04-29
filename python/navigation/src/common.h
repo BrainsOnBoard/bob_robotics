@@ -121,20 +121,25 @@ template<>
 struct type_caster<std::experimental::nullopt_t>
     : public void_caster<std::experimental::nullopt_t> {};
 
+/*
+ * NB: OpenCV's convention is width x height as opposed to numpy's
+ * height x width, so we swap the order when going from C++ -> Python and vice
+ * versa.
+ */
 template<>
 struct type_caster<cv::Size>
 {
     PYBIND11_TYPE_CASTER(cv::Size, _("cvSize"));
 
-    // For converting from a Python tuple to a cv::Size
     bool load(handle src, bool)
     {
-        return PyArg_ParseTuple(src.ptr(), "ii", &value.width, &value.height);
+        std::tie(value.height, value.width) = src.cast<std::pair<int, int>>();
+        return true;
     }
 
     static handle cast(const cv::Size &size, return_value_policy /* policy */, handle /* parent */)
     {
-        return make_tuple(size.width, size.height).release();
+        return make_tuple(size.height, size.width).release();
     }
 };
 

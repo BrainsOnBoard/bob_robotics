@@ -14,8 +14,13 @@ def apply_functions(im, funs):
     return funs(im)
 
 
-def resize(width, height):
-    '''Return a function to resize image to given size'''
+def resize(height, width):
+    '''
+    Return a function to resize image to given size.
+
+    NB: We swap the order of width and height, to be consistent with numpy's
+    convention.
+    '''
     return lambda im: cv2.resize(im, (width, height))
 
 
