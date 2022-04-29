@@ -3,13 +3,12 @@ InfoMax = bobnav.InfoMax
 
 
 @bobnav.cache_result
-def get_trained_network(training_images, seed,
+def get_trained_network(train_images, seed,
                         learning_rate=InfoMax.DEFAULT_LEARNING_RATE):
     assert seed is not None
 
-    infomax = InfoMax(training_images[0].shape, learning_rate=learning_rate, seed=seed)
-    infomax.train(training_images)
-    return infomax
+    return InfoMax(
+        train_images=train_images, learning_rate=learning_rate, seed=seed)
 
 
 @bobnav.cache_result

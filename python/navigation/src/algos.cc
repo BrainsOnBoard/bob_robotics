@@ -284,6 +284,35 @@ public:
     }
 };
 
+template<class Algo, class... Ts>
+auto createAlgo(const optional<cv::Size> &size,
+                const optional<ImageSet> &trainImages, Ts&&... otherArgs)
+{
+    if (!size && (!trainImages || trainImages->size() == 0)) {
+        throw std::runtime_error("Must supply either image size or some training images");
+    }
+
+    /*
+     * If size is given explicitly, use that, otherwise divine it from the size
+     * of the first training image.
+     */
+    cv::Size algoSize;
+    if (size) {
+        algoSize = *size;
+    } else {
+        const auto firstSnap = py::reinterpret_borrow<py::array>(*trainImages->images.begin());
+        algoSize.height = firstSnap.shape(0);
+        algoSize.width = firstSnap.shape(1);
+    }
+
+    PyAlgoWrapper<Algo> algo(algoSize, std::forward<Ts>(otherArgs)...);
+    if (trainImages) {
+        algo.train(*trainImages);
+    }
+
+    return algo;
+}
+
 template<class Algo>
 auto
 addAlgo(py::handle scope, const char *name)
@@ -307,7 +336,11 @@ addAlgorithmClasses(py::module &m)
 
     // Add various algorithms as Python classes
     addAlgo<PerfectMemoryType>(m, "PerfectMemory")
-            .def(py::init<const cv::Size &>())
+            .def(py::init([](const optional<cv::Size> &size, const optional<ImageSet> &trainImages) {
+                     return createAlgo<PerfectMemoryType>(size, trainImages);
+                 }),
+                 "size"_a = nullopt,
+                 "train_images"_a = nullopt)
             .def(py::pickle(
                     [](const PyAlgoWrapper<PerfectMemoryType> &wrapper) {
                         const auto &pm = wrapper.getAlgo();
@@ -334,8 +367,17 @@ addAlgorithmClasses(py::module &m)
                         };
                     }));
     addAlgo<InfoMaxType>(m, "InfoMax")
-            .def(py::init<const cv::Size &, float, float, Normalisation, const optional<unsigned> &, optional<Eigen::MatrixXf>>(),
-                 "size"_a,
+            .def(py::init([](const optional<cv::Size> &size,
+                             const optional<ImageSet> &trainImages,
+                             float learningRate,
+                             float tanhScalingFactor,
+                             Normalisation normalisation,
+                             const optional<unsigned> &seed,
+                             optional<Eigen::MatrixXf> weights) {
+                     return createAlgo<InfoMaxType>(size, trainImages, learningRate, tanhScalingFactor, normalisation, seed, std::move(weights));
+                 }),
+                 "size"_a = nullopt,
+                 "train_images"_a = nullopt,
                  "learning_rate"_a = InfoMaxType::DefaultLearningRate,
                  "tanh_scaling_factor"_a = InfoMaxType::DefaultTanhScalingFactor,
                  "normalisation"_a = Normalisation::None,
