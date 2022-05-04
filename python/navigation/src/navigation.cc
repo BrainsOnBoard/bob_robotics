@@ -95,6 +95,15 @@ type_caster<cv::Mat>::cast(const cv::Mat &m, return_value_policy, handle)
 } // detail
 } // pybind11
 
+void
+checkPythonErrors()
+{
+    // Check for Ctrl+C press etc.
+    if (PyErr_CheckSignals()) {
+        throw py::error_already_set{};
+    }
+}
+
 PYBIND11_MODULE(_navigation, m)
 {
     // Initialise plog

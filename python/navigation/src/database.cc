@@ -18,7 +18,7 @@ readImages(const BoBRobotics::Navigation::ImageDatabase &db,
         images[i] = std::move(fr);
 
         // Check for Ctrl+C etc.
-        BOB_ASSERT(!PyErr_CheckSignals());
+        checkPythonErrors();
     };
 
     if (!entries) {
