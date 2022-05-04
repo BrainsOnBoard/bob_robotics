@@ -66,15 +66,16 @@ def _interpolate_nan_entries(ts, position):
     assert not np.any(np.isnan(position))
 
 class Database(DatabaseInternal):
-    def __init__(self, path, limits_metres=None, interpolate_xy=False):
+    def __init__(self, path, limits_metres=None, interpolate_xy=False, warn_if_not_unwrapped=True):
         super().__init__(path)
         self.name = os.path.basename(path)
 
-        not_unwrapped = self.needs_unwrapping()
-        if not_unwrapped is None:
-            warn("Not known whether or not database is unwrapped")
-        elif not_unwrapped:
-            warn("!!!!! This database has not been unwrapped. Analysis may not make sense! !!!!!")
+        if warn_if_not_unwrapped:
+            not_unwrapped = self.needs_unwrapping()
+            if not_unwrapped is None:
+                warn("Not known whether or not database is unwrapped")
+            elif not_unwrapped:
+                warn("!!!!! This database has not been unwrapped. Analysis may not make sense! !!!!!")
 
         # Convert from a list of dicts
         df = DataFrame.from_records(self.get_entries())
