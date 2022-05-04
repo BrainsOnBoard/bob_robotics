@@ -35,6 +35,14 @@ readImages(const BoBRobotics::Navigation::ImageDatabase &db,
 
     return images;
 }
+
+void
+unwrapDatabase(const BoBRobotics::Navigation::ImageDatabase &database, const cv::Size &unwrapRes, std::experimental::optional<std::string> path, size_t frameSkip, bool greyscale) {
+    if (!path) {
+        path.emplace((database.getPath().parent_path() / ("unwrapped_" + database.getName())).str());
+    }
+    database.unwrap(*path, unwrapRes, frameSkip, greyscale);
+}
 } // anonymous namespace
 
 namespace BoBRobotics {
@@ -48,7 +56,12 @@ addDatabaseClass(py::module_ &m)
             .def("__len__", &ImageDatabase::size)
             .def("get_entries", &ImageDatabase::getEntries)
             .def("needs_unwrapping", &ImageDatabase::needsUnwrapping)
-            .def("read_images", &readImages, "entries"_a = std::experimental::nullopt, "greyscale"_a = true);
+            .def("read_images", &readImages, "entries"_a = std::experimental::nullopt, "greyscale"_a = true)
+            .def("unwrap", &unwrapDatabase,
+                 "size"_a,
+                 "destination"_a = std::experimental::nullopt,
+                 "frame_skip"_a = 1,
+                 "greyscale"_a = false);
 }
 } // Navigation
 } // BoBRobotics
