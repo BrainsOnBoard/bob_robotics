@@ -76,6 +76,13 @@ struct Range
     size_t size() const;
 };
 
+enum class DatabaseOptions
+{
+    Read = 1,
+    Write = 2,
+    Overwrite = 6
+};
+
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::ImageDatabase
 //------------------------------------------------------------------------
@@ -202,6 +209,8 @@ public:
           , m_SaveImages(true)
           , m_YAML(".yml", cv::FileStorage::WRITE | cv::FileStorage::MEMORY)
         {
+            BOB_ASSERT(!imageDatabase.m_ReadOnly);
+
             // Set this property of the ImageDatabase
             imageDatabase.m_IsRoute = isRoute;
 
@@ -418,7 +427,7 @@ public:
     };
 
     ImageDatabase();
-    ImageDatabase(filesystem::path databasePath, bool overwrite = false);
+    ImageDatabase(filesystem::path databasePath, DatabaseOptions options = DatabaseOptions::Read);
     ImageDatabase(const std::tm &creationTime);
 
     //! Get the path of the directory corresponding to this ImageDatabase
@@ -587,10 +596,11 @@ private:
     std::tm m_CreationTime;
     hertz_t m_FrameRate{ 0 };
     bool m_IsRoute;
+    bool m_ReadOnly;
     std::experimental::optional<bool> m_NeedsUnwrapping;
 
     ImageDatabase(const std::tm *creationTime, filesystem::path databasePath,
-                  bool overwrite);
+                  DatabaseOptions options);
 
     void generateUnwrapCSV(const filesystem::path &destination, size_t frameSkip) const;
     void loadMetadata();

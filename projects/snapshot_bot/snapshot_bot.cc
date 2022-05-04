@@ -78,7 +78,7 @@ public:
       , m_DifferenceImage(config.getCroppedRect().size(), CV_8UC1)
       , m_ImageInput(createImageInput(config, *m_Camera))
       , m_Memory(createMemory(config, m_ImageInput->getOutputSize()))
-      , m_TrainDatabase(m_Config.getOutputPath(), m_Config.shouldTrain())
+      , m_TrainDatabase(m_Config.getOutputPath(), m_Config.shouldTrain() ? Navigation::DatabaseOptions::Overwrite : Navigation::DatabaseOptions::Read)
       , m_NumSnapshots(0)
       , m_BackgroundEx(backgroundEx)
     {
@@ -346,7 +346,7 @@ private:
                     // Create new image database in subfolder of training database
                     const auto testingPath = m_TrainDatabase.getPath() / "testing";
                     filesystem::create_directory(testingPath);
-                    m_TestDatabase = std::make_unique<ImageDatabase>(Path::getNewPath(testingPath));
+                    m_TestDatabase = std::make_unique<ImageDatabase>(Path::getNewPath(testingPath), Navigation::DatabaseOptions::Write);
 
                     // Extra fields for test algorithms
                     std::vector<std::string> fieldNames = m_Memory->getCSVFieldNames();

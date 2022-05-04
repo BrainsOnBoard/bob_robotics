@@ -218,27 +218,28 @@ ImageDatabase::ImageDatabase()
 }
 
 ImageDatabase::ImageDatabase(const std::tm &creationTime)
-  : ImageDatabase{ &creationTime, Path::getNewPath(creationTime), false }
+  : ImageDatabase{ &creationTime, Path::getNewPath(creationTime), DatabaseOptions::Write }
 {
 }
 
-ImageDatabase::ImageDatabase(filesystem::path databasePath, bool overwrite)
-  : ImageDatabase{ nullptr, std::move(databasePath), overwrite }
+ImageDatabase::ImageDatabase(filesystem::path databasePath, DatabaseOptions options)
+  : ImageDatabase{ nullptr, std::move(databasePath), options }
 {
 }
 
 ImageDatabase::ImageDatabase(const std::tm *creationTime,
                              filesystem::path databasePath,
-                             bool overwrite)
+                             DatabaseOptions options)
   : m_Path{ std::move(databasePath) }
   , m_CreationTime{}
+  , m_ReadOnly{ options == DatabaseOptions::Read }
 {
     m_CreationTime.tm_isdst = -1;
 
     LOGI << "Using image database at " << m_Path;
 
     // If we're making a new database then we need a creation time
-    if (overwrite && m_Path.exists()) {
+    if (options == DatabaseOptions::Overwrite && m_Path.exists()) {
         m_CreationTime = creationTime ? *creationTime : getCurrentTime();
 
         LOG_WARNING << "Database already exists; overwriting";
@@ -272,7 +273,7 @@ ImageDatabase::ImageDatabase(const std::tm *creationTime,
     if (!loadCSV()) {
         LOGW << "Could not find CSV file";
         if (!isVideoType()) {
-            if (!readDirectoryEntries()) {
+            if (!readDirectoryEntries() && options != DatabaseOptions::Read) {
                 // Make sure we have a directory to save into
                 filesystem::create_directory(m_Path);
 
@@ -288,6 +289,14 @@ ImageDatabase::ImageDatabase(const std::tm *creationTime,
             BOB_ASSERT(cap.isOpened());
             m_Entries.resize(static_cast<size_t>(cap.get(cv::CAP_PROP_FRAME_COUNT)));
         }
+    }
+
+    /*
+     * If the user is trying to read an "empty" database, it probably means
+     * they've got the path wrong or something.
+     */
+    if (options == DatabaseOptions::Read && empty()) {
+        throw std::runtime_error{ "No database found at: " + m_Path.str() };
     }
 }
 

@@ -19,6 +19,8 @@
 // Standard C++ includes
 #include <stdexcept>
 
+void
+checkPythonErrors();
 
 template<class T>
 auto

@@ -52,7 +52,7 @@ public:
                           result.mutable_data(),
                           [&](const cv::Mat &image) {
                               // Check for Ctrl+C etc.
-                              BOB_ASSERT(!PyErr_CheckSignals());
+                              checkPythonErrors();
 
                               return m_Algo.test(image);
                           });
@@ -69,7 +69,7 @@ public:
             m_Algo.train(image);
 
             // Check for Ctrl+C etc.
-            BOB_ASSERT(!PyErr_CheckSignals());
+            checkPythonErrors();
         };
         ranges::for_each(imageSet.toRange(), train);
     }
@@ -111,7 +111,7 @@ protected:
             result.append(std::move(dict));
 
             // Check for Ctrl+C etc.
-            BOB_ASSERT(!PyErr_CheckSignals());
+            checkPythonErrors();
         }
 
         // No input DataFrame given
