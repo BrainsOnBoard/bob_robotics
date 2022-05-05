@@ -66,8 +66,8 @@ def _interpolate_nan_entries(ts, position):
     assert not np.any(np.isnan(position))
 
 class Database(DatabaseInternal):
-    def __init__(self, path, limits_metres=None, interpolate_xy=False, warn_if_not_unwrapped=True):
-        super().__init__(path)
+    def __init__(self, path, entries_filename="database_entries.csv", limits_metres=None, interpolate_xy=False, warn_if_not_unwrapped=True):
+        super().__init__(path, entries_filename)
         self.name = os.path.basename(path)
 
         if warn_if_not_unwrapped:
