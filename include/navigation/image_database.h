@@ -95,7 +95,7 @@ class ImageDatabase
 
 public:
     static constexpr const char *MetadataFilename = "database_metadata.yaml";
-    static constexpr const char *EntriesFilename = "database_entries.csv";
+    static constexpr const char *DefaultEntriesFilename = "database_entries.csv";
 
     //! The metadata for an entry in an ImageDatabase
     struct Entry
@@ -428,6 +428,7 @@ public:
 
     ImageDatabase();
     ImageDatabase(filesystem::path databasePath, DatabaseOptions options = DatabaseOptions::Read);
+    ImageDatabase(filesystem::path databasePath, std::string entriesFileName);
     ImageDatabase(const std::tm &creationTime);
 
     //! Get the path of the directory corresponding to this ImageDatabase
@@ -590,6 +591,7 @@ public:
 
 private:
     filesystem::path m_Path, m_VideoFilePath;
+    const std::string m_EntriesFileName;
     std::vector<Entry> m_Entries;
     std::unique_ptr<cv::FileStorage> m_MetadataYAML;
     cv::Size m_Resolution;
@@ -600,7 +602,7 @@ private:
     std::experimental::optional<bool> m_NeedsUnwrapping;
 
     ImageDatabase(const std::tm *creationTime, filesystem::path databasePath,
-                  DatabaseOptions options);
+                  DatabaseOptions options, std::string entriesFileName = DefaultEntriesFilename);
 
     void generateUnwrapCSV(const filesystem::path &destination, size_t frameSkip) const;
     void loadMetadata();

@@ -30,7 +30,7 @@ namespace BoBRobotics {
 namespace Navigation {
 
 constexpr const char *ImageDatabase::MetadataFilename;
-constexpr const char *ImageDatabase::EntriesFilename;
+constexpr const char *ImageDatabase::DefaultEntriesFilename;
 
 size_t
 Range::size() const
@@ -227,10 +227,17 @@ ImageDatabase::ImageDatabase(filesystem::path databasePath, DatabaseOptions opti
 {
 }
 
+ImageDatabase::ImageDatabase(filesystem::path databasePath, std::string entriesFileName)
+  : ImageDatabase::ImageDatabase{ nullptr, std::move(databasePath), DatabaseOptions::Read, std::move(entriesFileName) }
+{
+}
+
 ImageDatabase::ImageDatabase(const std::tm *creationTime,
                              filesystem::path databasePath,
-                             DatabaseOptions options)
+                             DatabaseOptions options,
+                             std::string entriesFileName)
   : m_Path{ std::move(databasePath) }
+  , m_EntriesFileName{ std::move(entriesFileName) }
   , m_CreationTime{}
   , m_ReadOnly{ options == DatabaseOptions::Read }
 {
@@ -303,7 +310,7 @@ ImageDatabase::ImageDatabase(const std::tm *creationTime,
 bool
 ImageDatabase::loadCSV()
 {
-    const auto entriesPath = m_Path / EntriesFilename;
+    const auto entriesPath = m_Path / m_EntriesFileName;
     std::ifstream entriesFile(entriesPath.str());
     if (entriesFile.fail()) {
         return false;
@@ -675,7 +682,7 @@ void
 ImageDatabase::generateUnwrapCSV(const filesystem::path &destination,
                                  size_t frameSkip) const
 {
-    const auto src = m_Path / EntriesFilename;
+    const auto src = m_Path / m_EntriesFileName;
     if (!src.exists()) {
         return;
     }
@@ -692,7 +699,7 @@ ImageDatabase::generateUnwrapCSV(const filesystem::path &destination,
 
     std::ofstream ofs;
     ofs.exceptions(std::ios::badbit | std::ios::failbit);
-    ofs.open((destination / EntriesFilename).str());
+    ofs.open((destination / m_EntriesFileName).str());
 
     // Copy headers; if the source is a video file we need to append file names
     ofs << line;
@@ -728,7 +735,7 @@ ImageDatabase::unwrap(const filesystem::path &destination,
                       bool greyscale) const
 {
     // Check that the database doesn't already exist
-    BOB_ASSERT(!(destination / EntriesFilename).exists());
+    BOB_ASSERT(!(destination / m_EntriesFileName).exists());
 
     BOB_ASSERT(frameSkip != 0);
     if (!m_NeedsUnwrapping.has_value()) {
@@ -957,7 +964,7 @@ ImageDatabase::addNewEntries(std::vector<ImageDatabase::Entry> &newEntries,
     // Reload metadata, in case it's changed
     loadMetadata();
 
-    const std::string path = (m_Path / EntriesFilename).str();
+    const std::string path = (m_Path / m_EntriesFileName).str();
     LOG_INFO << "Writing entries to " << path << "...";
 
     // Move new entries into this object's vector

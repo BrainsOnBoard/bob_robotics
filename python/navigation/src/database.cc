@@ -51,8 +51,9 @@ void
 addDatabaseClass(py::module_ &m)
 {
     py::class_<ImageDatabase>(m, "DatabaseInternal")
-            .def(py::init<const std::string &>(),
-                 "database_path"_a)
+            .def(py::init<const std::string &, std::string>(),
+                 "path"_a,
+                 "entries_filename"_a = ImageDatabase::DefaultEntriesFilename)
             .def("__len__", &ImageDatabase::size)
             .def("get_entries", &ImageDatabase::getEntries)
             .def("needs_unwrapping", &ImageDatabase::needsUnwrapping)
