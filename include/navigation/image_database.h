@@ -515,19 +515,9 @@ public:
     //! Check if database contains a video file cf. multiple image files
     bool isVideoType() const;
 
-    template<class Func, class Range>
-    void forEachImage(const Func &func, const Range &range,
-                      bool greyscale = true) const
+    template<class Func>
+    void forEachImage(const Func& func, const std::vector<std::pair<size_t, size_t>>& idx, bool greyscale = true) const
     {
-        const auto rangeView = ranges::views::all(range);
-
-        /*
-         * Unfortunately tbb requires that its range argument be a proper
-         * container class -- a range type won't do.
-         */
-        std::vector<std::pair<size_t, size_t>> idx;
-        ranges::copy(rangeView | ranges::views::enumerate, ranges::back_inserter(idx));
-
         // If database consists of individual image files...
         if (m_VideoFilePath.empty()) {
             const auto load = [&](const auto &pair) {
@@ -574,15 +564,36 @@ public:
         }
     }
 
+    template<class Func, class Range>
+    void forEachImage(const Func &func, const Range &range,
+                      bool greyscale = true) const
+    {
+        /*
+         * Unfortunately tbb requires that its range argument be a proper
+         * container class -- a range type won't do.
+         */
+        std::vector<std::pair<size_t, size_t>> idx;
+        size_t i = 0;
+        ranges::for_each(ranges::views::all(range), [&](size_t j) {
+            idx.emplace_back(i++, j);
+        });
+
+        forEachImage(func, idx, greyscale);
+    }
+
     template<class Func>
     void forEachImage(const Func &func, size_t frameSkip = 1,
                       bool greyscale = true) const
     {
         BOB_ASSERT(frameSkip > 0);
 
-        using namespace ranges::views;
-        const auto range = iota(0, (int)size()) | stride(frameSkip);
-        forEachImage(func, range, greyscale);
+        std::vector<std::pair<size_t, size_t>> idx;
+        idx.reserve(size());
+        for (size_t i = 0; i < size(); i++) {
+            idx.emplace_back(i, i * frameSkip);
+        }
+
+        forEachImage(func, idx, greyscale);
     }
 
     /**!
