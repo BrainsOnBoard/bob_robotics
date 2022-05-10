@@ -519,14 +519,14 @@ public:
     void forEachImage(const Func &func, const Range &range,
                       bool greyscale = true) const
     {
-        const auto rangeView = ranges::view::all(range);
+        const auto rangeView = ranges::views::all(range);
 
         /*
          * Unfortunately tbb requires that its range argument be a proper
          * container class -- a range type won't do.
          */
         std::vector<std::pair<size_t, size_t>> idx;
-        ranges::copy(rangeView | ranges::view::enumerate, ranges::back_inserter(idx));
+        ranges::copy(rangeView | ranges::views::enumerate, ranges::back_inserter(idx));
 
         // If database consists of individual image files...
         if (m_VideoFilePath.empty()) {
@@ -572,7 +572,7 @@ public:
     {
         BOB_ASSERT(frameSkip > 0);
 
-        using namespace ranges::view;
+        using namespace ranges::views;
         const auto range = iota(0, (int)size()) | stride(frameSkip);
         forEachImage(func, range, greyscale);
     }
