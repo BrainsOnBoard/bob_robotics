@@ -49,8 +49,8 @@ struct Range
     using millimeter_t = units::length::millimeter_t;
     millimeter_t begin, end, separation;
 
-    constexpr Range(const std::pair<millimeter_t, millimeter_t> beginAndEnd,
-                    const millimeter_t separation)
+    Range(const std::pair<millimeter_t, millimeter_t> beginAndEnd,
+          const millimeter_t separation)
       : begin(beginAndEnd.first)
       , end(beginAndEnd.second)
       , separation(separation)
@@ -63,11 +63,11 @@ struct Range
         }
     }
 
-    constexpr Range(const millimeter_t value)
+    Range(const millimeter_t value)
       : Range({ value, value }, 0_mm)
     {}
 
-    constexpr Range()
+    Range()
       : begin{ millimeter_t{ std::numeric_limits<double>::quiet_NaN() } }
       , end{ millimeter_t{ std::numeric_limits<double>::quiet_NaN() } }
       , separation{ 0_mm }
