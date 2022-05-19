@@ -49,8 +49,8 @@ struct Range
     using millimeter_t = units::length::millimeter_t;
     millimeter_t begin, end, separation;
 
-    constexpr Range(const std::pair<millimeter_t, millimeter_t> beginAndEnd,
-                    const millimeter_t separation)
+    Range(const std::pair<millimeter_t, millimeter_t> beginAndEnd,
+          const millimeter_t separation)
       : begin(beginAndEnd.first)
       , end(beginAndEnd.second)
       , separation(separation)
@@ -63,11 +63,11 @@ struct Range
         }
     }
 
-    constexpr Range(const millimeter_t value)
+    Range(const millimeter_t value)
       : Range({ value, value }, 0_mm)
     {}
 
-    constexpr Range()
+    Range()
       : begin{ millimeter_t{ std::numeric_limits<double>::quiet_NaN() } }
       , end{ millimeter_t{ std::numeric_limits<double>::quiet_NaN() } }
       , separation{ 0_mm }
@@ -519,14 +519,14 @@ public:
     void forEachImage(const Func &func, const Range &range,
                       bool greyscale = true) const
     {
-        const auto rangeView = ranges::view::all(range);
+        const auto rangeView = ranges::views::all(range);
 
         /*
          * Unfortunately tbb requires that its range argument be a proper
          * container class -- a range type won't do.
          */
         std::vector<std::pair<size_t, size_t>> idx;
-        ranges::copy(rangeView | ranges::view::enumerate, ranges::back_inserter(idx));
+        ranges::copy(rangeView | ranges::views::enumerate, ranges::back_inserter(idx));
 
         // If database consists of individual image files...
         if (m_VideoFilePath.empty()) {
@@ -572,7 +572,7 @@ public:
     {
         BOB_ASSERT(frameSkip > 0);
 
-        using namespace ranges::view;
+        using namespace ranges::views;
         const auto range = iota(0, (int)size()) | stride(frameSkip);
         forEachImage(func, range, greyscale);
     }
