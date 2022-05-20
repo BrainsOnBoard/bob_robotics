@@ -179,7 +179,6 @@ class VideoReader {
                 break;
             }
 
-
             unwrapped_frames.push_back(frame);
         }
         return unwrapped_frames;

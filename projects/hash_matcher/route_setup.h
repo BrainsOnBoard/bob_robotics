@@ -179,59 +179,56 @@ class HashMatrix
     std::vector<cv::Mat> images;
     std::vector<std::bitset<64> > m_matrix; // training examples with pre-calc rotations
 
+    int getWidth() const { return m_width; }
 
     //! get a difference hash vector form the best views ( 1rotation/ element)
-    std::vector<int> getBestHashRotationDists(std::vector<int> matrix, bool norm = true, int norm_window = 5) {
-        std::vector<int> bestRotVector;
-        for (size_t i=0; i< matrix.size()/m_width; i++) {
+    static std::vector<int> getBestHashRotationDists(std::vector<int> &matrix, int width) {
+        std::vector<int >bestRotVector;
+        std::vector<int> bestRotationAngles;
+
+        for (size_t i=0; i< matrix.size()/width; i++) {
             int min = 255;
-            for (int j = 0; j < m_width; j++ ) {
-                auto current_element = matrix[i*m_width+j];
+            int bestRot = 0;
+            for (int j = 0; j < width; j++ ) {
+                auto current_element = matrix[i*width+j];
                 if (current_element < min) {
                     min = current_element;
+                    bestRot = j;
                 }
             }
             // save best rotation's hash distance
             bestRotVector.push_back(min);
+            bestRotationAngles.push_back(bestRot);
         }
-
-        // normalising
-
-
-
-
 
         return bestRotVector;
     }
 
     static void normalise_n(std::vector<int> &vector, int norm_window) {
-
-
-        std::vector<int> vectorC(vector.size());
         for (int j = 0; j < vector.size(); j++) {
-
-            std::vector<int> window;
-
+            std::vector<int> window(norm_window);
             for (int i = 0; i < norm_window; i++) {
 
-                if (j-i >0) {
+                if (j-i >=0) {
                     window.push_back(vector[j-i]);
-                }
-                if (j+i < vector.size()) {
-                    window.push_back(vector[j+i]);
+                } else {
+                    window.push_back(0); // 0 padding
                 }
 
+                if (j+i < vector.size()) {
+                    window.push_back(vector[j+i]);
+                } else {
+                    window.push_back(0); // 0 padding
+                }
             }
 
             double sum = std::accumulate(window.begin(), window.end(), 0.0);
             double mean = sum / double(window.size());
             double sq_sum = std::inner_product(window.begin(), window.end(), window.begin(), 0.0);
             double stdev = std::sqrt(sq_sum / float(window.size()) - mean * mean);
-            vectorC[j] = (vector[j] - mean) / stdev;
+            vector[j] = (vector[j] - mean) / stdev;
         }
-        vector = vectorC;
-
-
+        vector = vector;
     }
 
     //! gets the matrix object
@@ -272,7 +269,7 @@ class HashMatrix
     }
 
     //! gets rotations
-    static std::vector<std::bitset<64>> getHashRotations(cv::Mat image, int totalRotations, std::vector<cv::Mat> &img_rotations) {
+    static std::vector<std::bitset<64>> getHashRotations(cv::Mat image, int totalRotations, std::vector<cv::Mat> &img_rotations)  {
         // rotate member variable matrix
 
         auto image_width = image.size().width;
@@ -292,7 +289,7 @@ class HashMatrix
     }
 
     //! hash all values in matrix with given hash
-    static std::vector<int> calculateHashValues(std::bitset<64> hash, const std::vector<std::bitset<64>> hashMatrix) {
+    static std::vector<int> calculateHashValues(std::bitset<64> hash, std::vector<std::bitset<64>> hashMatrix) {
         std::vector<int> differenceMatrix;
         for (size_t i =0; i < hashMatrix.size(); i++) {
             differenceMatrix.push_back( DCTHash::distance(hashMatrix[i], hash) );
@@ -392,7 +389,7 @@ class Route {
                 node.image = images[frameNumber];
                 cv::Mat img1,img2;
                 cv::cvtColor(node.image, img1, cv::COLOR_BGR2GRAY);
-                cv::equalizeHist(img1,img1);
+                //cv::equalizeHist(img1,img1);
                 img1.convertTo(img2, CV_32F, 1.0 / 255);
 
 

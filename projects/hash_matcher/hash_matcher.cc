@@ -1,5 +1,6 @@
 
 #include "route_setup.h"
+#include <thread>
 
 
 
@@ -10,19 +11,46 @@ class DTHW {
     HashMatrix m_long_sequence;
     std::deque<std::bitset<64>> m_short_sequence;
     std::deque<std::vector<int>> m_cost_matrix;
-    std::deque<std::vector<int>> m_accumulated_cost_matrix;
+    std::deque<std::vector<long int>> m_accumulated_cost_matrix;
     unsigned int m_roll_step;
     unsigned int m_current_sequence_size = 0;
     unsigned m_sequence_limit = 200;
     bool m_genP = true;
     int last_match_index = 0;
     int current_match;
-    int norm_window_size = 0;
+    int norm_window_size = 30;
     int successful_sequence = 0;
 
 
+    static void thread_stuff(std::bitset<64> sequence_element, std::vector<std::bitset<64>> curr_mat, int width, std::vector<int> &costMatRow) {
+        auto hashvals = HashMatrix::calculateHashValues(sequence_element, curr_mat);
+        costMatRow = HashMatrix::getBestHashRotationDists(hashvals , width);
+        HashMatrix::normalise_n(costMatRow,300);
+    }
+
+    // calculate C matrix
+    std::deque<std::vector<int>> calculate_cost_matrix(std::deque<std::bitset<64>> short_sequence, HashMatrix &h_matrix, bool normalise = true, int norm_window = 10) {
+        auto curr_mat = h_matrix.getMatrix(); // get the current hash matrix bitset
+        int width = h_matrix.getWidth();      // get the width of the matrix - as it's 1d and to know the mapping to 2d
+        std::deque<std::vector<int>> costMatrix(short_sequence.size());
+
+        // each element in the sequence will be processed by a thread
+        std::vector<std::thread> threads;
+        for (size_t i = 0; i < short_sequence.size(); i++) {
+            std::thread thr(thread_stuff, short_sequence[i], std::ref(curr_mat), width, std::ref(costMatrix[i]));
+            threads.push_back(std::move(thr));
+        }
+
+        for (auto&& t : threads) {
+            t.join();
+        }
+
+        m_cost_matrix = costMatrix;
+        return costMatrix;
+    }
 
 
+    /*
     // calculate C matrix
     std::deque<std::vector<int>> calculate_cost_matrix(std::deque<std::bitset<64>> short_sequence, HashMatrix &h_matrix, bool normalise = true, int norm_window = 10) {
         std::deque<std::vector<int>> costMatrix;
@@ -30,21 +58,22 @@ class DTHW {
         auto curr_mat = h_matrix.getMatrix();
         for (size_t i = 0; i < short_sequence.size(); i++) {
             std::vector<int> differenceMatrix = HashMatrix::calculateHashValues(short_sequence[i],curr_mat);
-            std::vector<int> row_dists = h_matrix.getBestHashRotationDists(differenceMatrix);
-            // window normalise
+            std::vector<int> row_dists = h_matrix.getBestHashRotationDists(differenceMatrix, h_matrix.getWidth());
 
-
+            HashMatrix::normalise_n(row_dists, norm_window_size);
             costMatrix.push_back(row_dists);
         }
         m_cost_matrix = costMatrix;;
         return costMatrix;
     }
-
+*/
     // calculate row distances
     std::vector<int> calculateNewRowDistances(std::bitset<64> last_hash_val, HashMatrix &matrix) {
         auto hashmat = matrix.getMatrix();
         std::vector<int> differenceMatrix = HashMatrix::calculateHashValues(last_hash_val,hashmat);
-        std::vector<int> new_row = matrix.getBestHashRotationDists(differenceMatrix); // 1 row in cost mat
+
+
+        std::vector<int> new_row = HashMatrix::getBestHashRotationDists(differenceMatrix, matrix.getWidth()); // 1 row in cost mat
 
         return new_row;
     }
@@ -53,18 +82,22 @@ class DTHW {
     std::vector<std::pair<int,int>> getBestSequence(std::deque<std::bitset<64>> short_sequence,
                                                     HashMatrix &hmat,
                                                     std::deque<std::vector<int>> &C,
-                                                    std::deque<std::vector<int>> &D
+                                                    std::deque<std::vector<long int>> &D
                                                    ) {
 
         if (D.empty() || m_genP) { // init D mat
 
              // init cost mat
-            C = calculate_cost_matrix(short_sequence, m_long_sequence);
+
+            if (C.empty()) {
+                C = calculate_cost_matrix(short_sequence, m_long_sequence);
+            }
             D = calculate_accumulated_cost_matrix(m_cost_matrix);
             successful_sequence = 0;
             m_genP = false;
         } else { // append row if exists
-            D = appendRowToD( calculateNewRowDistances (short_sequence.back(), hmat), C, D);
+            D = appendRowToD( calculateNewRowDistances(short_sequence.back(), hmat), C, D);
+
         }
 
         // calculate path
@@ -77,14 +110,15 @@ class DTHW {
     }
 
     //! appends a row to D ----  to debug
-    std::deque<std::vector<int>> appendRowToD(std::vector<int> cost_row, std::deque<std::vector<int>> &C, std::deque<std::vector<int>> &D) {
-        std::vector<int> D_row(cost_row.size());
+    std::deque<std::vector<long int>> appendRowToD(std::vector<int> cost_row, std::deque<std::vector<int>> &C, std::deque<std::vector<long int>> &D) {
+        std::vector<long int> D_row(cost_row.size());
 
+        HashMatrix::normalise_n(cost_row, norm_window_size);
 
         C.push_back(cost_row); // append C mat with  new cost row
-      //  C.pop_front(); // remove first
+        C.pop_front(); // remove first
         D.push_back(D_row); // push new empty row
-      //  D.pop_front(); //  remove first
+        D.pop_front(); //  remove first
 
 
         // copy first element of Cost matrix row
@@ -92,21 +126,25 @@ class DTHW {
         int M = cost_row.size()-1;
 
         // add 1 to cum sum
-        D[N][0] = D[N-1][0] + C[0][0];
+        //D[N][0] = D[N-1][0] + C[0][0];
+        std::vector<long int> cum_sum(C.size());
+        std::vector<long int> first_col;
+         // cumulative sum of first column
+        for  (size_t  i = 0; i < C.size(); i++) {
+            first_col.push_back(C[i][0]);
+        }
+        std::partial_sum(first_col.begin(), first_col.end(), cum_sum.begin(), std::plus<int>());
+        for (size_t i =0;  i < D.size(); i++) {
+            D[i][0] = cum_sum[i];
+        }
 
-
-
-       // copy first row of Cost matrix
-       // for (size_t i = 0; i < D[0].size(); i++) {
-      //      D[0][i] = C[0][i]; // row 0 of D = C
-      //  }
 
         for (int j = 1; j < M+1; j++) {
-            int up = D[N-1][j]; // up
-            int left = D[N][j-1]; // left
-            int upper_left = D[N-1][j-1]; // upper left
-            std::vector<int> squares({up,left,upper_left});
-            int min_val = *std::min_element( std::begin(squares), std::end(squares) );
+            auto up = D[N-1][j]; // up
+            auto left = D[N][j-1]; // left
+            auto upper_left = D[N-1][j-1]; // upper left
+            std::vector<long int> squares({up,left,upper_left});
+            auto min_val = *std::min_element( std::begin(squares), std::end(squares) );
             D.back()[j] = C.back()[j] + min_val;
         }
         m_accumulated_cost_matrix = D;
@@ -115,13 +153,13 @@ class DTHW {
     }
 
     //! calculate D matrix
-    std::deque<std::vector<int>> calculate_accumulated_cost_matrix(std::deque<std::vector<int>> &C) {
+    std::deque<std::vector<long int>> calculate_accumulated_cost_matrix(std::deque<std::vector<int>> &C) {
 
         int N, M;
         N = C.size();
         M = C[0].size();
 
-        std::deque<std::vector<int>> D(C.size(),std::vector<int>(C[0].size())); // accumulated cost matrix
+        std::deque<std::vector<long int>> D(C.size(),std::vector<long int>(C[0].size())); // accumulated cost matrix
         std::vector<int> cum_sum(C.size());
         std::vector<int> first_col;
          // cumulative sum of first column
@@ -140,9 +178,12 @@ class DTHW {
 
         for (int i = 1; i < N; i++) {
             for (int j = 1; j < M; j++) {
-                int up = D[i-1][j]; // up
-                int left = D[i][j-1]; // left
+
+                int up = D[i-1][j]; // up   D[i-2][j-1];
+                int left = D[i][j-1]; // left    D[i-1][j-2];
                 int upper_left = D[i-1][j-1]; // upper left
+
+
                 std::vector<int> squares({up,left,upper_left});
                 int min_val = *std::min_element( std::begin(squares), std::end(squares) );
                 //D[n, m] = C[n, m] + min(D[n-1, m], D[n, m-1], D[n-1, m-1])
@@ -154,7 +195,7 @@ class DTHW {
     }
 
     //! calculate path
-    std::vector<std::pair<int,int> > calculateOptimalWarpingPath(std::deque<std::vector<int>> &D) {
+    std::vector<std::pair<int,int> > calculateOptimalWarpingPath(std::deque<std::vector<long int>> &D) {
 
         int N = D.size(); // row size
         int n = N -1;
@@ -166,7 +207,7 @@ class DTHW {
 
 
         for (size_t i = 0; i < curr_row.size(); i++) {  // m = D[N - 1, :].argmin()
-            if (curr_row[i] < minVal) {
+            if (curr_row[i] <= minVal) {
                 minVal = curr_row[i];
                 min_index = i;
             }
@@ -181,7 +222,7 @@ class DTHW {
                 path_node.first = n-1;
                 path_node.second = 0;
             } else {
-                std::vector<int> squares({D[n-1][m-1],D[n-1][m],D[n][m-1]});
+                std::vector<long int> squares({D[n-1][m-1],D[n-1][m],D[n][m-1]});
                 int val = *std::min_element( std::begin(squares), std::end(squares) );
 
                 if (val == D[n-1][m-1]) { // if upper left
@@ -241,7 +282,6 @@ class DTHW {
             auto P = getBestSequence(m_short_sequence, m_long_sequence, m_cost_matrix, m_accumulated_cost_matrix );
             int match_index =  P[0].second;  // get best match index
 
-
             if (match_index != 0) {
                 last_match_index = match_index;
             } else {
@@ -255,7 +295,6 @@ class DTHW {
         } else {
             std::vector<int> differenceMatrix = HashMatrix::calculateHashValues(m_short_sequence.back(),m_long_sequence.getMatrix());
             int min_col, min_row, min_value;
-
 
             HashMatrix::argmin_matrix(differenceMatrix , m_roll_step, min_col, min_row, min_value) ;
             last_match_index = min_row;
@@ -275,7 +314,7 @@ class DTHW {
         cv::Mat costMat(0, m_cost_matrix.size(), cv::DataType<int>::type);
 
         for (unsigned int i = 0; i < m_cost_matrix.size(); ++i) {
-        // Make a temporary cv::Mat row and add to NewSamples _without_ data copy
+            // Make a temporary cv::Mat row and add to NewSamples _without_ data copy
             cv::Mat Sample(1, m_cost_matrix[i].size(), cv::DataType<int>::type, m_cost_matrix[i].data());
 
             costMat.push_back(Sample);
@@ -305,15 +344,15 @@ std::pair<millimeter_t,degree_t> scoring(Route &testRoute, int current_frame, Ro
 int main(int argc, char **argv) {
 
     bool show_images = true;    // show visual
-    int seq_length = 5;        // sequence length
-    int roll_step = 60;         // number of rotations for a view
+    int seq_length = 50;        // sequence length
+    int roll_step = 30;         // number of rotations for a view
     cv::Size unwrapRes(180,60); // resolution of the unwrrapped video
     bool createVideo = true;    // if true, it saves unwrapped video
     bool unwrap = true;         // if true, videos will be unwrapped
-    int skipstep = 5;           // skip frames in training matrix
-    int testRoute_skipstep = 5;
+    int skipstep = 1;           // skip frames in training matrix
+    int testRoute_skipstep =1;
     int num_datasets = 2;
-    int testRouteNum = 0;
+    int testRouteNum = 1;
 
     std::vector<Route> route_vector;
     std::vector<DTHW> sequence_matcher_vector;
@@ -342,37 +381,41 @@ int main(int argc, char **argv) {
 
     // simulation - for all nodes of test route - get best match
     for (size_t h = 0; h < testRoute.size(); h++) {
-
         auto hash = testRoute[h].image_hash; // current hash of test set
         int min_value; // best value
 
         // for all datasets calculate sequence
-
-        for (int i = 0; i < sequence_matcher_vector.size(); i++) {
-            if (i == testRouteNum) {
+        for (int j = 0; j < sequence_matcher_vector.size(); j++) {
+            if (j == testRouteNum) {
                 continue;
             }
-
-            sequence_matcher_vector[i].addToShortSequence(hash,seq_length);
-           // int seq_index = sequence_matcher_vector[i].getBestMatch();
-
+            sequence_matcher_vector[j].addToShortSequence(hash,seq_length);
         }
-
-
         // get the best matching frame using sequence matching
-
         if (show_images) {
             cv::Mat conc_img1, conc_img2;
-
             std::vector<cv::Mat> concat_imgs({testRoute[h].image});
 
             for (int i = 0; i < route_vector.size(); i++ ) {
                 if (i == testRouteNum) {
                     continue;
                 }
-
                 int seq_index = sequence_matcher_vector[i].getBestMatch();
+
+                cv::Mat dist_mat1;
+                cv::Mat dist_mat = sequence_matcher_vector[i].getCostMatrix();
                 concat_imgs.push_back(route_vector[i].nodes[seq_index].image);
+
+
+                if (dist_mat.size().height > 0) {
+                    //
+                    dist_mat*=10;
+                    cv::normalize(dist_mat, dist_mat1, 0, 255, cv::NORM_MINMAX);
+                    dist_mat1.convertTo(dist_mat1,CV_8UC1);
+                    applyColorMap(dist_mat1, dist_mat1, cv::COLORMAP_JET);
+                    cv::imshow("dist_mat", dist_mat1);
+                }
+
             }
 
 
@@ -383,6 +426,7 @@ int main(int argc, char **argv) {
 
         }
     }
+    cv::waitKey(5000);
 
     return 0;
 }
