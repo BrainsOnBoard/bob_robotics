@@ -543,16 +543,24 @@ public:
         BOB_ASSERT(cap.isOpened());
 
         cv::Mat img;
-        size_t cur = 0;
+        size_t curFrame = 0;
+
+        // Skip to first frame
+        for (; curFrame < m_FrameNumbers[0]; curFrame++) {
+            BOB_ASSERT(cap.grab());
+        }
+
         for (const auto &pair : idx) {
+            const auto nextFrame = m_FrameNumbers[pair.second];
+
             /*
              * It is possible to explicitly jump to a given frame with OpenCV,
              * but that turns out to be reeeeeeeaaaally slow. Instead we just
              * grab the frames one by one, discarding those we don't want.
              * Note: This assumes that the range of values increases monotonically!
              */
-            BOB_ASSERT(pair.second >= cur);
-            for (; cur <= pair.second && cap.grab(); cur++)
+            BOB_ASSERT(nextFrame >= curFrame);
+            for (; curFrame <= nextFrame && cap.grab(); curFrame++)
                 ;
 
             // Copy the grabbed frame into img
@@ -593,6 +601,7 @@ private:
     filesystem::path m_Path, m_VideoFilePath;
     const std::string m_EntriesFileName;
     std::vector<Entry> m_Entries;
+    std::vector<size_t> m_FrameNumbers;
     std::unique_ptr<cv::FileStorage> m_MetadataYAML;
     cv::Size m_Resolution;
     std::tm m_CreationTime;
