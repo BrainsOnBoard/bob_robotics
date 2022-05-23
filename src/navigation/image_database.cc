@@ -329,9 +329,9 @@ ImageDatabase::loadCSV()
     std::for_each(fields.begin(), fields.end(), strTrim);
     const size_t numFields = fields.size();
 
-    constexpr std::array<const char *, 10> defaultFieldNames{
+    constexpr std::array<const char *, 11> defaultFieldNames{
         "X [mm]", "Y [mm]", "Z [mm]", "Heading [degrees]", "Filename", "Grid X",
-        "Grid Y", "Grid Z", "Pitch [degrees]", "Roll [degrees]"
+        "Grid Y", "Grid Z", "Pitch [degrees]", "Roll [degrees]", "Frame"
     };
 
     /*
@@ -428,6 +428,14 @@ ImageDatabase::loadCSV()
             std::move(extraFields)
         };
         m_Entries.emplace_back(std::move(entry));
+
+        if (validIdx(fieldNameIdx[10])) {
+            m_FrameNumbers.push_back(std::stoi(getDefaultField(10)));
+        }
+    }
+
+    if (!validIdx(fieldNameIdx[10])) {
+        std::iota(m_FrameNumbers.begin(), m_FrameNumbers.end(), 0);
     }
 
     return true;
