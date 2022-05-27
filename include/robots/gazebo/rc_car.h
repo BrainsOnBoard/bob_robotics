@@ -23,11 +23,14 @@ public:
     // Public methods
     meters_per_second_t getAbsoluteMaximumSpeed();
     void move(float speed, float steeringAngle) ;
+    void poseUpdate(ConstPosePtr &_msg);
+    void start(gazebo::transport::NodePtr node);
 
 private:
     const radians_per_second_t m_MaximumSpeed;
     gazebo::msgs::Vector2d msg;
     gazebo::transport::PublisherPtr pub; // the node to communicate with the simulation
+    gazebo::transport::SubscriberPtr sub; // pose
 
 }; // RCCar
 } // Gazebo

@@ -21,6 +21,7 @@ using namespace BoBRobotics::Robots;
 using namespace std::literals;
 using namespace units::literals;
 
+
 int main(int argc, char **argv)
 {
     /************************************Gazebo setup************/
@@ -47,15 +48,21 @@ int main(int argc, char **argv)
         //display->runInBackground();
     }
 
-    BoBRobotics::Robots::Gazebo::RCCar robot(5_rad_per_s, node); // car agent
 
+    BoBRobotics::Robots::Gazebo::RCCar robot(5_rad_per_s, node); // car agent
+    robot.start(node);
 
     for(;;) {
         // Check for keyboard events
         if (1) { // if keyboard event
+            cv::Mat frame;
             display->update();
+
+
+            //cv::imshow("frame" ,frame);
+            //cv::waitKey(1);
             // A small delay so we don't hog CPU
-           // robot.move(2,0.3);
+            //robot.move(1,0);
             std::this_thread::sleep_for(5ms);
         }
     }

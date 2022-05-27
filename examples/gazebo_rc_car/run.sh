@@ -1,6 +1,6 @@
 #!/bin/sh
 trap 'kill %1' INT
-world_file=outdoor_world.world
+world_file=simple_world.world
 display_flag=''
 camera_url='/gazebo/default/cart_front_steer_pancam/simple_camera/link/camera/image'
 

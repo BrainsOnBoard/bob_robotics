@@ -8,7 +8,7 @@
 
 
 namespace gazebo {
-/// \brief A plugin to control a simple car with ackermann drive using the keyboard [w,a,s,d] 
+/// \brief A plugin to control a simple car with ackermann drive using the keyboard [w,a,s,d]
 // It needs KeyboardGUIPlugin to run, which can be enabled in the .world file
 class RCCarPlugin : public ModelPlugin
 {
@@ -29,7 +29,7 @@ public:
             gzthrow("Invalid joint count, model not loaded\n");
             return;
         }
-    
+
         // the model
         m_Model = _model;
 
@@ -41,7 +41,7 @@ public:
 
         // Setup a P-controller, with a gain of 0.1.
         m_WheelPID = common::PID(10, 0, 0);
-    
+
         // Apply the P-controller to the joints on the wheels
         m_Model->GetJointController()->SetVelocityPID(m_RearLeftJoint->GetScopedName(), m_WheelPID);
         m_Model->GetJointController()->SetVelocityPID(m_RearRightJoint->GetScopedName(), m_WheelPID);
@@ -65,7 +65,7 @@ public:
         m_Node->Init(m_Model->GetWorld()->Name());
 #endif
 
-        // topic names 
+        // topic names
         std::string topicName = "~/" + m_Model->GetName() + "/vel_cmd";
         std::string keypressTopicName = "~/keyboard/keypress";
 
@@ -84,7 +84,7 @@ public:
         gazebo::transport::NodePtr node(new gazebo::transport::Node());
         node->Init();
         pub = node->Advertise<gazebo::msgs::Pose>("~/"  + m_Model->GetName() + "/pose");
-    
+
     }
 
     /// \brief Set the velocity of the wheels in radians per second.
@@ -94,14 +94,14 @@ public:
         // Set the rear wheel joints target velocity.
         m_Model->GetJointController()->SetVelocityTarget(m_RearLeftJoint->GetScopedName(), speed);
         m_Model->GetJointController()->SetVelocityTarget(m_RearRightJoint->GetScopedName(), speed);
-        SetSteering(turning);   
+        SetSteering(turning);
     }
 
     /// \brief Set the steering angle.
     /// \param[in] _vel steering angle
     void SetSteering(const double turning_angle) {
         double ang1,ang2;
-        getAckermannAngles(turning_angle,ang1,ang2); 
+        getAckermannAngles(turning_angle,ang1,ang2);
         m_FrontLeftJoint->SetPosition(0,ang1);
         m_FrontRightJoint->SetPosition(0,ang2);
     }
@@ -119,28 +119,28 @@ private:
     void OnKeyMsg(const std::string &_msg)
     {
         double ang1,ang2;
-        if (_msg[3] == 'd') { 
+        if (_msg[3] == 'd') {
             // turn left 30 degrees
-            SetSteering(-0.523599);     
+            SetSteering(-0.523599);
         }
 
-        else if (_msg[3] == 'a') {  
+        else if (_msg[3] == 'a') {
             // turn right 30 degrees
-            SetSteering(0.523599);     
+            SetSteering(0.523599);
         }
 
         // go forward
-        if (_msg[3] == 'w') {  
-            SetVelocity(7.0, 0.0);  
+        if (_msg[3] == 'w') {
+            SetVelocity(7.0, 0.0);
         }
-        
+
         // stop motors
-        else if (_msg[3] == 'x') { 
+        else if (_msg[3] == 'x') {
             SetVelocity(0.0, 0.0);
         }
 
         // reverse
-        else if (_msg[3] == 'c') { 
+        else if (_msg[3] == 'c') {
             SetVelocity(-7.0, 0.0);
         }
     }
@@ -152,15 +152,15 @@ private:
         auto pose = m_Model->WorldPose();
         gazebo::msgs::Set(&msg, pose);
         //publish robot Pose every update
-        pub->Publish(msg);   
+        pub->Publish(msg);
     }
 
-   
+
     /// \brief calculates the proper angles for both wheels to minimise slippage.
     void getAckermannAngles(const double angle, double &angle_left, double &angle_right) {
         double numerator = 2.0 * wheelBase * sin(angle);
         angle_left = atan2(numerator,(2.0*wheelBase*cos(angle) - wheelSeparation*sin(angle)) );
-        angle_right = atan2(numerator,(2.0*wheelBase*cos(angle) + wheelSeparation*sin(angle)) );    
+        angle_right = atan2(numerator,(2.0*wheelBase*cos(angle) + wheelSeparation*sin(angle)) );
     }
 
     /// \brief a pointer to a publisher to transport Pose messages
@@ -189,7 +189,7 @@ private:
     /// \brief A PID controller for the joint.
     common::PID m_WheelPID;
 
-    /// \brief a pointer to the update event 
+    /// \brief a pointer to the update event
     event::ConnectionPtr updateConnection;
 
     /// \brief Robot pose to publish
@@ -198,7 +198,7 @@ private:
     /// \brief robot parameters, change this according to the robot spec
     const double wheelBase = 1.0;
     const double wheelSeparation = 0.5;
-   
+
 };
 
 // Tell Gazebo about this plugin, so that Gazebo can call Load on this plugin.

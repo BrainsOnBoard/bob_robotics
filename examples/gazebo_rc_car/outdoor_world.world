@@ -28,14 +28,15 @@
     <physics name='default_physics' default='0' type='ode'>
       <max_step_size>0.001</max_step_size>
       <real_time_factor>1</real_time_factor>
-      <real_time_update_rate>30</real_time_update_rate>
-      <updateRate>30</updateRate>
+      <real_time_update_rate>1000</real_time_update_rate>
+
+
     </physics>
     <scene>
 
       <ambient>0.4 0.4 0.4 1</ambient>
       <background>0.7 0.7 0.7 1</background>
-      <shadows>1</shadows>
+      <shadows>0</shadows>
     </scene>
     <audio>
       <device>default</device>
@@ -4397,7 +4398,7 @@
               </lens>
             </camera>
             <always_on>1</always_on>
-            <update_rate>15</update_rate>
+            <update_rate>10</update_rate>
           </sensor>
           <self_collide>0</self_collide>
           <enable_wind>0</enable_wind>

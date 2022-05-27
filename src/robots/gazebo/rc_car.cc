@@ -22,6 +22,19 @@ RCCar::RCCar(const radians_per_second_t maximumSpeed,
     pub->WaitForConnection();
 }
 
+void RCCar::start(gazebo::transport::NodePtr node)
+{
+
+    sub = node->Subscribe("~/cart_front_steer_pancam/pose", &RCCar::poseUpdate,this);
+}
+
+void RCCar::poseUpdate(ConstPosePtr &_msg)
+{
+
+    std::cout << _msg->position().x() << " " << _msg->position().y() << " " << _msg->position().z() << std::endl;
+}
+
+
 
 meters_per_second_t RCCar::getAbsoluteMaximumSpeed()
 {
