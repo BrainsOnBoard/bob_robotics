@@ -3,7 +3,7 @@ include(../../cmake/BoBRobotics.cmake)
 project(bob_common)
 
 set(SOURCES background_exception_catcher.cc geometry.cc macros.cc main.cc
-    map_coordinate.cc path.cc pid.cc progress_bar.cc semaphore.cc
+    map_coordinate.cc path.cc pid.cc progress_bar.cc robo_claw.cc semaphore.cc
     serial_interface.cc stopwatch.cc string.cc threadable.cc)
 
 find_package(BoBRobotics REQUIRED)
