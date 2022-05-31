@@ -15,10 +15,15 @@ int bobMain(int, char **)
     RoboClaw roboClaw;
 
     std::cout << roboClaw.getVersion() << std::endl;
-
-    roboClaw.setMotor1Speed(0.1f);
+    std::cout << roboClaw.getBatteryVoltage() << "V" << std::endl;
+    roboClaw.setMotor1Speed(-0.1f);
     for(int i = 0; i < 100; i++) {
-        std::cout << roboClaw.getMotor1Speed() << "," << roboClaw.getMotor1Encoder() << std::endl;
+
+        //std::cout << "Query:";
+        uint32_t speed = roboClaw.getMotor1Encoder();
+
+        std::cout << std::endl << "Speed:" << speed << std::endl;
+        //uint32_t encoder = roboClaw.getMotor1Encoder() << std::endl;
         std::this_thread::sleep_for(50ms);
     }
     roboClaw.setMotor1Speed(0.0f);

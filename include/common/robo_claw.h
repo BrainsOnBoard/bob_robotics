@@ -31,6 +31,9 @@ public:
     //! Get RoboClaw version string
     std::string getVersion();
 
+    //! Get voltage of main battery
+    float getBatteryVoltage();
+
 private:
     //------------------------------------------------------------------------
     // Enumerations
@@ -284,11 +287,11 @@ private:
     //! Read a byte
     template<typename ...Data>
     void read(CRC &crc,
-              uint8_t &byte, Data... data)
+              uint8_t *byte, Data... data)
     {
         // Read byte and update CRC
-        if(m_SerialInterface.readByte(byte)) {
-            crc.update(byte);
+        if(m_SerialInterface.readByte(*byte)) {
+            crc.update(*byte);
         }
         else {
             throw std::runtime_error("Unable to read byte");
@@ -301,31 +304,36 @@ private:
     //! Read a word
     template<typename ...Data>
     void read(CRC &crc,
-              uint16_t &word, Data... data)
+              uint16_t *word, Data... data)
     {
         // Read two bytes followed by remainder
         // **NOTE** RoboClaw is big endian so SerialInterface::read wouldn't work
-        uint8_t bytes[2] = {0};
-        read(crc, bytes[0], bytes[1], data...);
+        uint8_t bytes[2];
+        read(crc, &bytes[0], &bytes[1], data...);
 
         // Re-assemble word
-        word = (bytes[0] << 8) | bytes[1];
+        *word = (bytes[0] << 8) | bytes[1];
     }
 
     //! Read a dword
     template<typename ...Data>
     void read(CRC &crc,
-              uint32_t &dword, Data... data)
+              uint32_t *dword, Data... data)
     {
         // Read four bytes followed by remainder
         // **NOTE** RoboClaw is big endian so SerialInterface::read wouldn't work
-        uint8_t bytes[4] = {0};
-        read(crc, bytes[0], bytes[1], bytes[2], bytes[3], data...);
+        uint8_t bytes[4];
+        read(crc, &bytes[0], &bytes[1], &bytes[2], &bytes[3], data...);
 
         // Re-assemble dword
-        dword = (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
+        *dword = (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
     }
 
+    // Perform a read command consisting of:
+    // write address [1 byte]
+    // write command[1 byte]
+    // read variadic parameters
+    // read CRC [2 bytes]
     template<typename ...Data>
     void readCommand(Command command, Data... data)
     {
@@ -338,10 +346,15 @@ private:
             read(crc, data...);
 
             // Check CRC
-            if(!crc.check(m_SerialInterface)) {
+            if(crc.check(m_SerialInterface)) {
+                return;
+            }
+            else {
                 throw std::runtime_error("CRC check failed");
             }
         }
+
+        throw std::runtime_error("Unable to read to serial port");
     }
 
     //------------------------------------------------------------------------

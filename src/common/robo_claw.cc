@@ -45,7 +45,7 @@ uint32_t RoboClaw::getMotor1Encoder()
 {
     uint32_t encoder = 0;
     uint8_t status = 0;
-    readCommand(Command::GETM1ENC, encoder, status);
+    readCommand(Command::GETM1ENC, &encoder, &status);
     return encoder;
 }
 //----------------------------------------------------------------------------
@@ -53,7 +53,7 @@ uint32_t RoboClaw::getMotor2Encoder()
 {
     uint32_t encoder = 0;
     uint8_t status = 0;
-    readCommand(Command::GETM2ENC, encoder, status);
+    readCommand(Command::GETM2ENC, &encoder, &status);
     return encoder;
 }
 //----------------------------------------------------------------------------
@@ -61,8 +61,8 @@ uint32_t RoboClaw::getMotor1Speed()
 {
     uint32_t speed = 0;
     uint8_t status = 0;
-    readCommand(Command::GETM1SPEED, speed, status);
-
+    readCommand(Command::GETM1SPEED, &speed, &status);
+    std::cout << "status:" << (int)status << std::endl;
     return speed;
 }
 //----------------------------------------------------------------------------
@@ -70,7 +70,7 @@ uint32_t RoboClaw::getMotor2Speed()
 {
     uint32_t speed = 0;
     uint8_t status = 0;
-    readCommand(Command::GETM2SPEED, speed, status);
+    readCommand(Command::GETM2SPEED, &speed, &status);
 
     return speed;
 }
@@ -103,6 +103,16 @@ std::string RoboClaw::getVersion()
 
         throw std::runtime_error("Version string not correctly terminated");
     }
+
+    throw std::runtime_error("Unable to read to serial port");
 }
+//----------------------------------------------------------------------------
+float RoboClaw::getBatteryVoltage()
+{
+    uint16_t voltage;
+    readCommand(Command::GETMBATT, &voltage);
+    return (voltage * 0.1f);
+}
+
 }   // namespace BoBRobotics
 #endif   // _WIN32
