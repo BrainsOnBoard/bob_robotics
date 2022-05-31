@@ -14,10 +14,22 @@ namespace BoBRobotics {
 class RoboClaw
 {
 public:
-    Roboclaw(const char *path = SerialInterface::DefaultLinuxDevicePath, uint8_t address = 0x80, int maxRetry = 2);
+    RoboClaw(const char *path = SerialInterface::DefaultLinuxDevicePath, uint8_t address = 0x80, int maxRetry = 2);
 
+    //! Set motor speed
     void setMotor1Speed(float throttle);
     void setMotor2Speed(float throttle);
+
+    //! Get encoder values for motors
+    uint32_t getMotor1Encoder();
+    uint32_t getMotor2Encoder();
+
+    //! Get motor speeds
+    uint32_t getMotor1Speed();
+    uint32_t getMotor2Speed();
+
+    //! Get RoboClaw version string
+    std::string getVersion();
 
 private:
     //------------------------------------------------------------------------
@@ -25,27 +37,27 @@ private:
     //------------------------------------------------------------------------
     enum class Error
     {
-        NONE            = 0x000000,
-        ESTOP           = 0x000001,	//Error: E-Stop active
-        TEMP            = 0x000002,	//Error: Temperature Sensor 1 >=100c
-        TEMP2           = 0x000004,	//Error: Temperature Sensor 2 >=100C (available only on some models)
-        MBATHIGH        = 0x000008,	//Error: Main Battery Over Voltage
-        LBATHIGH        = 0x000010,	//Error: Logic Battery High Voltage
-        LBATLOW         = 0x000020,	//Error: Logic Battery Low Voltage
-        FAULTM1         = 0x000040,	//Error: Motor 1 Driver Fault (only on some models)
-        FAULTM2         = 0x000080,	//Error: Motor 2 Driver Fault (only on some models)
-        SPEED1          = 0x000100,	//Error: Motor 1 Speed Error Limit
-        SPEED2          = 0x000200,	//Error: Motor 2 Speed Error Limit
-        POS1            = 0x000400,	//Error: Motor 1 Position Error Limit
-        POS2            = 0x000800,	//Error: MOtor2 Position Error Limit
-        OVERCURRENTM1   = 0x010000, //Warning: Motor 1 Current Limited
-        OVERCURRENTM2   = 0x020000, //Warning: Motor 2 CUrrent Limited
-        MBATHIGH        = 0x040000, //Warning: Main Battery Voltage High
-        MBATLOW         = 0x080000, //Warning: Main Battery Low Voltage
-        TEMP            = 0x100000, //Warning: Temperaure Sensor 1 >=85C
-        TEMP2           = 0x200000, //Warning: Temperature Sensor 2 >=85C (available only on some models)
-        S4              = 0x400000, //Warning: Motor 1 Home/Limit Signal
-        S5              = 0x800000, //Warning: Motor 2 Home/Limit Signal
+        NONE                = 0x000000,
+        ESTOP               = 0x000001,	//Error: E-Stop active
+        TEMP                = 0x000002,	//Error: Temperature Sensor 1 >=100c
+        TEMP2               = 0x000004,	//Error: Temperature Sensor 2 >=100C (available only on some models)
+        MBATHIGH            = 0x000008,	//Error: Main Battery Over Voltage
+        LBATHIGH            = 0x000010,	//Error: Logic Battery High Voltage
+        LBATLOW             = 0x000020,	//Error: Logic Battery Low Voltage
+        FAULTM1             = 0x000040,	//Error: Motor 1 Driver Fault (only on some models)
+        FAULTM2             = 0x000080,	//Error: Motor 2 Driver Fault (only on some models)
+        SPEED1              = 0x000100,	//Error: Motor 1 Speed Error Limit
+        SPEED2              = 0x000200,	//Error: Motor 2 Speed Error Limit
+        POS1                = 0x000400,	//Error: Motor 1 Position Error Limit
+        POS2                = 0x000800,	//Error: MOtor2 Position Error Limit
+        WARN_OVERCURRENTM1  = 0x010000, //Warning: Motor 1 Current Limited
+        WARN_OVERCURRENTM2  = 0x020000, //Warning: Motor 2 CUrrent Limited
+        WARN_MBATHIGH       = 0x040000, //Warning: Main Battery Voltage High
+        WARN_MBATLOW        = 0x080000, //Warning: Main Battery Low Voltage
+        WARN_TEMP           = 0x100000, //Warning: Temperaure Sensor 1 >=85C
+        WARN_TEMP2          = 0x200000, //Warning: Temperature Sensor 2 >=85C (available only on some models)
+        WARN_S4             = 0x400000, //Warning: Motor 1 Home/Limit Signal
+        WARN_S5             = 0x800000, //Warning: Motor 2 Home/Limit Signal
     };
 
     enum class Command : uint8_t
@@ -150,6 +162,7 @@ private:
     //! CRC implementation, copied from Arduino code
     class CRC
     {
+    public:
         CRC() : m_CRC(0)
         {
         }
@@ -167,6 +180,25 @@ private:
             }
         }
 
+        bool check(SerialInterface &serialInterface)
+        {
+            // Read 1st CRCbyte
+            uint8_t ccrc_1;
+            if(!serialInterface.readByte(ccrc_1)) {
+                throw std::runtime_error("Unable to read CRC");
+            }
+
+            // Read 2nd CRC byte
+            uint8_t ccrc_2;
+            if(!serialInterface.readByte(ccrc_2)) {
+                throw std::runtime_error("Unable to read CRC");
+            }
+
+            // Check
+            const uint16_t ccrc = (ccrc_1 << 8) | ccrc_2;
+            return (ccrc == m_CRC);
+        }
+
         uint16_t get()
         {
             return m_CRC;
@@ -179,11 +211,12 @@ private:
     //------------------------------------------------------------------------
     // Private methods
     //------------------------------------------------------------------------
-    template<typename ...Data>
+    // End-stop of variadic expandion
     void write(CRC&)
     {
     }
 
+    //! Write byte
     template<typename ...Data>
     void write(CRC &crc,
                uint8_t byte, Data... data)
@@ -196,6 +229,17 @@ private:
         write(crc, data...);
     }
 
+    //! Write word
+    template<typename ...Data>
+    void write(CRC &crc,
+               uint16_t word, Data... data)
+    {
+        // Write bytes of word followed by remainder
+        // **NOTE** RoboClaw is big endian so SerialInterface::write wouldn't work
+        write(crc, (uint8_t)(word >> 8),(uint8_t)word, data...);
+    }
+
+     //! Write dword
     template<typename ...Data>
     void write(CRC &crc,
                uint32_t dword, Data... data)
@@ -205,19 +249,12 @@ private:
         write(crc, (uint8_t)(dword >> 24), (uint8_t)(dword >> 16), (uint8_t)(dword >> 8),(uint8_t)dword, data...);
     }
 
-    template<typename ...Data>
-    void write(CRC &crc,
-               uint8_t word, Data... data)
-    {
-        // Write bytes of word followed by remainder
-        // **NOTE** RoboClaw is big endian so SerialInterface::write wouldn't work
-        write(crc, (uint8_t)(word >> 8),(uint8_t)word, data...);
-    }
 
+    //! Write command
     template<typename ...Data>
-    void writeN(Command command, Data... data)
+    void writeCommand(Command command, Data... data)
     {
-        for(int r = 0; r < maxRetry; r++) {
+        for(int r = 0; r < m_MaxRetry; r++) {
             // Start CRC calculation
             CRC crc;
 
@@ -226,18 +263,85 @@ private:
 
             // Write CRC
             // **NOTE** RoboClaw is big endian so SerialInterface::write wouldn't work
-            const uint16_t crc = crc.get();
-            m_SerialInterface.writeByte(crc >> 8);
-            m_SerialInterface.writeByte(crc);
+            m_SerialInterface.writeByte(crc.get() >> 8);
+            m_SerialInterface.writeByte(crc.get());
 
             // If byte is read successfully
             uint8_t response;
-            if(m_SerialInterface.readByte(reponse) && response == 0xFF) {
+            if(m_SerialInterface.readByte(response) && response == 0xFF) {
                 return;
             }
         }
 
         throw std::runtime_error("Unable to write to serial port");
+    }
+
+    //! End-stop of variadic expandion
+    void read(CRC&)
+    {
+    }
+
+    //! Read a byte
+    template<typename ...Data>
+    void read(CRC &crc,
+              uint8_t &byte, Data... data)
+    {
+        // Read byte and update CRC
+        if(m_SerialInterface.readByte(byte)) {
+            crc.update(byte);
+        }
+        else {
+            throw std::runtime_error("Unable to read byte");
+        }
+
+        // Read remainder
+        read(crc, data...);
+    }
+
+    //! Read a word
+    template<typename ...Data>
+    void read(CRC &crc,
+              uint16_t &word, Data... data)
+    {
+        // Read two bytes followed by remainder
+        // **NOTE** RoboClaw is big endian so SerialInterface::read wouldn't work
+        uint8_t bytes[2] = {0};
+        read(crc, bytes[0], bytes[1], data...);
+
+        // Re-assemble word
+        word = (bytes[0] << 8) | bytes[1];
+    }
+
+    //! Read a dword
+    template<typename ...Data>
+    void read(CRC &crc,
+              uint32_t &dword, Data... data)
+    {
+        // Read four bytes followed by remainder
+        // **NOTE** RoboClaw is big endian so SerialInterface::read wouldn't work
+        uint8_t bytes[4] = {0};
+        read(crc, bytes[0], bytes[1], bytes[2], bytes[3], data...);
+
+        // Re-assemble dword
+        dword = (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
+    }
+
+    template<typename ...Data>
+    void readCommand(Command command, Data... data)
+    {
+        for(int r = 0; r < m_MaxRetry; r++) {
+            // Write address and command
+            CRC crc;
+            write(crc, m_Address, static_cast<uint8_t>(command));
+
+            // Read data
+            read(crc, data...);
+
+            // Check CRC
+            if(!crc.check(m_SerialInterface)) {
+                throw std::runtime_error("CRC check failed");
+            }
+        }
     }
 
     //------------------------------------------------------------------------
