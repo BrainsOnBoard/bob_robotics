@@ -97,19 +97,19 @@ std::string RoboClaw::getVersion()
 
         // Read maximum version characters
         uint8_t version[48];
-        for(int i = 0; i < 48; i++) {
-            m_SerialInterface.readByte(version[i]);
-            crc.update(version[i]);
+        for(uint8_t &c : version) {
+            m_SerialInterface.readByte(c);
+            crc.update(c);
 
             // If end of string is reached
-            if(version[i] == '\0') {
+            if(c == '\0') {
                 // Check CRC against one returned by device
                 if(!crc.check(m_SerialInterface)) {
                     throw std::runtime_error("CRC check failed");
                 }
 
                 // Return string
-                return std::string(reinterpret_cast<char*>(version));
+                return reinterpret_cast<char*>(version);
             }
         }
 
