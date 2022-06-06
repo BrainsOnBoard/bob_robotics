@@ -16,10 +16,10 @@ namespace Tank {
 //----------------------------------------------------------------------------
 //! An interface for large wheeled, all-terrain robot with two RoboClaw motor controllers
 class ATV
-  : public TankBase<Norbot>
+  : public TankBase<ATV>
 {
 public:
-    ATV(const char *frontPath, const char *rearPath,
+    ATV(const char *frontPath = "/dev/ttyACM0", const char *rearPath = "/dev/ttyACM1",
         uint8_t frontAddress = 0x80, uint8_t rearAddress = 0x80);
 
     //----------------------------------------------------------------------------
@@ -39,7 +39,16 @@ public:
         return units::length::millimeter_t{ 104 };
     }
 
+    //----------------------------------------------------------------------------
+    // Public API
+    //----------------------------------------------------------------------------
+    RoboClaw &getFrontController(){ return m_FrontController; }
+    RoboClaw &getRearController(){ return m_RearController; }
+
 private:
+    //----------------------------------------------------------------------------
+    // Members
+    //----------------------------------------------------------------------------
     RoboClaw m_FrontController;
     RoboClaw m_RearController;
 }; // Norbot
