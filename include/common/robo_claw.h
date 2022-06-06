@@ -16,6 +16,35 @@ class RoboClaw
 public:
     RoboClaw(const char *path = SerialInterface::DefaultLinuxDevicePath, uint8_t address = 0x80, int maxRetry = 2);
 
+    //------------------------------------------------------------------------
+    // Enumerations
+    //------------------------------------------------------------------------
+    enum class Status : uint32_t
+    {
+        NONE                = 0x000000,
+        ERROR_ESTOP         = 0x000001, //Error: E-Stop active
+        ERROR_TEMP          = 0x000002, //Error: Temperature Sensor 1 >=100c
+        ERROR_TEMP2         = 0x000004, //Error: Temperature Sensor 2 >=100C (available only on some models)
+        ERROR_MBATHIGH      = 0x000008, //Error: Main Battery Over Voltage
+        ERROR_LBATHIGH      = 0x000010, //Error: Logic Battery High Voltage
+        ERROR_LBATLOW       = 0x000020, //Error: Logic Battery Low Voltage
+        ERROR_FAULTM1       = 0x000040, //Error: Motor 1 Driver Fault (only on some models)
+        ERROR_FAULTM2       = 0x000080, //Error: Motor 2 Driver Fault (only on some models)
+        ERROR_SPEED1        = 0x000100, //Error: Motor 1 Speed Error Limit
+        ERROR_SPEED2        = 0x000200, //Error: Motor 2 Speed Error Limit
+        ERROR_POS1          = 0x000400, //Error: Motor 1 Position Error Limit
+        ERROR_POS2          = 0x000800, //Error: MOtor2 Position Error Limit
+        WARN_OVERCURRENTM1  = 0x010000, //Warning: Motor 1 Current Limited
+        WARN_OVERCURRENTM2  = 0x020000, //Warning: Motor 2 CUrrent Limited
+        WARN_MBATHIGH       = 0x040000, //Warning: Main Battery Voltage High
+        WARN_MBATLOW        = 0x080000, //Warning: Main Battery Low Voltage
+        WARN_TEMP           = 0x100000, //Warning: Temperaure Sensor 1 >=85C
+        WARN_TEMP2          = 0x200000, //Warning: Temperature Sensor 2 >=85C (available only on some models)
+        WARN_S4             = 0x400000, //Warning: Motor 1 Home/Limit Signal
+        WARN_S5             = 0x800000, //Warning: Motor 2 Home/Limit Signal
+    };
+
+
     //! Set motor speed
     void setMotor1Speed(float throttle);
     void setMotor2Speed(float throttle);
@@ -36,35 +65,13 @@ public:
     //! Get voltage of main battery
     float getBatteryVoltage();
 
+    //! Get status of motor controller
+    Status getStatus();
+
 private:
     //------------------------------------------------------------------------
     // Enumerations
     //------------------------------------------------------------------------
-    enum class Error
-    {
-        NONE                = 0x000000,
-        ESTOP               = 0x000001,	//Error: E-Stop active
-        TEMP                = 0x000002,	//Error: Temperature Sensor 1 >=100c
-        TEMP2               = 0x000004,	//Error: Temperature Sensor 2 >=100C (available only on some models)
-        MBATHIGH            = 0x000008,	//Error: Main Battery Over Voltage
-        LBATHIGH            = 0x000010,	//Error: Logic Battery High Voltage
-        LBATLOW             = 0x000020,	//Error: Logic Battery Low Voltage
-        FAULTM1             = 0x000040,	//Error: Motor 1 Driver Fault (only on some models)
-        FAULTM2             = 0x000080,	//Error: Motor 2 Driver Fault (only on some models)
-        SPEED1              = 0x000100,	//Error: Motor 1 Speed Error Limit
-        SPEED2              = 0x000200,	//Error: Motor 2 Speed Error Limit
-        POS1                = 0x000400,	//Error: Motor 1 Position Error Limit
-        POS2                = 0x000800,	//Error: MOtor2 Position Error Limit
-        WARN_OVERCURRENTM1  = 0x010000, //Warning: Motor 1 Current Limited
-        WARN_OVERCURRENTM2  = 0x020000, //Warning: Motor 2 CUrrent Limited
-        WARN_MBATHIGH       = 0x040000, //Warning: Main Battery Voltage High
-        WARN_MBATLOW        = 0x080000, //Warning: Main Battery Low Voltage
-        WARN_TEMP           = 0x100000, //Warning: Temperaure Sensor 1 >=85C
-        WARN_TEMP2          = 0x200000, //Warning: Temperature Sensor 2 >=85C (available only on some models)
-        WARN_S4             = 0x400000, //Warning: Motor 1 Home/Limit Signal
-        WARN_S5             = 0x800000, //Warning: Motor 2 Home/Limit Signal
-    };
-
     enum class Command : uint8_t
     {
         M1FORWARD = 0,
@@ -144,7 +151,7 @@ private:
         RESTOREDEFAULTS = 80,
         GETTEMP = 82,
         GETTEMP2 = 83,	//Only valid on some models
-        GETERROR = 90,
+        GETSTATUS = 90,
         GETENCODERMODE = 91,
         SETM1ENCODERMODE = 92,
         SETM2ENCODERMODE = 93,

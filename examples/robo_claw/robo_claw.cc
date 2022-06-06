@@ -15,6 +15,7 @@ int bobMain(int, char **)
     RoboClaw roboClaw;
     std::cout << "Version:" << roboClaw.getVersion() << std::endl;
     std::cout << "Battery voltage:" << roboClaw.getBatteryVoltage() << "V" << std::endl;
+    std::cout  << "Status:" << std::hex << (uint32_t)roboClaw.getStatus() << std::dec << std::endl;
     for(int i = 0; i < 100; i++) {
         if((i % 20) == 0) {
             roboClaw.setMotor1Speed(((i / 20) + 1) * 0.1f);

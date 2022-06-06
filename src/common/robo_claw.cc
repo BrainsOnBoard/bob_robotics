@@ -125,6 +125,12 @@ float RoboClaw::getBatteryVoltage()
     readCommand(Command::GETMBATT, &voltage);
     return (voltage * 0.1f);
 }
-
+//----------------------------------------------------------------------------
+RoboClaw::Status RoboClaw::getStatus()
+{
+    uint32_t status;
+    readCommand(Command::GETSTATUS, &status);
+    return static_cast<Status>(status);
+}
 }   // namespace BoBRobotics
 #endif   // _WIN32
