@@ -28,7 +28,7 @@ RoboClaw::RoboClaw(const char *path, uint8_t address, int maxRetry)
 void RoboClaw::setMotor1Speed(float throttle)
 {
     const bool forward = (throttle > 0.0f);
-    const uint8_t byte = (uint8_t)std::round(255.0 * std::min(1.0f, forward ? throttle : -throttle));
+    const uint8_t byte = (uint8_t)std::round(127.0 * std::min(1.0f, forward ? throttle : -throttle));
 
     writeCommand(forward ? Command::M1FORWARD : Command::M1BACKWARD, byte);
 }
@@ -36,7 +36,7 @@ void RoboClaw::setMotor1Speed(float throttle)
 void RoboClaw::setMotor2Speed(float throttle)
 {
     const bool forward = (throttle > 0.0f);
-    const uint8_t byte = (uint8_t)std::round(255.0 * std::min(1.0f, forward ? throttle : -throttle));
+    const uint8_t byte = (uint8_t)std::round(127.0 * std::min(1.0f, forward ? throttle : -throttle));
 
     writeCommand(forward ? Command::M2FORWARD : Command::M2BACKWARD, byte);
 }
@@ -46,6 +46,8 @@ uint32_t RoboClaw::getMotor1Encoder()
     uint32_t encoder = 0;
     uint8_t status = 0;
     readCommand(Command::GETM1ENC, &encoder, &status);
+
+    // **TODO** think about something sensible to do with status
     return encoder;
 }
 //----------------------------------------------------------------------------
@@ -54,25 +56,35 @@ uint32_t RoboClaw::getMotor2Encoder()
     uint32_t encoder = 0;
     uint8_t status = 0;
     readCommand(Command::GETM2ENC, &encoder, &status);
+
+    // **TODO** think about something sensible to do with status
     return encoder;
 }
 //----------------------------------------------------------------------------
-uint32_t RoboClaw::getMotor1Speed()
+void RoboClaw::resetEncoders()
+{
+    writeCommand(Command::RESETENC);
+}
+//----------------------------------------------------------------------------
+int RoboClaw::getMotor1Speed()
 {
     uint32_t speed = 0;
     uint8_t status = 0;
     readCommand(Command::GETM1SPEED, &speed, &status);
-    std::cout << "status:" << (int)status << std::endl;
-    return speed;
+
+    // **NOTE** status signifies direction but this also seems to be 2s compliment encoded in speed
+    return (int)speed;
 }
 //----------------------------------------------------------------------------
-uint32_t RoboClaw::getMotor2Speed()
+int RoboClaw::getMotor2Speed()
 {
     uint32_t speed = 0;
     uint8_t status = 0;
     readCommand(Command::GETM2SPEED, &speed, &status);
 
-    return speed;
+    // Cast to signed int and return
+    // **NOTE** status signifies direction but this also seems to be 2s compliment encoded in speed
+    return (int)speed;
 }
 //----------------------------------------------------------------------------
 std::string RoboClaw::getVersion()

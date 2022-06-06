@@ -24,9 +24,11 @@ public:
     uint32_t getMotor1Encoder();
     uint32_t getMotor2Encoder();
 
+    void resetEncoders();
+
     //! Get motor speeds
-    uint32_t getMotor1Speed();
-    uint32_t getMotor2Speed();
+    int getMotor1Speed();
+    int getMotor2Speed();
 
     //! Get RoboClaw version string
     std::string getVersion();

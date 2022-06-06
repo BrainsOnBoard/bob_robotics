@@ -13,17 +13,13 @@ int bobMain(int, char **)
 
     // Create roboclaw interface
     RoboClaw roboClaw;
-
-    std::cout << roboClaw.getVersion() << std::endl;
-    std::cout << roboClaw.getBatteryVoltage() << "V" << std::endl;
-    roboClaw.setMotor1Speed(-0.1f);
+    std::cout << "Version:" << roboClaw.getVersion() << std::endl;
+    std::cout << "Battery voltage:" << roboClaw.getBatteryVoltage() << "V" << std::endl;
     for(int i = 0; i < 100; i++) {
-
-        //std::cout << "Query:";
-        uint32_t speed = roboClaw.getMotor1Encoder();
-
-        std::cout << std::endl << "Speed:" << speed << std::endl;
-        //uint32_t encoder = roboClaw.getMotor1Encoder() << std::endl;
+        if((i % 20) == 0) {
+            roboClaw.setMotor1Speed(((i / 20) + 1) * 0.1f);
+        }
+        std::cout << "Speed:" << roboClaw.getMotor1Speed() << std::endl;
         std::this_thread::sleep_for(50ms);
     }
     roboClaw.setMotor1Speed(0.0f);
