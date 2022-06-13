@@ -41,6 +41,7 @@ void readIntegerSize(const cv::FileNode &node, size_t &value, size_t defaultValu
 Config::Config()
   : m_UseBinaryImage(false)
   , m_UseHorizonVector(false)
+  , m_UseHistEq(false)
   , m_Train(true)
   , m_UseInfoMax(false)
   , m_SaveTestingDiagnostic(false)
@@ -102,6 +103,7 @@ Config::read(const cv::FileNode &node)
         // **NOTE** we use cv::read rather than stream operators as we want to use current values as defaults
         cv::read(node["shouldUseBinaryImage"], m_UseBinaryImage, m_UseBinaryImage);
         cv::read(node["shouldUseHorizonVector"], m_UseHorizonVector, m_UseHorizonVector);
+        cv::read(node["shouldUseHistEq"], m_UseHistEq, m_UseHistEq);
         cv::read(node["shouldTrain"], m_Train, m_Train);
         cv::read(node["shouldUseInfoMax"], m_UseInfoMax, m_UseInfoMax);
         cv::read(node["shouldSaveTestingDiagnostic"], m_SaveTestingDiagnostic, m_SaveTestingDiagnostic);
@@ -222,6 +224,7 @@ Config::write(cv::FileStorage &fs) const
     fs << "{";
     fs << "shouldUseBinaryImage" << shouldUseBinaryImage();
     fs << "shouldUseHorizonVector" << shouldUseHorizonVector();
+    fs << "shouldUseHistEq" << shouldUseHistEq();
     fs << "shouldTrain" << shouldTrain();
     fs << "shouldUseInfoMax" << shouldUseInfoMax();
     fs << "shouldSaveTestingDiagnostic" << shouldSaveTestingDiagnostic();
