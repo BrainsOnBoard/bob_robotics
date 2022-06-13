@@ -32,6 +32,7 @@ public:
     //------------------------------------------------------------------------
     bool shouldUseBinaryImage() const{ return m_UseBinaryImage; }
     bool shouldUseHorizonVector() const{ return m_UseHorizonVector; }
+    bool shouldUseHistEq() const{ return m_UseHistEq; }
     bool shouldTrain() const{ return m_Train; }
     bool shouldUseInfoMax() const{ return m_UseInfoMax; }
     bool shouldSaveTestingDiagnostic() const{ return m_SaveTestingDiagnostic; }
@@ -100,6 +101,8 @@ private:
     bool m_UseBinaryImage;
 
     bool m_UseHorizonVector;
+
+    bool m_UseHistEq;
 
     // Should we start in training mode or use existing data?
     bool m_Train;

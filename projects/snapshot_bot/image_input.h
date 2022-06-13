@@ -74,6 +74,24 @@ private:
 };
 
 //----------------------------------------------------------------------------
+// ImageInputHistEq
+//----------------------------------------------------------------------------
+// Simply returns grayscale images that have been normalised with histeq
+class ImageInputHistEq : public ImageInput
+{
+public:
+    ImageInputHistEq(const Config &config, const cv::Size &unwrapSize, std::unique_ptr<OpenCVUnwrap360> unwrapper);
+
+    //----------------------------------------------------------------------------
+    // ImageInput virtuals
+    //----------------------------------------------------------------------------
+    virtual std::pair<cv::Mat, Mask> processSnapshot(const cv::Mat &snapshot) override;
+
+private:
+    cv::Mat m_HistEq;
+};
+
+//----------------------------------------------------------------------------
 // ImageInputBinary
 //----------------------------------------------------------------------------
 // Returns binary images, segmented into sky and ground using watershed algorithm
