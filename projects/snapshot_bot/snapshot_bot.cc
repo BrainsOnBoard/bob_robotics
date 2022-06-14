@@ -122,9 +122,9 @@ public:
             bestSnapshotAsync.wait();
 
             // Create netsinks
-            m_LiveNetSink = std::make_unique<Video::NetSink>(*m_LiveConnection, config.getCroppedRect().size(), "live");
-            m_SnapshotNetSink = std::make_unique<Video::NetSink>(*m_SnapshotConnection, config.getCroppedRect().size(), "snapshot");
-            m_BestSnapshotNetSink = std::make_unique<Video::NetSink>(*m_BestSnapshotConnection, config.getCroppedRect().size(), "best_snapshot");
+            m_LiveNetSink.emplace(*m_LiveConnection, config.getCroppedRect().size(), "live");
+            m_SnapshotNetSink.emplace(*m_SnapshotConnection, config.getCroppedRect().size(), "snapshot");
+            m_BestSnapshotNetSink.emplace(*m_BestSnapshotConnection, config.getCroppedRect().size(), "best_snapshot");
 
             // Start background threads for transmitting images
             m_LiveConnection->runInBackground();
@@ -160,7 +160,7 @@ public:
         }
 
         if (m_Config.shouldUseIMU()){
-            m_IMU = std::make_unique<BN055>();
+            m_IMU.emplace();
         }
 
          // If a training path is specified
@@ -176,7 +176,7 @@ public:
             LOGI << "Loaded training route with " << m_TrainingRoute.size() << " points from " << m_Config.getTrainingPath();
 
             // Create tank PID
-            m_TankPID = std::make_unique<Robots::TankPID<ROBOT_TYPE, Vicon::ObjectReference<Vicon::ObjectData>>>(
+            m_TankPID.emplace(
                 *m_Robot, *m_ViconObject, m_Config.getTankPIDKP(), m_Config.getTankPIDKI(), m_Config.getTankPIDKD(),
                 m_Config.getTankPIDDistanceTolerance(), m_Config.getTankPIDAngleTolerance(),
                 m_Config.getTankPIDStartTurningThreshold(), m_Config.getTankPIDAverageSpeed());
@@ -440,7 +440,7 @@ private:
                     // Create new image database in subfolder of training database
                     const auto testingPath = m_TrainDatabase.getPath() / "testing";
                     filesystem::create_directory(testingPath);
-                    m_TestDatabase = std::make_unique<ImageDatabase>(Path::getNewPath(testingPath), Navigation::DatabaseOptions::Write);
+                    m_TestDatabase.emplace(Path::getNewPath(testingPath), Navigation::DatabaseOptions::Write);
 
                     // Extra fields for test algorithms
                     std::vector<std::string> fieldNames = m_Memory->getCSVFieldNames();
@@ -666,7 +666,7 @@ private:
     size_t m_TestImageIndex;
 
     // IMU device
-    std::unique_ptr<BN055> m_IMU;
+    std::experimental::optional<BN055> m_IMU;
 
 #ifdef USE_VICON
     // Vicon tracking interface
@@ -676,7 +676,7 @@ private:
     std::experimental::optional<Vicon::ObjectReference<Vicon::ObjectData>> m_ViconObject;
 
     // PID controller for driving robot
-    std::unique_ptr<Robots::TankPID<ROBOT_TYPE, Vicon::ObjectReference<Vicon::ObjectData>>> m_TankPID;
+    std::experimental::optional<Robots::TankPID<ROBOT_TYPE, Vicon::ObjectReference<Vicon::ObjectData>>> m_TankPID;
 
     // Vicon capture control interface
     Vicon::CaptureControl m_ViconCaptureControl;
@@ -690,7 +690,7 @@ private:
     ImageDatabase m_TrainDatabase;
 
     // For testing data
-    std::unique_ptr<ImageDatabase> m_TestDatabase;
+    std::experimental::optional<ImageDatabase> m_TestDatabase;
 
     // For recording training and testing data
     std::unique_ptr<ImageDatabase::RouteRecorder> m_Recorder;
@@ -706,9 +706,9 @@ private:
     std::unique_ptr<Net::Connection> m_BestSnapshotConnection;
 
     // Sinks for video to send over server
-    std::unique_ptr<Video::NetSink> m_LiveNetSink;
-    std::unique_ptr<Video::NetSink> m_SnapshotNetSink;
-    std::unique_ptr<Video::NetSink> m_BestSnapshotNetSink;
+    std::experimental::optional<Video::NetSink> m_LiveNetSink;
+    std::experimental::optional<Video::NetSink> m_SnapshotNetSink;
+    std::experimental::optional<Video::NetSink> m_BestSnapshotNetSink;
 
     // For catching exceptions on background threads
     BackgroundExceptionCatcher &m_BackgroundEx;
