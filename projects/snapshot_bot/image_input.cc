@@ -101,6 +101,26 @@ std::pair<cv::Mat, Mask> ImageInputRaw::processSnapshot(const cv::Mat &snapshot)
 }
 
 //----------------------------------------------------------------------------
+// ImageInputHistEq
+//----------------------------------------------------------------------------
+ImageInputHistEq::ImageInputHistEq(const Config &config, const cv::Size &unwrapSize, std::unique_ptr<OpenCVUnwrap360> unwrapper)
+  : ImageInput(config, unwrapSize, std::move(unwrapper))
+  , m_HistEq(getUnwrapSize(), CV_8UC1)
+{
+}
+//----------------------------------------------------------------------------
+std::pair<cv::Mat, Mask> ImageInputHistEq::processSnapshot(const cv::Mat &snapshot)
+{
+    // Convert to greyscale
+    cv::cvtColor(snapshot, m_HistEq, cv::COLOR_BGR2GRAY);
+
+    cv::equalizeHist(m_HistEq, m_HistEq);
+
+    // Return cropped and unwrapped image
+    return preprocess(m_HistEq);
+}
+
+//----------------------------------------------------------------------------
 // ImageInputBinary
 //----------------------------------------------------------------------------
 ImageInputBinary::ImageInputBinary(const Config &config, const cv::Size &unwrapSize, std::unique_ptr<OpenCVUnwrap360> unwrapper)
@@ -205,7 +225,11 @@ std::unique_ptr<ImageInput> createImageInput(const Config& config,
                                              std::unique_ptr<OpenCVUnwrap360> unwrapper)
 {
     // Create image input
-    if(config.shouldUseHorizonVector()) {
+    if (config.shouldUseHistEq()) {
+        LOGI << "Creating ImageInputHistEq";
+        return std::make_unique<ImageInputHistEq>(config, unwrapSize, std::move(unwrapper));
+    }
+    else if(config.shouldUseHorizonVector()) {
         LOGI << "Creating ImageInputHorizon";
         return std::make_unique<ImageInputHorizon>(config, unwrapSize, std::move(unwrapper));
     }

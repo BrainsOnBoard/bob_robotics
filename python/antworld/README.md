@@ -5,11 +5,14 @@ functionality of the BoB robotics [AntWorld module](https://brainsonboard.github
 Example usage is given in the file `test_antworld.py`.
 
 # Building
-Compilation requires [scikit-build](https://pypi.org/project/scikit-build).
-
-Build as usual:
+Compilation requires [scikit-build](https://pypi.org/project/scikit-build). You
+can install it like so:
 ```sh
-python setup.py bdist_wheel
+pip install scikit-build
 ```
 
-**NOTE**: Currently this module needs to be packaged manually.
+Build and install as usual:
+```sh
+python setup.py build
+python setup.py install --user
+```

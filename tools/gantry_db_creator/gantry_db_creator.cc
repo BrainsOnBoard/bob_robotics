@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "navigation/image_database.h"
 #include "os/keycodes.h"
-#include "robots/gantry.h"
+#include "robots/gantry/gantry.h"
 #include "video/display.h"
 #include "video/opencvinput.h"
 
@@ -24,7 +24,7 @@ int bobMain(int, char **)
     cam.setOutputSize(imSize);
 
     // Save images into a folder called gantry
-    Navigation::ImageDatabase database("gantry_images", /*overwrite=*/true);
+    Navigation::ImageDatabase database("gantry_images", Navigation::DatabaseOptions::Overwrite);
     auto gridRecorder = database.createGridRecorder(xrange, yrange, z);
     auto &metadata = gridRecorder->getMetadataWriter();
     metadata << "camera" << cam

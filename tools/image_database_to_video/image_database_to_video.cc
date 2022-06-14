@@ -42,7 +42,7 @@ void
 convertCSVFile(const ImageDatabase &inDatabase,
                const filesystem::path &outPath)
 {
-    std::ifstream ifs{ (inDatabase.getPath() / ImageDatabase::EntriesFilename).str() };
+    std::ifstream ifs{ (inDatabase.getPath() / ImageDatabase::DefaultEntriesFilename).str() };
     BOB_ASSERT(ifs.good());
     ifs.exceptions(std::ios::badbit);
 
@@ -67,7 +67,7 @@ convertCSVFile(const ImageDatabase &inDatabase,
     }
 
     // Write out new CSV file without Filename column
-    std::ofstream ofs{ (outPath / ImageDatabase::EntriesFilename).str() };
+    std::ofstream ofs{ (outPath / ImageDatabase::DefaultEntriesFilename).str() };
     BOB_ASSERT(ofs.good());
     ofs.exceptions(std::ios::badbit);
     do {

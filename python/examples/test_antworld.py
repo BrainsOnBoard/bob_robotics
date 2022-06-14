@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-import antworld, cv2
+import cv2
+from bob_robotics import antworld
 
 # Old Seville data (lower res, but loads faster)
 # worldpath = antworld.bob_robotics_path + "/resources/antworld/world5000_gray.bin"

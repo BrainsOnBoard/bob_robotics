@@ -111,6 +111,23 @@ for(b = 0; b < builderNodes.size(); b++) {
                 }
             }
 
+            stage("Running Python tests (" + env.NODE_NAME + ")") {
+                setBuildStatus("Running Python tests (" + env.NODE_NAME + ")", "PENDING")
+
+                // Generate unique name for message
+                def uniqueMsg = "msg_pytest_results_" + env.NODE_NAME;
+                def runTestsCommand = "./python/navigation/build_and_test.sh 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"";
+                def runTestsStatus = sh script:runTestsCommand, returnStatus:true;
+
+                // Archive output
+                archive uniqueMsg;
+
+                // If tests failed, set failure status
+                if(runTestsStatus != 0) {
+                    setBuildStatus("Running Python tests (" + env.NODE_NAME + ")", "FAILURE");
+                }
+            }
+
             stage("Gathering test results (" + env.NODE_NAME + ")") {
                 junit '**/*_test_results.xml'
             }

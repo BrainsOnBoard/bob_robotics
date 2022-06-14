@@ -79,12 +79,22 @@ Mask::clone() const
 }
 
 void
-Mask::roll(Mask &out, size_t pixelsLeft) const
+Mask::rollLeft(Mask &out, size_t pixelsLeft) const
 {
     if (empty()) {
         out.m_Mask = cv::Mat{};
     } else {
-        ImgProc::roll(m_Mask, out.m_Mask, pixelsLeft);
+        ImgProc::rollLeft(m_Mask, out.m_Mask, pixelsLeft);
+    }
+}
+
+void
+Mask::rollRight(Mask &out, size_t pixelsRight) const
+{
+    if (empty()) {
+        out.m_Mask = cv::Mat{};
+    } else {
+        ImgProc::rollRight(m_Mask, out.m_Mask, pixelsRight);
     }
 }
 

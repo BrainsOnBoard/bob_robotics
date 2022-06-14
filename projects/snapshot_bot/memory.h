@@ -64,7 +64,16 @@ protected:
     //------------------------------------------------------------------------
     // Protected API
     //------------------------------------------------------------------------
-    void setBestHeading(units::angle::degree_t bestHeading){ m_BestHeading = bestHeading; }
+    void setBestHeading(units::angle::degree_t bestHeading)
+    {
+        /*
+         * I changed the navigation algo APIs so that the RIDFs are the other
+         * way round, but let's keep the headings as they used to be for
+         * snapshot_bot.
+         */
+        m_BestHeading = -bestHeading;
+    }
+
     void setLowestDifference(float lowestDifference){ m_LowestDifference = lowestDifference; }
 
 private:

@@ -3,6 +3,7 @@
 #include "net/connection.h"
 
 // Standard C++ includes
+#include <algorithm>
 #include <iterator>
 #include <sstream>
 

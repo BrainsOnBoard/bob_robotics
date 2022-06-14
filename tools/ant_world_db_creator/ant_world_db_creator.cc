@@ -57,7 +57,7 @@ protected:
                             bool oldAntWorld,
                             meter_t agentHeight,
                             sf::Window &window)
-      : m_Database(databaseName)
+      : m_Database(databaseName, DatabaseOptions::Write)
       , m_Window(window)
       , m_Renderer(512, 0.1)
       , m_Agent(window, m_Renderer, RenderSize)

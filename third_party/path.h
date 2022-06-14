@@ -350,13 +350,6 @@ inline void copy_file(const filesystem::path &from, const filesystem::path &to)
     ofs << ifs.rdbuf();
 }
 
-inline filesystem::path
-current_path()
-{
-    char cwd[PATH_MAX];
-    return getcwd(cwd, sizeof(cwd));
-}
-
 //! Delete a file/folder and all its contents
 inline std::uintmax_t
 remove_all(const path &path)

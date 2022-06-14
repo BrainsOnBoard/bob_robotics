@@ -7,6 +7,7 @@
 #include "third_party/path.h"
 
 // Python includes
+#define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>

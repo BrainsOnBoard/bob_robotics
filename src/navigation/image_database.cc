@@ -30,7 +30,7 @@ namespace BoBRobotics {
 namespace Navigation {
 
 constexpr const char *ImageDatabase::MetadataFilename;
-constexpr const char *ImageDatabase::EntriesFilename;
+constexpr const char *ImageDatabase::DefaultEntriesFilename;
 
 size_t
 Range::size() const
@@ -218,35 +218,35 @@ ImageDatabase::ImageDatabase()
 }
 
 ImageDatabase::ImageDatabase(const std::tm &creationTime)
-  : ImageDatabase{ &creationTime, Path::getNewPath(creationTime), false }
+  : ImageDatabase{ &creationTime, Path::getNewPath(creationTime), DatabaseOptions::Write }
 {
 }
 
-ImageDatabase::ImageDatabase(const char *databasePath, bool overwrite)
-  : ImageDatabase(filesystem::path(databasePath), overwrite)
-{}
+ImageDatabase::ImageDatabase(filesystem::path databasePath, DatabaseOptions options)
+  : ImageDatabase{ nullptr, std::move(databasePath), options }
+{
+}
 
-ImageDatabase::ImageDatabase(const std::string &databasePath, bool overwrite)
-  : ImageDatabase(filesystem::path(databasePath), overwrite)
-{}
-
-ImageDatabase::ImageDatabase(filesystem::path databasePath, bool overwrite)
-  : ImageDatabase{ nullptr, std::move(databasePath), overwrite }
+ImageDatabase::ImageDatabase(filesystem::path databasePath, std::string entriesFileName)
+  : ImageDatabase::ImageDatabase{ nullptr, std::move(databasePath), DatabaseOptions::Read, std::move(entriesFileName) }
 {
 }
 
 ImageDatabase::ImageDatabase(const std::tm *creationTime,
                              filesystem::path databasePath,
-                             bool overwrite)
+                             DatabaseOptions options,
+                             std::string entriesFileName)
   : m_Path{ std::move(databasePath) }
+  , m_EntriesFileName{ std::move(entriesFileName) }
   , m_CreationTime{}
+  , m_ReadOnly{ options == DatabaseOptions::Read }
 {
     m_CreationTime.tm_isdst = -1;
 
     LOGI << "Using image database at " << m_Path;
 
     // If we're making a new database then we need a creation time
-    if (overwrite && m_Path.exists()) {
+    if (options == DatabaseOptions::Overwrite && m_Path.exists()) {
         m_CreationTime = creationTime ? *creationTime : getCurrentTime();
 
         LOG_WARNING << "Database already exists; overwriting";
@@ -280,7 +280,7 @@ ImageDatabase::ImageDatabase(const std::tm *creationTime,
     if (!loadCSV()) {
         LOGW << "Could not find CSV file";
         if (!isVideoType()) {
-            if (!readDirectoryEntries()) {
+            if (!readDirectoryEntries() && options != DatabaseOptions::Read) {
                 // Make sure we have a directory to save into
                 filesystem::create_directory(m_Path);
 
@@ -297,12 +297,20 @@ ImageDatabase::ImageDatabase(const std::tm *creationTime,
             m_Entries.resize(static_cast<size_t>(cap.get(cv::CAP_PROP_FRAME_COUNT)));
         }
     }
+
+    /*
+     * If the user is trying to read an "empty" database, it probably means
+     * they've got the path wrong or something.
+     */
+    if (options == DatabaseOptions::Read && empty()) {
+        throw std::runtime_error{ "No database found at: " + m_Path.str() };
+    }
 }
 
 bool
 ImageDatabase::loadCSV()
 {
-    const auto entriesPath = m_Path / EntriesFilename;
+    const auto entriesPath = m_Path / m_EntriesFileName;
     std::ifstream entriesFile(entriesPath.str());
     if (entriesFile.fail()) {
         return false;
@@ -321,9 +329,9 @@ ImageDatabase::loadCSV()
     std::for_each(fields.begin(), fields.end(), strTrim);
     const size_t numFields = fields.size();
 
-    constexpr std::array<const char *, 10> defaultFieldNames{
+    constexpr std::array<const char *, 11> defaultFieldNames{
         "X [mm]", "Y [mm]", "Z [mm]", "Heading [degrees]", "Filename", "Grid X",
-        "Grid Y", "Grid Z", "Pitch [degrees]", "Roll [degrees]"
+        "Grid Y", "Grid Z", "Pitch [degrees]", "Roll [degrees]", "Frame"
     };
 
     /*
@@ -420,6 +428,14 @@ ImageDatabase::loadCSV()
             std::move(extraFields)
         };
         m_Entries.emplace_back(std::move(entry));
+
+        if (validIdx(fieldNameIdx[10])) {
+            m_FrameNumbers.push_back(std::stoi(getDefaultField(10)));
+        }
+    }
+
+    if (!validIdx(fieldNameIdx[10])) {
+        std::iota(m_FrameNumbers.begin(), m_FrameNumbers.end(), 0);
     }
 
     return true;
@@ -531,6 +547,12 @@ ImageDatabase::getPath() const
     return m_Path;
 }
 
+const std::vector<ImageDatabase::Entry> &
+ImageDatabase::getEntries() const
+{
+    return m_Entries;
+}
+
 //! Get one Entry from the database
 const ImageDatabase::Entry &
 ImageDatabase::operator[](size_t i) const
@@ -588,17 +610,17 @@ ImageDatabase::isVideoType() const
 
 //! Load all of the images in this database into memory and return
 std::vector<cv::Mat>
-ImageDatabase::loadImages(const cv::Size &size, size_t frameSkip,
+ImageDatabase::readImages(const cv::Size &size, size_t frameSkip,
                           bool greyscale) const
 {
     std::vector<cv::Mat> images;
-    loadImages(images, size, frameSkip, greyscale);
+    readImages(images, size, frameSkip, greyscale);
     return images;
 }
 
 //! Load all of the images in this database into the specified std::vector<>
 void
-ImageDatabase::loadImages(std::vector<cv::Mat> &images, const cv::Size &size,
+ImageDatabase::readImages(std::vector<cv::Mat> &images, const cv::Size &size,
                           size_t frameSkip, bool greyscale) const
 {
     size_t oldSize = images.size();
@@ -621,10 +643,10 @@ ImageDatabase::loadImages(std::vector<cv::Mat> &images, const cv::Size &size,
     }
 }
 
-bool
+std::experimental::optional<bool>
 ImageDatabase::needsUnwrapping() const
 {
-    return m_NeedsUnwrapping.value();
+    return m_NeedsUnwrapping;
 }
 
 units::frequency::hertz_t
@@ -668,7 +690,7 @@ void
 ImageDatabase::generateUnwrapCSV(const filesystem::path &destination,
                                  size_t frameSkip) const
 {
-    const auto src = m_Path / EntriesFilename;
+    const auto src = m_Path / m_EntriesFileName;
     if (!src.exists()) {
         return;
     }
@@ -685,7 +707,7 @@ ImageDatabase::generateUnwrapCSV(const filesystem::path &destination,
 
     std::ofstream ofs;
     ofs.exceptions(std::ios::badbit | std::ios::failbit);
-    ofs.open((destination / EntriesFilename).str());
+    ofs.open((destination / m_EntriesFileName).str());
 
     // Copy headers; if the source is a video file we need to append file names
     ofs << line;
@@ -721,7 +743,7 @@ ImageDatabase::unwrap(const filesystem::path &destination,
                       bool greyscale) const
 {
     // Check that the database doesn't already exist
-    BOB_ASSERT(!(destination / EntriesFilename).exists());
+    BOB_ASSERT(!(destination / m_EntriesFileName).exists());
 
     BOB_ASSERT(frameSkip != 0);
     if (!m_NeedsUnwrapping.has_value()) {
@@ -950,7 +972,7 @@ ImageDatabase::addNewEntries(std::vector<ImageDatabase::Entry> &newEntries,
     // Reload metadata, in case it's changed
     loadMetadata();
 
-    const std::string path = (m_Path / EntriesFilename).str();
+    const std::string path = (m_Path / m_EntriesFileName).str();
     LOG_INFO << "Writing entries to " << path << "...";
 
     // Move new entries into this object's vector
