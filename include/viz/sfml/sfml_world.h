@@ -3,7 +3,6 @@
 // BoB robotics includes
 #include "common/macros.h"
 #include "common/pose.h"
-#include "robots/robot.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -165,8 +164,8 @@ public:
         return event;
     }
 
-    template<typename... Drawables>
-    sf::Event updateAndDrive(Robots::Robot &robot, Drawables&& ...drawables)
+    template<typename RobotType, typename... Drawables>
+    sf::Event updateAndDrive(RobotType &robot, Drawables&& ...drawables)
     {
         // Set m_Window to be active OpenGL context
         m_Window.setActive(true);

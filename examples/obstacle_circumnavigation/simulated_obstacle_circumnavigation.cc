@@ -1,12 +1,12 @@
 #include "common.h"
 
 // BoB robotics includes
-#include "robots/simulated_tank.h"
+#include "robots/tank/simulated_tank.h"
 
 int bobMain(int, char **)
 {
     // Our tank-like agent
-    Robots::SimulatedTank<> tank;
+    Robots::Tank::SimulatedTank<> tank;
     constexpr Pose2<meter_t, degree_t> initialPose{ 0_m, 0_m, 180_deg };
     tank.setPose(initialPose);
 

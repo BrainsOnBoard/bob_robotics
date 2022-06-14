@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "robots/simulated_ackermann.h"
+#include "robots/ackermann/simulated_ackermann.h"
 #include "viz/car_display/car_display.h"
 
 // Third-party includes
@@ -17,8 +17,8 @@ using namespace units::length;
 
 int bobMain(int, char **)
 {
-    Robots::SimulatedAckermann car(1.4_mps, 500_mm); // simulated ackermann car
-    Viz::CarDisplay display(10.2_m, 160_mm);         // For displaying the agent
+    Robots::Ackermann::SimulatedAckermann car(1.4_mps, 500_mm); // simulated ackermann car
+    Viz::CarDisplay display(10.2_m, 160_mm);                    // For displaying the agent
 
     auto mmps = 0_mps;
     degree_t deg = 0_deg;

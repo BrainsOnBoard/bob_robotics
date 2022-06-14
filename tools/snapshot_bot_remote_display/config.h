@@ -20,7 +20,7 @@ class Config
 {
 public:
     Config() : m_LiveImagePort(2000), m_SnapshotPort(2001), m_Resolution(1920, 1080),
-        m_SnapshotInterpolationMethod(cv::INTER_LINEAR), m_MaxSnapshotRotateDegrees(90.0), m_TrainingLiveRect(420, 150, 1080, 150),
+        m_SnapshotInterpolationMethod(cv::INTER_LINEAR), m_MaxSnapshotRotate(90.0), m_TrainingLiveRect(420, 150, 1080, 150),
         m_TrainingSnapshotRects{{100, 500, 720, 100}, {1100, 500, 720, 100}, {100, 650, 720, 100}, {1100, 650, 720, 100},
                                 {100, 800, 720, 100}, {1100, 800, 720, 100}, {100, 950, 720, 100}, {1100, 950, 720, 100}},
         m_TestingBestSnapshotPort(2002), m_TestingLiveRect(420, 150, 1080, 150), m_TestingBestRect(420, 400, 1080, 150),
@@ -36,7 +36,7 @@ public:
     uint16_t getSnapshotPort() const{ return m_SnapshotPort; }
     const cv::Size &getResolution() const{ return m_Resolution; }
     cv::InterpolationFlags getSnapshotInterpolationMethod() const{ return (cv::InterpolationFlags)m_SnapshotInterpolationMethod; }
-    units::angle::degree_t getMaxSnapshotRotateAngle() const{ return units::angle::degree_t(m_MaxSnapshotRotateDegrees); }
+    units::angle::degree_t getMaxSnapshotRotateAngle() const{ return m_MaxSnapshotRotate; }
 
     const std::string &getTrainingBackgroundFilename() const{ return m_TrainingBackgroundFilename; }
     const cv::Rect &getTrainingLiveRect() const{ return m_TrainingLiveRect; }
@@ -97,7 +97,9 @@ public:
         cv::read(node["snapshotPort"], m_SnapshotPort, m_SnapshotPort);
         cv::read(node["resolution"], m_Resolution, m_Resolution);
         cv::read(node["snapshotInterpolationMethod"], m_SnapshotInterpolationMethod, m_SnapshotInterpolationMethod);
-        cv::read(node["maxSnapshotRotateDegrees"], m_MaxSnapshotRotateDegrees, m_MaxSnapshotRotateDegrees);
+        double rotate;
+        cv::read(node["maxSnapshotRotateDegrees"], rotate, m_MaxSnapshotRotate.value());
+        m_MaxSnapshotRotate = units::angle::degree_t{ rotate };
 
         const auto &training = node["training"];
         if(training.isMap()) {
@@ -144,7 +146,7 @@ private:
     int m_SnapshotInterpolationMethod;
 
     // Maximum (absolute) angle snapshots will be rotated by
-    double m_MaxSnapshotRotateDegrees;
+    units::angle::degree_t m_MaxSnapshotRotate;
 
     // Filename for training background image
     std::string m_TrainingBackgroundFilename;
@@ -152,7 +154,7 @@ private:
     // Rectangle within which to display live image when training
     cv::Rect m_TrainingLiveRect;
 
-    // Rectangles within which to display trained snapshotss
+    // Rectangles within which to display trained snapshots
     std::vector<cv::Rect> m_TrainingSnapshotRects;
 
     // Filename for testing background image

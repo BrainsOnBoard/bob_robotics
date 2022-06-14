@@ -299,7 +299,7 @@ std::tuple<meter_t, size_t> RouteArdin::getDistanceToRoute(const Vector2<meter_t
 {
     // Loop through segments
     meter_t minimumDistance = std::numeric_limits<meter_t>::max();
-    size_t nearestWaypoint;
+    size_t nearestWaypoint = std::numeric_limits<size_t>::max();
     for(unsigned int s = 0; s < m_Waypoints.size(); s++)
     {
         const meter_t distanceToWaypoint = distance(m_Waypoints[s], position.x(), position.y());
@@ -311,7 +311,7 @@ std::tuple<meter_t, size_t> RouteArdin::getDistanceToRoute(const Vector2<meter_t
         }
     }
 
-    // Return the minimum distance to the path and the segment in which this occured
+    // Return the minimum distance to the path and the segment in which this occurred
     return std::make_tuple(minimumDistance, nearestWaypoint);
 }
 //----------------------------------------------------------------------------

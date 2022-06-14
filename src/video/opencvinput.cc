@@ -4,6 +4,8 @@
 // Standard C++ includes
 #include <stdexcept>
 
+using namespace units::frequency;
+
 namespace BoBRobotics {
 namespace Video {
 
@@ -19,11 +21,16 @@ std::string OpenCVInput::getCameraName() const
     return m_CameraName;
 }
 
-units::frequency::hertz_t OpenCVInput::getFrameRate() const
+hertz_t OpenCVInput::getFrameRate() const
 {
     const auto val = m_Device.get(cv::CAP_PROP_FPS);
     BOB_ASSERT(val != 0.0);
-    return units::frequency::hertz_t{ val };
+    return hertz_t{ val };
+}
+
+void OpenCVInput::setFrameRate(hertz_t fps)
+{
+    BOB_ASSERT(m_Device.set(cv::CAP_PROP_FPS, fps.value()));
 }
 
 cv::Size OpenCVInput::getOutputSize() const

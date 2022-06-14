@@ -17,10 +17,6 @@ bobMain(int, char **)
     generateDataWindow<PerfectMemoryRotater<PerfectMemoryStore::HOG<CorrCoefficient>>>("pm_hog_ccoeff.bin", {}, cv::Size(10, 10), 8);
 
     generateDataWindow<PerfectMemoryRotater<PerfectMemoryStore::RawImage<CorrCoefficient>>>("pm_ccoeff.bin", {});
-#ifdef BOB_OPENCV_SUPPORTS_CCOEFF_MASKS
     generateDataWindow<PerfectMemoryRotater<PerfectMemoryStore::RawImage<CorrCoefficient>>>("mask_pm_ccoeff.bin", TestMask);
-#else
-    LOGW << "Not generating mask_pm_ccoeff.bin as versions of OpenCV older than 4.5.2 have a bug (your version: " CV_VERSION ")";
-#endif
     return EXIT_SUCCESS;
 }

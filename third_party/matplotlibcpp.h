@@ -50,6 +50,7 @@ struct _interpreter {
     PyObject *s_python_function_fill_between;
     PyObject *s_python_function_hist;
     PyObject *s_python_function_imshow;
+    PyObject *s_python_function_colorbar;
     PyObject *s_python_function_subplot;
     PyObject *s_python_function_legend;
     PyObject *s_python_function_xlim;
@@ -158,6 +159,7 @@ private:
 #ifndef WITHOUT_NUMPY
         s_python_function_imshow = PyObject_GetAttrString(pymod, "imshow");
 #endif
+        s_python_function_colorbar = PyObject_GetAttrString(pymod, "colorbar");
         s_python_function_subplot = PyObject_GetAttrString(pymod, "subplot");
         s_python_function_legend = PyObject_GetAttrString(pymod, "legend");
         s_python_function_ylim = PyObject_GetAttrString(pymod, "ylim");
@@ -201,6 +203,7 @@ private:
 #ifndef WITHOUT_NUMPY
             || !s_python_function_imshow
 #endif
+            || !s_python_function_colorbar
             || !s_python_function_grid
             || !s_python_function_xlim
             || !s_python_function_ion
@@ -234,6 +237,7 @@ private:
 #ifndef WITHOUT_NUMPY
             || !PyFunction_Check(s_python_function_imshow)
 #endif
+            || !PyFunction_Check(s_python_function_colorbar)
             || !PyFunction_Check(s_python_function_title)
             || !PyFunction_Check(s_python_function_axis)
             || !PyFunction_Check(s_python_function_xlabel)
@@ -532,6 +536,18 @@ bool hist(const std::vector<Numeric>& y, long bins=10,std::string color="b", dou
     }
 #endif
 #endif
+
+bool colorbar()
+{
+    PyObject *args = PyTuple_New(0);
+    PyObject *res = PyObject_Call(detail::_interpreter::get().s_python_function_colorbar, args, nullptr);
+
+    Py_DECREF(args);
+    if (res)
+        Py_DECREF(res);
+
+    return res;
+}
 
 template< typename Numeric>
 bool named_hist(std::string label,const std::vector<Numeric>& y, long bins=10, std::string color="b", double alpha=1.0)
@@ -995,29 +1011,34 @@ inline std::array<double, 2> xlim()
 {
     PyObject* args = PyTuple_New(0);
     PyObject* res = PyObject_CallObject(detail::_interpreter::get().s_python_function_xlim, args);
+    Py_DECREF(args);
 
     if(!res) throw std::runtime_error("Call to xlim() failed.");
 
-    Py_DECREF(res);
-
     PyObject* left = PyTuple_GetItem(res,0);
     PyObject* right = PyTuple_GetItem(res,1);
-    return { PyFloat_AsDouble(left), PyFloat_AsDouble(right) };
-}
 
+    std::array<double, 2> lims{ PyFloat_AsDouble(left), PyFloat_AsDouble(right) };
+    Py_DECREF(res);
+
+    return lims;
+}
 
 inline std::array<double, 2> ylim()
 {
     PyObject* args = PyTuple_New(0);
     PyObject* res = PyObject_CallObject(detail::_interpreter::get().s_python_function_ylim, args);
+    Py_DECREF(args);
 
     if(!res) throw std::runtime_error("Call to ylim() failed.");
 
+    PyObject* bottom = PyTuple_GetItem(res,0);
+    PyObject* top = PyTuple_GetItem(res,1);
+
+    std::array<double, 2> lims{ PyFloat_AsDouble(bottom), PyFloat_AsDouble(top) };
     Py_DECREF(res);
 
-    PyObject* left = PyTuple_GetItem(res,0);
-    PyObject* right = PyTuple_GetItem(res,1);
-    return { PyFloat_AsDouble(left), PyFloat_AsDouble(right) };
+    return lims;
 }
 
 template<typename Numeric>
@@ -1118,9 +1139,9 @@ inline void subplot(long nrows, long ncols, long plot_number)
 {
     // construct positional args
     PyObject* args = PyTuple_New(3);
-    PyTuple_SetItem(args, 0, PyFloat_FromDouble(nrows));
-    PyTuple_SetItem(args, 1, PyFloat_FromDouble(ncols));
-    PyTuple_SetItem(args, 2, PyFloat_FromDouble(plot_number));
+    PyTuple_SetItem(args, 0, PyLong_FromLong(nrows));
+    PyTuple_SetItem(args, 1, PyLong_FromLong(ncols));
+    PyTuple_SetItem(args, 2, PyLong_FromLong(plot_number));
 
     PyObject* res = PyObject_CallObject(detail::_interpreter::get().s_python_function_subplot, args);
     if(!res) throw std::runtime_error("Call to subplot() failed.");

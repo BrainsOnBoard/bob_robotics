@@ -1,10 +1,11 @@
 // BoB robotics includes
-#include "plog/Log.h"
 #include "hid/joystick.h"
-#include "robots/bebop/bebop.h"
+#include "hid/robot_control.h"
+#include "robots/uav/bebop/bebop.h"
 #include "video/display.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/units.h"
 
 // Standard C++ includes
@@ -14,7 +15,7 @@
 #include <utility>
 
 using namespace BoBRobotics;
-using namespace BoBRobotics::Robots;
+using namespace BoBRobotics::Robots::UAV;
 using namespace std::literals;
 
 template<typename T>
@@ -66,7 +67,7 @@ int bobMain(int, char **)
 
     // control drone with joystick
     HID::Joystick joystick(/*deadZone=*/0.25);
-    drone.addJoystick(joystick);
+    HID::addJoystick(drone, joystick);
 
     // display the drone's video stream on screen
     Video::Display display(drone.getVideoStream(), true);

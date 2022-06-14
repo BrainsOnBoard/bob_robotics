@@ -1,5 +1,10 @@
 #pragma once
 
+#include "data_path.h"
+
+// BoB robotics includes
+#include "common/path.h"
+
 // Google Test
 #include "gtest/gtest.h"
 

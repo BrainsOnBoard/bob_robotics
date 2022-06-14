@@ -1,7 +1,8 @@
-cmake_minimum_required(VERSION 3.1)
-include(../../cmake/bob_robotics.cmake)
-BoB_project(SOURCES bee_eye.cc
-            BOB_MODULES imgproc video)
+cmake_minimum_required(VERSION 3.10)
+include(../../cmake/BoBRobotics.cmake)
+project(bee_eye_example)
+
+find_package(BoBRobotics QUIET REQUIRED COMPONENTS imgproc video)
 
 # Default to 800x600 for input resolution
 if(NOT INPUT_WIDTH)
@@ -16,11 +17,12 @@ message(STATUS "Input resolution for bee eye: [${INPUT_WIDTH} x ${INPUT_HEIGHT}]
 # Auto-generate header file
 add_custom_target(bee_eye_data.h
                   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-                  COMMAND ${BOB_ROBOTICS_PATH}/bin/make_bee_eye_data_h.py
+                  COMMAND ${BoBRobotics_ROOT_DIR}/bin/make_bee_eye_data_h.py
                           ${INPUT_WIDTH} ${INPUT_HEIGHT})
-foreach(target IN LISTS BOB_TARGETS)
-    add_dependencies(${target} bee_eye_data.h)
-endforeach()
+
+add_executable(bee_eye bee_eye.cc)
+add_dependencies(bee_eye bee_eye_data.h)
+target_link_libraries(bee_eye PUBLIC ${BoBRobotics_LIBRARIES})
 
 # So that the program can find the header
-BoB_add_include_directories("${CMAKE_BINARY_DIR}")
+target_include_directories(bee_eye PUBLIC "${CMAKE_BINARY_DIR}")

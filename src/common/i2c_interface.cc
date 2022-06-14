@@ -97,6 +97,16 @@ I2CInterface::readByte()
 }
 
 void
+I2CInterface::read(void *data, size_t size)
+{
+    if (::read(m_I2C, data, size) != (int) size) {
+        throw std::runtime_error("Failed to read from i2c bus: " +
+                                 std::string(strerror(errno)) +
+                                 " (" + std::to_string(errno) + ")");
+    }
+}
+
+void
 I2CInterface::writeByteCommand(uint8_t address, uint8_t byte)
 {
     if (i2c_smbus_write_byte_data(m_I2C, address, byte) < 0) {
@@ -109,6 +119,16 @@ I2CInterface::writeByte(uint8_t byte)
 {
     if (i2c_smbus_write_byte(m_I2C, byte) < 0) {
         throw std::runtime_error("Failed to write byte to i2c bus");
+    }
+}
+
+void
+I2CInterface::write(const void *data, size_t size)
+{
+    if (::write(m_I2C, data, size) != (int) size) {
+        throw std::runtime_error("Failed to write to i2c bus: " +
+                                 std::string(strerror(errno)) +
+                                 " (" + std::to_string(errno) + ")");
     }
 }
 } // BoBRobotics

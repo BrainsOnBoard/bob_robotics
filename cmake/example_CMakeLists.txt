@@ -1,10 +1,21 @@
 # This file is a simple template for your CMakeLists.txt file. For documentation
-# on how to use CMake with BoB robotics, please see the readme file in This
+# on how to use CMake with BoB robotics, please see the readme file in this
 # folder.
-cmake_minimum_required(VERSION 3.1)
-include([path to BoB robotics]/cmake/bob_robotics.cmake)
-BoB_project(SOURCES my_program.cc
-            BOB_MODULES common hid antworld video
-            THIRD_PARTY third_party_modules
-            EXTERNAL_LIBS sdl2
-            PLATFORMS unix)
+cmake_minimum_required(VERSION 3.10)
+
+# Note that this must come first
+include([path to BoB robotics]/cmake/BoBRobotics.cmake)
+
+project(my_exciting_project)
+
+# Specify the required modules here
+find_package(BoBRobotics REQUIRED COMPONENTS hid antworld video)
+
+# Optionally specify third-party modules
+find_package(BoBThirdParty REQUIRED COMPONENTS matplotlibcpp)
+
+add_executable(my_program my_program.cc)
+
+# Link against the BoB robotics libraries (and any libraries they depend on etc.)
+target_link_libraries(my_program PUBLIC ${BoBRobotics_LIBRARIES}
+                      ${BoBThirdParty_LIBRARIES})

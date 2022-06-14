@@ -3,7 +3,7 @@
 #include "hid/joystick.h"
 #include "navigation/read_objects.h"
 #include "robots/control/collision_detector.h"
-#include "robots/simulated_tank.h"
+#include "robots/tank/simulated_tank.h"
 #include "viz/sfml/arena_object.h"
 #include "viz/sfml/sfml_world.h"
 
@@ -38,7 +38,7 @@ int bobMain(int, char **)
     };
 
     // Tank agent
-    Robots::SimulatedTank<> robot(1.0_mps, 104_mm);
+    Robots::Tank::SimulatedTank<> robot(1.0_mps, 104_mm);
 
     // For displaying the agent
     Viz::SFMLWorld display({5_m, 5_m});

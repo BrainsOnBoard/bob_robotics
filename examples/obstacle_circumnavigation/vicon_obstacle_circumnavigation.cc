@@ -3,8 +3,9 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "net/client.h"
-#include "robots/tank_netsink.h"
+#include "robots/tank/net/sink.h"
 #include "vicon/udp.h"
 
 int bobMain(int, char **)
@@ -19,10 +20,10 @@ int bobMain(int, char **)
     Net::Client client;
 
     // Transmit motor commands over network
-    Robots::TankNetSink tank(client);
+    Robots::Tank::Net::Sink tank(client);
 
     // Control with joystick
-    tank.addJoystick(joystick);
+    HID::addJoystick(tank, joystick);
 
     // Run client on background thread, catching any exceptions for rethrowing
     BackgroundExceptionCatcher catcher;

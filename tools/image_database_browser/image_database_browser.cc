@@ -39,13 +39,13 @@ int bobMain(int argc, char **argv)
 
     // Load images
     std::cout << "Loading images..." << std::endl;
-    const auto images = database.loadImages({}, frameSkip, false);
+    const auto images = database.readImages({}, frameSkip, false);
 
     // Iterate through images with arrow keys
     cv::namedWindow(argv[0]);
     for (size_t i = 0; i < images.size();) {
         std::stringstream ssTitle, ssNumber;
-        const auto pos = database[i * frameSkip].position;
+        const auto &pos = database[i * frameSkip].pose.position();
         ssTitle << database.getName() << " [" << i << "/" << images.size() << "]"
                 << " (" << pos[0] << ", " << pos[1] << ", " << pos[2] << ")";
         cv::imshow(argv[0], images[i]);

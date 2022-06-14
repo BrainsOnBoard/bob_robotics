@@ -66,7 +66,7 @@ SFMLWorld::SFMLWorld(const Vector2<meter_t> &arenaSize)
 SFMLWorld::CarAgent
 SFMLWorld::createCarAgent(meter_t carWidth)
 {
-    return CarAgent(*this, carWidth);
+    return { *this, carWidth };
 }
 
 bool

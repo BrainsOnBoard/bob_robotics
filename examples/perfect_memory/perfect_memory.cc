@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "common/macros.h"
 #include "common/path.h"
 #include "common/timer.h"
 #include "navigation/image_database.h"
@@ -33,10 +34,9 @@ int bobMain(int, char **)
 {
     const cv::Size imSize(180, 50);
     units::angle::degree_t heading;
-    const Eigen::MatrixXf *allDifferences;
 
     const ImageDatabase imdb{ Path::getRepoPath() / "tools/ant_world_db_creator/ant1_route1" };
-    const auto snapshots = imdb.loadImages(imSize);
+    const auto snapshots = imdb.readImages(imSize);
     LOGI << "Loaded " << snapshots.size() << " snapshots";
 
     {
@@ -53,7 +53,7 @@ int bobMain(int, char **)
         const auto snap = pm.getSnapshot(10);
         size_t snapshot;
         float difference;
-        std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(snap);
+        std::tie(heading, snapshot, difference, std::ignore) = pm.getHeading(snap);
         LOGI << "Heading: " << heading;
         LOGI << "Best-matching snapshot: #" << snapshot;
         LOGI << "Difference score: " << difference;
@@ -76,7 +76,7 @@ int bobMain(int, char **)
 
         size_t snapshot;
         float difference;
-        std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(snap, rotations.begin(), rotations.end());
+        std::tie(heading, snapshot, difference, std::ignore) = pm.getHeading(snap, rotations.begin(), rotations.end());
         LOGI << "Heading: " << heading;
         LOGI << "Best-matching snapshot: #" << snapshot;
         LOGI << "Difference score: " << difference;
@@ -94,7 +94,7 @@ int bobMain(int, char **)
         const auto snap = pm.getSnapshot(10);
         size_t snapshot;
         float difference;
-        std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(snap);
+        std::tie(heading, snapshot, difference, std::ignore) = pm.getHeading(snap);
         LOGI << "Heading: " << heading;
         LOGI << "Best-matching snapshot: #" << snapshot;
         LOGI << "Difference score: " << difference;
@@ -112,7 +112,7 @@ int bobMain(int, char **)
         const auto snap = pm.getSnapshot(10);
         size_t snapshot;
         float difference;
-        std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(snap);
+        std::tie(heading, snapshot, difference, std::ignore) = pm.getHeading(snap);
         LOGI << "Heading: " << heading;
         LOGI << "Best-matching snapshot: #" << snapshot;
         LOGI << "Difference score: " << difference;
@@ -130,7 +130,7 @@ int bobMain(int, char **)
         const auto snap = pm.getSnapshot(10);
         std::array<size_t, numComp> snapshots;
         std::array<float, numComp> differences;
-        std::tie(heading, snapshots, differences, allDifferences) = pm.getHeading(snap);
+        std::tie(heading, snapshots, differences, std::ignore) = pm.getHeading(snap);
         LOGI << "Heading: " << heading;
         for (size_t i = 0; i < snapshots.size(); i++) {
             LOGI << "Snapshot " << i + 1 << ": #" << snapshots[i]
@@ -148,11 +148,12 @@ int bobMain(int, char **)
         Timer<> t{ "Time taken for testing: " };
 
         // Treat snapshot #10 as test data
-        cv::Mat snap = cv::imread((Path::getRepoPath() / "tools/ant_world_db_creator/ant1_route1/image00010.png").str(), cv::IMREAD_GRAYSCALE);
+        cv::Mat snap = cv::imread((Path::getRepoPath() / "tools/ant_world_db_creator/ant1_route1/image_00010.png").str(), cv::IMREAD_GRAYSCALE);
+        BOB_ASSERT(!snap.empty());
         cv::resize(snap, snap, imSize);
         size_t snapshot;
         float difference;
-        std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(snap);
+        std::tie(heading, snapshot, difference, std::ignore) = pm.getHeading(snap);
         LOGI << "Heading: " << heading;
         LOGI << "Best-matching snapshot: #" << snapshot;
         LOGI << "Difference score: " << difference;

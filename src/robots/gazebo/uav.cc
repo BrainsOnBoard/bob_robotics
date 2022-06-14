@@ -4,6 +4,9 @@
 // Third-party includes
 #include "third_party/units.h"
 
+// Standard C++ includes
+#include <thread>
+
 using namespace std::literals;
 using namespace units::literals;
 

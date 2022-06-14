@@ -3,6 +3,7 @@
 #include "net/connection.h"
 
 // Standard C++ includes
+#include <algorithm>
 #include <iterator>
 #include <sstream>
 
@@ -63,7 +64,7 @@ void Connection::read(void *buffer, size_t length)
 
 Connection::SocketWriter Connection::getSocketWriter()
 {
-    return SocketWriter(*this);
+    return { *this };
 }
 
 std::string Connection::readNextCommand()

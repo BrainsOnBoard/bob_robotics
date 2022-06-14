@@ -50,7 +50,7 @@ struct InSilicoRotater
             BOB_ASSERT(image.isContinuous());
             BOB_ASSERT(beginRoll < endRoll);
             BOB_ASSERT((distance(endRoll, beginRoll) % scanStep) == 0);
-      }
+        }
 
         template<class Func>
         void rotate(Func func) const
@@ -59,13 +59,13 @@ struct InSilicoRotater
                 [this, func](const auto &r) {
                     for (size_t i = r.begin(); i != r.end(); ++i) {
                         const auto index = RotaterInternal<IterType>::toIndex(m_BeginRoll + i * m_ScanStep);
-                        ImgProc::roll(m_Image, m_ScratchImage, index);
-                        m_Mask.roll(m_ScratchMask, index);
+                        ImgProc::rollRight(m_Image, m_ScratchImage, index);
+                        m_Mask.rollRight(m_ScratchMask, index);
 
                         func(m_ScratchImage, m_ScratchMask, i);
                     }
                 });
-       }
+        }
 
         units::angle::radian_t columnToHeading(size_t column) const
         {
@@ -85,7 +85,7 @@ struct InSilicoRotater
 
         static thread_local cv::Mat m_ScratchImage;
         static thread_local ImgProc::Mask m_ScratchMask;
-        
+
         static size_t distance(size_t first, size_t last)
         {
             return last - first;
@@ -108,7 +108,7 @@ struct InSilicoRotater
             return *it;
         }
     };
-    
+
     template<typename IterType>
     static auto
     create(const cv::Size &unwrapRes,

@@ -4,21 +4,11 @@ This file lists the build requirements for different BoB robotics modules and sa
 ## Compiler
 On Linux, the earliest supported version of gcc is 5.x. For Windows, Visual Studio 2015 or newer is required.
 
-## Environment variables
-The ``BOB_ROBOTICS_PATH`` environment variable is used to help programs built with BoB robotics modules to find where this repository is on your machine. (Currently this is only needed so that the panoramic unwrapping code can find [the unwrapping parameters for different types of camera](../imgproc/unwrapparams).)
-
-On Linux and Mac, you can have this variable automatically set by adding it to your .profile file as follows:
-```sh
-echo export BOB_ROBOTICS_PATH=/path/to/bob_robotics >> $HOME/.profile
-```
-
-On Windows, you can set environment variables by typing 'environment variables' into your start menu and following the instructions.
-
 ## GeNN
 You must use version 3.X or later of GeNN. Stable releases of GeNN can be downloaded from https://github.com/genn-team/genn/releases. However some models in this repository may require the lastest version from the Github repository: https://github.com/genn-team/genn. It should also be passed to genn-buildmodel using the -i command line argument when building networks using the models in the [genn\_models](../genn_models) folder i.e. ``genn-buildmodel.sh -i $BOB_ROBOTICS_PATH`` on \*nix or ``genn-buildmodel.bat -i %BOB_ROBOTICS_PATH%`` on Windows.
 
 ## OpenCV
-OpenCV v3+ is required for most BoB robotics projects. Note that the ``libopencv`` package in Ubuntu 16.04 is only version 2.4, so you will have to build from source or find a working OpenCV v3 PPA. Also note that the OpenCV package in Ubuntu is not compiled with CUDA support (this is required for [ant\_world](../ant_world)), so if you want this feature you will have to [build it from source](https://docs.opencv.org/3.4/d7/d9f/tutorial\_linux\_install.html).
+OpenCV v3+ is required for most BoB robotics projects. Note that the ``libopencv`` package in Ubuntu 16.04 is only version 2.4, so you will have to build from source or find a working OpenCV v3 PPA. Also note that the OpenCV package in Ubuntu is not compiled with CUDA support (this is required for [ant\_world](../ant_world)), so if you want this feature you will have to [build it from source](https://docs.opencv.org/master/d7/d9f/tutorial_linux_install.html).
 
 On Ubuntu 18.04, you can install OpenCV with:
 ```sh

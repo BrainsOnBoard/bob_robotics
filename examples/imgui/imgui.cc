@@ -15,10 +15,10 @@
 #include "imgui.h"
 //#include "examples/imgui_impl_sfml.h"
 #include "imgui_impl_sfml.h"
-#include "examples/imgui_impl_opengl2.h"
+#include "backends/imgui_impl_opengl2.h"
 
 
-int bobMain(int, char**)
+int main()
 {
     sf::Window window(sf::VideoMode(1280, 720), "Dear ImGui SFML+OpenGL2 example");
 

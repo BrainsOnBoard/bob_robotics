@@ -20,7 +20,7 @@
 typedef SSIZE_T ssize_t;
 #endif
 
-#include "robots/gazebo/uav_plugin.h"
+#include "uav_plugin.h"
 
 // Gazebo includes
 #include <gazebo/common/Assert.hh>

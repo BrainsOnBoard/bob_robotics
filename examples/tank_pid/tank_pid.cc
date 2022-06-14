@@ -1,8 +1,8 @@
 // BoB robotics includes
 #include "robots/control/tank_pid.h"
 #include "common/background_exception_catcher.h"
-#include "plog/Log.h"
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "navigation/read_objects.h"
 #include "vicon/udp.h"
 #include "viz/plot_agent.h"
@@ -10,12 +10,13 @@
 // This program can be run locally on the robot or remotely
 #ifdef NO_I2C_ROBOT
 #include "net/client.h"
-#include "robots/tank_netsink.h"
+#include "robots/tank/net/sink.h"
 #else
 #include "robots/robot_type.h"
 #endif
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/matplotlibcpp.h"
 #include "third_party/path.h"
 #include "third_party/units.h"
@@ -70,7 +71,7 @@ int bobMain(int argc, char **argv)
 #ifdef NO_I2C_ROBOT
     // Make connection to robot on default port
     Net::Client client;
-    Robots::TankNetSink robot(client);
+    Robots::Tank::Net::Sink robot(client);
 
     if (filesystem::path(PLAY_PATH).exists()) {
         canPlaySound = true;
@@ -78,7 +79,7 @@ int bobMain(int argc, char **argv)
         LOGW << PLAY_PATH << " not found. Install sox for sounds.";
     }
 #else
-    Robots::ROBOT_TYPE robot;
+    ROBOT_TYPE robot;
 #endif
 
     // Load path from file, if one is given
@@ -113,12 +114,12 @@ int bobMain(int argc, char **argv)
 
     // Drive robot with joystick
     HID::Joystick joystick;
-    robot.addJoystick(joystick);
+    HID::addJoystick(robot, joystick);
 
     auto viconObject = vicon.getObjectReference();
     auto pid = Robots::createTankPID(robot, viconObject, kp, ki, kd, stoppingDistance, 3_deg, 45_deg, averageSpeed);
     bool runPositioner = false;
-    joystick.addHandler([&](HID::JButton button, bool pressed) {
+    joystick.addHandler([&](auto &, HID::JButton button, bool pressed) {
         if (!pressed) {
             return false;
         }
@@ -148,7 +149,7 @@ int bobMain(int argc, char **argv)
             return false;
         }
     });
-    joystick.addHandler([&runPositioner](HID::JAxis, float) {
+    joystick.addHandler([&runPositioner](auto &, HID::JAxis, float) {
         // If positioner is running, do nothing when joysticks moved
         return runPositioner;
     });

@@ -4,7 +4,7 @@
 #include "common/macros.h"
 #include "common/circstat.h"
 #include "common/pose.h"
-#include "robots/tank.h"
+#include "robots/tank/slowed_tank.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -17,15 +17,23 @@ namespace Robots {
 using namespace units::literals;
 
 // Forward declaration
-template<class PoseGetterType>
+template<class TankType, class PoseGetterType>
 class RobotPositioner;
 
-template<class PoseGetterType, class... Args>
-auto createRobotPositioner(Robots::Tank &tank,
+template<class TankType, class PoseGetterType, class... Args>
+auto createRobotPositioner(Robots::Tank::SlowedTank<TankType> &tank,
                            PoseGetterType &poseGetter,
                            Args&&... otherArgs)
 {
-    return RobotPositioner<PoseGetterType>{ tank, poseGetter, std::forward<Args>(otherArgs)... };
+    return RobotPositioner<Robots::Tank::SlowedTank<TankType> &, PoseGetterType>{ tank, poseGetter, std::forward<Args>(otherArgs)... };
+}
+
+template<class TankType, class PoseGetterType, class... Args>
+auto createRobotPositioner(TankType &tank,
+                           PoseGetterType &poseGetter,
+                           Args&&... otherArgs)
+{
+    return RobotPositioner<Robots::Tank::SlowedTank<TankType &>, PoseGetterType>{ tank, poseGetter, std::forward<Args>(otherArgs)... };
 }
 
 /*!
@@ -35,7 +43,7 @@ auto createRobotPositioner(Robots::Tank &tank,
  * with, e.g. a Vicon system (see Vicon::UDPClient). The algorithm used is drawn
  * from: https://web.eecs.umich.edu/~kuipers/papers/Park-icra-11.pdf
  */
-template<class PoseGetterType>
+template<class TankType, class PoseGetterType>
 class RobotPositioner
 {
     using meter_t = units::length::meter_t;
@@ -45,7 +53,7 @@ class RobotPositioner
 
 private:
     // Hardware
-    Robots::Tank &m_Tank;
+    TankType m_Tank;
     PoseGetterType &m_PoseGetter;
 
     // Robot variables
@@ -84,8 +92,9 @@ private:
 
     //-----------------PUBLIC API---------------------------------------------------------------------
 public:
+    template<class TankType2>
     RobotPositioner(
-            Robots::Tank &tank,
+            TankType2 &tank,
             PoseGetterType &poseGetter,
             meter_t stoppingDistance,     // if the robot's distance from goal < stopping dist, robot stops
             radian_t allowedHeadingError, // the amount of error allowed in the final heading
@@ -160,7 +169,7 @@ public:
         /*
          * Drive robot with specified velocities.
          * We invert the turning direction because we're counting anti-clockwise
-         * for the robot's pose, but the Tank interface turns robots clockwise.
+         * for the robot's pose, but the TankBase interface turns robots clockwise.
          * If the motor commands are out of range, they will be scaled down.
          */
         m_Tank.move(v, -omega, true);

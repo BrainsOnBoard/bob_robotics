@@ -1,17 +1,19 @@
+#include "common/path.h"
 #include "imgproc/dct_hash.h"
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
 
+using namespace BoBRobotics::Path;
 using namespace BoBRobotics::ImgProc;
 
 int
 bobMain(int, char **)
 {
-    std::string image_path1 = "library1.jpg";
-    std::string image_path2 = "library2.jpg";
-    cv::Mat img1 = imread(image_path1, cv::IMREAD_GRAYSCALE);
-    cv::Mat img2 = imread(image_path2, cv::IMREAD_GRAYSCALE);
+    const auto imagePath1 = getProgramDirectory() / "library1.jpg";
+    const auto imagePath2 = getProgramDirectory() / "library2.jpg";
+    cv::Mat img1 = imread(imagePath1.str(), cv::IMREAD_GRAYSCALE);
+    cv::Mat img2 = imread(imagePath2.str(), cv::IMREAD_GRAYSCALE);
 
     // convert to calculate dct
     img1.convertTo(img1, CV_32F, 1.0 / 255);

@@ -1,18 +1,24 @@
 // BoB robotics includes
+#define EXPOSE_INFOMAX_INTERNALS
 #include "navigation/infomax.h"
 
 namespace BoBRobotics {
 namespace Navigation {
+constexpr size_t NumTrainStepsToTest = 1;
+
 class InfoMaxTest
   : public InfoMaxRotater<> {
 public:
     InfoMaxTest(const cv::Size &unwrapRes)
-      : InfoMaxRotater<>{ unwrapRes, generateInitialWeights(unwrapRes.width * unwrapRes.height,
-                                                            unwrapRes.width * unwrapRes.height + 1, /*seed=*/42)}
+      : InfoMaxRotater<>{ unwrapRes, 0.0001f, 1.f,
+                          Normalisation::None,
+                          generateInitialWeights(unwrapRes.width * unwrapRes.height,
+                                                 unwrapRes.width * unwrapRes.height + 1,
+                                                 /*seed=*/42)}
     {}
 
     template<class... Ts>
-    auto getImageDifferences(Ts&&... args) const
+    const auto getImageDifferences(Ts&&... args) const
     {
         const auto &diffs = InfoMaxRotater<>::getImageDifferences(std::forward<Ts>(args)...);
 

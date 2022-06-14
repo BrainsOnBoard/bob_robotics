@@ -22,7 +22,8 @@ ODK2::ODK2(const std::string &hostIP, const std::string &remoteIP)
     devkitDriverConfig_t config = {};
     strncpy(config.hostIP, hostIP.c_str(), sizeof(config.hostIP) - 1);
     strncpy(config.remoteIP, remoteIP.c_str(), sizeof(config.remoteIP) - 1);
-    config.port = 50102;
+    config.rxPort = 50102;
+    config.txPort = 50102;
 
     // Initialise dev-kit
     const int ret = devkit_driver_init(&m_State, &config);
@@ -149,6 +150,10 @@ void ODK2::readThread()
             else if (ret < 0) {
                 if (ret == DEVKIT_DRIVER_RX_TIMEOUT) {
                     LOGW << "RX timeout";
+                }
+                // **HACK** current ODK2 driver doesn't correctly handle (ignore) EINTR errors
+                else if (ret == DEVKIT_DRIVER_SOCKET_ERROR && errno == 4) {
+                    LOGW << "Interrrupt";
                 }
                 else {
                     throw std::runtime_error("Error in devkit driver RX (" + std::to_string(ret) + ")");

@@ -13,8 +13,7 @@ bobMain(int argc, char **argv)
 
     // Iterate over entries, printing out info
     for (const auto &entry : imdb) {
-        std::cout << entry.position << "\t" << entry.heading << "\t"
-                  << entry.path;
+        std::cout << entry.pose << "\t" << entry.path;
 
         // ./write_example adds this extra field, so print it if present
         if (entry.hasExtraField("Sensor value")) {

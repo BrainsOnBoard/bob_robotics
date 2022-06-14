@@ -1,13 +1,14 @@
 // BoB robotics includes
 #include "hid/joystick.h"
-#include "plog/Log.h"
+#include "hid/robot_control.h"
 #include "robots/gazebo/camera.h"
 #include "robots/gazebo/node.h"
 #include "robots/gazebo/tank.h"
-#include "robots/simulated_tank.h"
+#include "robots/tank/simulated_tank.h"
 #include "video/display.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/units.h"
 
 // Standard C includes
@@ -51,7 +52,7 @@ bobMain(int argc, char **argv)
     std::unique_ptr<HID::Joystick> joystick;
     try {
         joystick = std::make_unique<HID::Joystick>(0.25f);
-        robot.controlWithThumbsticks(*joystick);
+        HID::controlWithThumbsticks(robot, *joystick);
         std::cout << "Drive the car using the two thumbsticks: each stick is for one motor" << std::endl;
     } catch (std::runtime_error &) {
         LOGW << "Could not find joystick";

@@ -16,7 +16,7 @@ struct Formatter
 {
     static plog::util::nstring header()
     {
-        return plog::util::nstring();
+        return {};
     }
 
     static plog::util::nstring format(const plog::Record &record)

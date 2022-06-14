@@ -3,6 +3,7 @@
 // OpenCV includes
 #include <opencv2/core.hpp>
 
+#ifdef HAVE_OPENCV_SUPERRES
 namespace cv {
 namespace superres {
 class FarnebackOpticalFlow;
@@ -46,3 +47,4 @@ private:
 }; // OpenCVOpticalFlow
 }  // ImgProc
 }  // BoBRobotics
+#endif // HAVE_OPENCV_SUPERRES
