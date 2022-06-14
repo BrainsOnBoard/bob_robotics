@@ -165,7 +165,7 @@ bobMain(int argc, char **argv)
     catcher.trapSignals();
 
     // Run main program
-    AutoDatasetRecorderProgram program{ app.remaining()[0],
+    AutoDatasetRecorderProgram program{ Navigation::ImageDatabase{ app.remaining()[0] },
                                         useSystemClock->count() > 0,
                                         catcher };
     program.run();

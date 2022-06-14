@@ -43,7 +43,7 @@ bobMain(int argc, char **argv)
     BOB_ASSERT(argc == 2);
 
     Robots::Ackermann::SimulatedAckermann robot{ MaxSpeed, 500_mm, 0_m, MaxTurn };
-    AutoController controller{ argv[1], LookAheadDistance, robot.getDistanceBetweenAxes(), StoppingDist };
+    AutoController controller{ Navigation::ImageDatabase{ argv[1] }, LookAheadDistance, robot.getDistanceBetweenAxes(), StoppingDist };
     Navigation::ImageDatabase database;
     const auto &route = controller.getRoute();
 
