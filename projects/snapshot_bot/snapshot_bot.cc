@@ -139,7 +139,7 @@ public:
             m_ViconTracking.connect(m_Config.getViconTrackingPort());
 
             // Get Vicon tracking object
-            m_ViconObject = m_ViconTracking.getObjectReference(m_Config.getViconTrackingObjectName());
+            m_ViconObject.emplace(m_ViconTracking.getObjectReference(m_Config.getViconTrackingObjectName()));
 #else
             throw std::runtime_error("You must rebuild with -DUSE_VICON=ON");
 #endif
@@ -673,7 +673,7 @@ private:
     Vicon::UDPClient<Vicon::ObjectData> m_ViconTracking;
 
     // Vicon tracking object
-    std::unique_ptr<Vicon::ObjectReference<Vicon::ObjectData>> m_ViconObject;
+    std::experimental::optional<Vicon::ObjectReference<Vicon::ObjectData>> m_ViconObject;
 
     // PID controller for driving robot
     std::unique_ptr<Robots::TankPID<ROBOT_TYPE, Vicon::ObjectReference<Vicon::ObjectData>>> m_TankPID;

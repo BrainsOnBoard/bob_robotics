@@ -307,30 +307,28 @@ public:
         return m_ObjectData.at(bytes);
     }
 
-     //! Get current pose information for first object
-     ObjectDataType getObjectData() const
-     {
-         // Note: We return by value because m_ObjectData is protected by mutex
-         waitUntilConnected();
-         std::lock_guard<std::mutex> guard(m_ObjectMutex);
-         return m_ObjectData.begin()->second;
-     }
+    //! Get current pose information for first object
+    ObjectDataType getObjectData() const
+    {
+        // Note: We return by value because m_ObjectData is protected by mutex
+        waitUntilConnected();
+        std::lock_guard<std::mutex> guard(m_ObjectMutex);
+        return m_ObjectData.begin()->second;
+    }
 
-     auto getObjectReference(Stopwatch::Duration timeoutDuration = 10s) const
-     {
-         waitUntilConnected();
-         std::lock_guard<std::mutex> guard(m_ObjectMutex);
-         return std::make_unique<ObjectReference<ObjectDataType>>(
-             *this, m_ObjectData.begin()->first.data(), timeoutDuration);
-     }
-
-    //! Returns an object whose pose is updated by the Vicon system over time
-    auto getObjectReference(const std::string& name,
-                            Stopwatch::Duration timeoutDuration = 10s) const
+    ObjectReference<ObjectDataType> getObjectReference(Stopwatch::Duration timeoutDuration = 10s) const
     {
         waitUntilConnected();
-        return std::make_unique<ObjectReference<ObjectDataType>>(
-            *this, name.c_str(), timeoutDuration);
+        std::lock_guard<std::mutex> guard(m_ObjectMutex);
+        return { *this, m_ObjectData.begin()->first.data(), timeoutDuration };
+    }
+
+    //! Returns an object whose pose is updated by the Vicon system over time
+    ObjectReference<ObjectDataType> getObjectReference(const std::string &name,
+                                                       Stopwatch::Duration timeoutDuration = 10s) const
+    {
+        waitUntilConnected();
+        return { *this, name.c_str(), timeoutDuration };
     }
 
     bool connected() const { return m_IsConnected; }
