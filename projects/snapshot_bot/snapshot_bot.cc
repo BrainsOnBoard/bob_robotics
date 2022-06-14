@@ -409,7 +409,7 @@ private:
                 LOGI << "Returning to start of training route";
 
                 // Assert that we have a training route
-                assert(!m_TrainingRoute.empty());
+                BOB_ASSERT(!m_TrainingRoute.empty());
 
                 // Start moving towards first point in training route
                 m_TankPID->moveTo(m_TrainingRoute.front());

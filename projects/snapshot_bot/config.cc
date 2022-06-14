@@ -180,7 +180,7 @@ Config::read(const cv::FileNode &node)
     if (node["turnThresholds"].isSeq()) {
         m_TurnThresholds.clear();
         for (const auto &t : node["turnThresholds"]) {
-            assert(t.isSeq());
+            BOB_ASSERT(t.isSeq());
 
             if (t.size() == 2) {
                 m_TurnThresholds.emplace(std::piecewise_construct,
