@@ -226,6 +226,12 @@ public:
         auto rotater = InSilicoRotater::create(this->getUnwrapResolution(), mask, image, std::forward<Ts>(args)...);
         calcImageDifferences(window, rotater);
 
+        return getHeadingFromDifferences(m_RotatedDifferences, window, rotater.getNumColumns(), rotater.getBeginRoll());
+    }
+
+    template<class IterType = size_t>
+    auto getHeadingFromDifferences(const Eigen::MatrixXf &rotatedDiffs, typename PerfectMemory<Store>::Window window, size_t numColumns, IterType beginRoll = IterType{ 0 }) const
+    {
         // Now get the minimum for each snapshot and the column this corresponds to
         const size_t numSnapshots = window.second - window.first;
         m_BestColumns.resize(numSnapshots);
@@ -234,13 +240,21 @@ public:
         tbb::parallel_for(tbb::blocked_range<size_t>(0, numSnapshots),
                           [&](const auto &r) {
                               for (size_t i = r.begin(); i != r.end(); ++i) {
-                                  m_MinimumDifferences[i] = m_RotatedDifferences.row(i).minCoeff(&m_BestColumns[i]);
+                                  m_MinimumDifferences[i] = rotatedDiffs.row(i).minCoeff(&m_BestColumns[i]);
                               }
                           });
 
         // Return result
-        return std::tuple_cat(RIDFProcessor()(m_BestColumns, m_MinimumDifferences, rotater, window.first),
-                              std::make_tuple(std::cref(m_RotatedDifferences)));
+        const auto columnToHeading = [numColumns, beginRoll](size_t col) {
+            return InSilicoRotater::columnToHeading(col, numColumns, beginRoll);
+        };
+        return std::tuple_cat(RIDFProcessor()(m_BestColumns, m_MinimumDifferences, columnToHeading, window.first),
+                              std::make_tuple(std::cref(rotatedDiffs)));
+    }
+
+    auto getHeadingFromDifferences(const Eigen::MatrixXf &rotatedDiffs, typename PerfectMemory<Store>::Window window = {}) const
+    {
+        return getHeadingFromDifferences(rotatedDiffs, window, rotatedDiffs.cols());
     }
 
     /*!

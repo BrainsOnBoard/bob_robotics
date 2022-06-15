@@ -58,7 +58,7 @@ struct InSilicoRotater
             tbb::parallel_for(tbb::blocked_range<size_t>(0, numRotations()),
                 [this, func](const auto &r) {
                     for (size_t i = r.begin(); i != r.end(); ++i) {
-                        const auto index = RotaterInternal<IterType>::toIndex(m_BeginRoll + i * m_ScanStep);
+                        const auto index = InSilicoRotater::toIndex(m_BeginRoll + i * m_ScanStep);
                         ImgProc::rollRight(m_Image, m_ScratchImage, index);
                         m_Mask.rollRight(m_ScratchMask, index);
 
@@ -67,9 +67,19 @@ struct InSilicoRotater
                 });
         }
 
-        units::angle::radian_t columnToHeading(size_t column) const
+        auto getBeginRoll() const
         {
-            return units::angle::turn_t{ (double) toIndex(m_BeginRoll + column) / (double) m_Image.cols };
+            return m_BeginRoll;
+        }
+
+        size_t getNumColumns() const
+        {
+            return m_Image.cols;
+        }
+
+        auto columnToHeading(size_t column) const
+        {
+            return InSilicoRotater::columnToHeading(column, getNumColumns(), m_BeginRoll);
         }
 
         size_t numRotations() const
@@ -95,17 +105,6 @@ struct InSilicoRotater
         static size_t distance(Iter first, Iter last)
         {
             return static_cast<size_t>(std::distance(first, last));
-        }
-
-        static size_t toIndex(size_t index)
-        {
-            return index;
-        }
-
-        template<typename Iter>
-        static size_t toIndex(Iter it)
-        {
-            return *it;
         }
     };
 
@@ -139,6 +138,24 @@ struct InSilicoRotater
            size_t beginRoll = 0)
     {
         return RotaterInternal<size_t>(unwrapRes, mask, image, scanStep, beginRoll, image.cols);
+    }
+
+    template<class IterType = size_t>
+    static units::angle::radian_t columnToHeading(size_t column, size_t numColumns, IterType beginRoll = IterType{ 0 })
+    {
+        return units::angle::turn_t{ (double) toIndex(beginRoll + column) / (double) numColumns };
+    }
+
+private:
+    static size_t toIndex(size_t index)
+    {
+        return index;
+    }
+
+    template<typename Iter>
+    static size_t toIndex(Iter it)
+    {
+        return *it;
     }
 };
 

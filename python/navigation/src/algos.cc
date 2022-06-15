@@ -74,7 +74,9 @@ public:
         ranges::for_each(imageSet.toRange(), train);
     }
 
-private:
+protected:
+    T m_Algo;
+
     template<size_t Index, size_t NumRetVals, class TupleType, std::enable_if_t<Index<NumRetVals, int> = 0>
     static void assignToDict(py::dict &dict, const std::array<const char *, NumRetVals> &labels, TupleType &data)
     {
@@ -88,9 +90,6 @@ private:
                              const TupleType &)
     {
     }
-
-protected:
-    T m_Algo;
 
     template<size_t NumRetVals>
     py::object doRIDFInternal(const ImageSet &imageSet,
@@ -222,10 +221,79 @@ public:
         return imageSet.singleImage ? df.attr("squeeze")() : df;
     }
 
+    const auto doRIDFRaw(const ImageSet &imageSet, size_t step) const
+    {
+        py::list result;
+        ranges::for_each(imageSet.toRange(), [&](const cv::Mat &image) {
+            result.append(m_Algo.getImageDifferences(image, {}, step));
+        });
+        return result;
+    }
+
     const auto &getIndexes() const { return m_Indexes; }
 
 private:
     std::vector<size_t> m_Indexes;
+
+    template<size_t NumRetVals>
+    py::object doRIDFInternal(const ImageSet &imageSet,
+                              const std::array<const char *, NumRetVals> &labels,
+                              size_t step) const
+    {
+        BOB_ASSERT(step == 1);
+        py::list result;
+
+        // // For some reason using ranges::for_each here yields a crash
+        // auto rng = imageSet.toRange();
+        // for (auto it = rng.begin(); it != rng.end(); ++it) {
+        //     const cv::Mat image = *it;
+        //     auto data = m_Algo.getHeading(image, {}, step);
+
+        //     // Use labels to give returned values meaningful names
+        //     py::dict dict;
+        //     assignToDict<0>(dict, labels, data);
+        //     result.append(std::move(dict));
+
+        //     // Check for Ctrl+C etc.
+        //     checkPythonErrors();
+        // }
+
+        for (auto array : imageSet.images) {
+            const auto &diffs = imageSet.isImage ? m_Algo.getImageDifferences(array.cast<cv::Mat>(), {}, step)
+                                                 : array.cast<Eigen::MatrixXf>();
+            const auto data = m_Algo.getHeadingFromDifferences(diffs);
+
+            // Use labels to give returned values meaningful names
+            py::dict dict;
+            assignToDict<0>(dict, labels, data);
+            result.append(std::move(dict));
+
+            // Check for Ctrl+C etc.
+            checkPythonErrors();
+        }
+
+        // No input DataFrame given
+        if (!imageSet.dataFrame) {
+            return dictsToDataFrame(std::move(result));
+        }
+
+        // Use the indexes from the input DataFrame
+        auto dfOut = dictsToDataFrame(std::move(result),
+                                      "index"_a = imageSet.getColumn("database_idx"));
+
+        /*
+         * If the test images are tagged with world-centric headings, use
+         * these values to calculate the real headings, in addition to the
+         * change in headings that we've already computed.
+         */
+        if (py::hasattr(*imageSet.dataFrame, "heading")) {
+            dfOut["estimated_heading"] = dfOut["estimated_dheading"] +
+                                         (*imageSet.dataFrame)["heading"];
+        }
+
+        // Concatenate with input DataFrame for convenience
+        return dfOut.attr("join")(*imageSet.dataFrame);
+    }
 };
 
 template<>
@@ -365,7 +433,8 @@ addAlgorithmClasses(py::module &m)
                             ImageSet{ state[1] },
                             state[2].cast<std::vector<size_t>>()
                         };
-                    }));
+                    }))
+            .def("ridf_raw", &PyAlgoWrapper<PerfectMemoryType>::doRIDFRaw, "image_set"_a, "step"_a = 1);
     addAlgo<InfoMaxType>(m, "InfoMax")
             .def(py::init([](const optional<cv::Size> &size,
                              const optional<ImageSet> &trainImages,

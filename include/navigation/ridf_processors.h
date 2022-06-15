@@ -24,10 +24,10 @@ using namespace units::literals;
 //! Winner-take all: derive heading using only the best-matching snapshot
 struct BestMatchingSnapshot
 {
-    template<typename Rotater>
+    template<class Func>
     auto operator()(const std::vector<size_t> &bestCols,
                     const std::vector<float> &minDifferences,
-                    const Rotater &rotater, size_t startSnapshot)
+                    const Func &columnToHeading, size_t startSnapshot)
     {
         // Get index corresponding to best-matching snapshot
         const auto bestPtr = std::min_element(std::begin(minDifferences), std::end(minDifferences));
@@ -36,7 +36,7 @@ struct BestMatchingSnapshot
         // Convert to radians
         using namespace units::angle;
         // const radian_t heading = units::make_unit<turn_t>((double) col / (double) unwrapRes.width);
-        const radian_t heading = normaliseAngle180(rotater.columnToHeading(bestCols[bestSnapshot]));
+        const radian_t heading = normaliseAngle180(columnToHeading(bestCols[bestSnapshot]));
 
         // Normalise to be between 0 and 1
         const float difference = minDifferences[bestSnapshot] / 255.0f;
@@ -50,10 +50,10 @@ struct BestMatchingSnapshot
 template<size_t numComp>
 struct WeightSnapshotsDynamic
 {
-    template<typename Rotater>
+    template<class Func>
     auto operator()(std::vector<size_t> &bestCols,
                     std::vector<float> &minDifferences,
-                    const Rotater &rotater, size_t)
+                    const Func &columnToHeading, size_t)
     {
         using namespace units::angle;
 
@@ -76,8 +76,8 @@ struct WeightSnapshotsDynamic
         }
 
         // Convert best columns to headings
-        auto colsToHeadings = [&bestCols, &rotater](const size_t s) {
-            return rotater.columnToHeading(bestCols[s]);
+        auto colsToHeadings = [&bestCols, &columnToHeading](const size_t s) {
+            return columnToHeading(bestCols[s]);
         };
         std::array<radian_t, numComp> headings;
         std::transform(snapshots.cbegin(), snapshots.cend(), headings.begin(),

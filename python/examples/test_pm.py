@@ -1,30 +1,37 @@
 #!/usr/bin/env python3
-from bob_robotics import navigation
+import bob_robotics.navigation as bobnav
+from bob_robotics.navigation import imgproc as ip
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
-from time import time
+from time import perf_counter
 
-dbPath = sys.argv[1]
+IM_SIZE = (45, 180)
+PREPROC = ip.resize(*IM_SIZE)
+
+# dbPath = sys.argv[1]
+dbPath = "/home/alex/code/datasets/ant_world/routes/ant1_route1"
 img = cv2.imread(dbPath + '/image_00100.png')
 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 print('Loaded image')
 
-algo = navigation.PerfectMemory((180, 45))
-algo.train_route(dbPath)
+db = bobnav.Database(dbPath)
+train_entries = db.read_image_entries(range(20), preprocess=PREPROC)
+test_entry = db.read_image_entries(100, preprocess=PREPROC)
+
+algo = bobnav.PerfectMemory(IM_SIZE)
+algo.train(train_entries)
 print('Training complete')
 
-t0 = time()
-ang = algo.get_heading(img)
-print(time() - t0)
+t0 = perf_counter()
+# (heading, best_snap, best_min, diffs) = algo.ridf(img)
+df = algo.ridf(img)
+print(perf_counter() - t0)
 
-# Alternatively you can use algo.get_heading(img) to just get the heading,
-# which should be faster
-(heading, best_snap, best_min, diffs) = algo.get_ridf_data(img)
+print('Best snapshot: %d at %g° (diff: %g)' % (df.best_snap, np.rad2deg(df.estimated_heading), df.min))
 
-print('Best snapshot: %d at %g° (diff: %g)' % (best_snap, np.rad2deg(heading), best_min))
-
+diffs = df.differences
 xs = np.linspace(0, 360, diffs.shape[1])
 ridf = diffs[best_snap, :]
 plt.plot(xs, ridf / 255.0)

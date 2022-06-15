@@ -54,6 +54,7 @@ getColumn(const pybind11::object &df, const char *name)
 struct ImageSet {
     pybind11::array images;
     std::experimental::optional<pybind11::object> dataFrame;
+    bool isImage = true;
     bool singleImage = false;
 
     ImageSet() = default;
@@ -70,7 +71,15 @@ struct ImageSet {
         object imagesObj;
         if (hasattr(imageSet, "iloc")) {
             // ...then it's a DataFrame/Series
-            imagesObj = imageSet["image"];
+            if (hasattr(imageSet, "differences")) {
+                images = imageSet["differences"];
+                isImage = false;
+                return;
+            }
+
+            if (hasattr(imageSet, "image")) {
+                imagesObj = imageSet["image"];
+            }
 
             // If it's a column with multiple values
             if (hasattr(imagesObj, "to_list")) {
