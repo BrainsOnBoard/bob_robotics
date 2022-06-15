@@ -11,6 +11,9 @@
 // Third-party includes
 #include "third_party/CLI11.hpp"
 
+// Standard C++ includes
+#include <limits>
+
 using namespace BoBRobotics;
 using namespace std::literals;
 using namespace units::angle;
@@ -115,7 +118,7 @@ private:
 
         // Drive forward until we've gone x metres
         MapCoordinate::UTMCoordinate utmEnd{};
-        meter_t distance;
+        meter_t distance{ std::numeric_limits<double>::infinity() };
         LOGI << "Driving forwards...";
         Stopwatch sw;
         sw.start();
