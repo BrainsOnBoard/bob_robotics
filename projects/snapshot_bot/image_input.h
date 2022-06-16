@@ -69,6 +69,8 @@ public:
     //----------------------------------------------------------------------------
     virtual std::pair<cv::Mat, Mask> processSnapshot(const cv::Mat &snapshot) override;
 
+    static constexpr const char *OptionName = "raw";
+
 private:
     cv::Mat m_Greyscale;
 };
@@ -86,6 +88,8 @@ public:
     // ImageInput virtuals
     //----------------------------------------------------------------------------
     virtual std::pair<cv::Mat, Mask> processSnapshot(const cv::Mat &snapshot) override;
+
+    static constexpr const char *OptionName = "histeq";
 
 private:
     cv::Mat m_HistEq;
@@ -105,6 +109,8 @@ public:
     //----------------------------------------------------------------------------
     virtual std::pair<cv::Mat, Mask> processSnapshot(const cv::Mat &snapshot) override;
     virtual cv::Size getOutputSize() const override { return cv::Size(getUnwrapSize().width - 2, getUnwrapSize().height - 2); }
+
+    static constexpr const char *OptionName = "binary";
 
 protected:
     //----------------------------------------------------------------------------
@@ -151,6 +157,8 @@ public:
     {
         return cv::Size(getUnwrapSize().width - 2, 1);
     }
+
+    static constexpr const char *OptionName = "horizon";
 
 private:
     //----------------------------------------------------------------------------
