@@ -449,8 +449,6 @@ public:
         LOGD << "Capped target position: " << targetDist[0] << " "
              << targetDist[1] << " " << targetDist[2];
 
-        P1240MotStop(m_BoardId, XYZ_Axis, XYZ_Axis);
-
         LOGD << "Final position: " << targetDist[0] << " " << targetDist[1]
              << " " << targetDist[2];
 
