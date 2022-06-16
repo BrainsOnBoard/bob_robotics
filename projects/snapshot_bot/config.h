@@ -30,9 +30,6 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    bool shouldUseBinaryImage() const{ return m_UseBinaryImage; }
-    bool shouldUseHorizonVector() const{ return m_UseHorizonVector; }
-    bool shouldUseHistEq() const{ return m_UseHistEq; }
     bool shouldTrain() const{ return m_Train; }
     bool shouldUseInfoMax() const{ return m_UseInfoMax; }
     bool shouldSaveTestingDiagnostic() const{ return m_SaveTestingDiagnostic; }
@@ -42,6 +39,7 @@ public:
     bool shouldDriveRobot() const{ return m_DriveRobot; }
     bool shouldRecordVideo() const{ return m_RecordVideo; }
 
+    const std::string &getImageInputType() const{ return m_ImageInputType; }
     const std::string &getVideoCodec() const{ return m_VideoCodec; }
     const std::string &getVideoFileExtension() const{ return m_VideoFileExtension; }
 
@@ -98,11 +96,7 @@ private:
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-    bool m_UseBinaryImage;
-
-    bool m_UseHorizonVector;
-
-    bool m_UseHistEq;
+    std::string m_ImageInputType;
 
     // Should we start in training mode or use existing data?
     bool m_Train;
