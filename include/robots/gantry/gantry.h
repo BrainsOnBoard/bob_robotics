@@ -9,8 +9,8 @@
 #include "third_party/units.h"
 
 // Gantry-specifc includes
-#include "Windows.h"
 #include "Ads1240.h"
+#include "Windows.h"
 
 // Standard C++ includes
 #include <algorithm>
@@ -265,6 +265,36 @@ public:
         }
 
         return Traj;
+    }
+
+    void continuousMove(BYTE axis, meters_per_second_t velocity)
+    {
+        // Check that only valid bits are set
+        BOB_ASSERT(!(axis & ~XYZ_Axis));
+
+        const bool negative = (velocity < 0_mps);
+        velocity = units::math::abs(velocity);
+
+        // Set the velocity for each axis
+        for (size_t i = 0; i < 3; i++) {
+            const BYTE bit = (1 << i);
+            if (axis & bit) {
+                const auto pulseRate = (DWORD) round(velocity.value() / MetersPerSecondPerPulseRate[i]);
+                checkError(P1240MotChgDV(m_BoardId, bit, pulseRate), "Could not change velocity");
+            }
+        }
+
+        checkError(P1240MotCmove(m_BoardId, axis, negative), "Could not start continuous move");
+    }
+
+    void arcXY(millimeter_t centreX, millimeter_t centreY, millimeter_t endX, millimeter_t endY, bool antiClockwise = false)
+    {
+        const LONG centreXp = centreX.value() * PulsesPerMillimetre[0];
+        const LONG endXp = endX.value() * PulsesPerMillimetre[0];
+        const LONG centreYp = centreY.value() * PulsesPerMillimetre[1];
+        const LONG endYp = endY.value() * PulsesPerMillimetre[1];
+        
+        checkError(P1240MotArc(m_BoardId, XY_Axis, 0, antiClockwise, centreXp, centreYp, endXp, endYp), "Could not start arc move");
     }
 
     /**!
