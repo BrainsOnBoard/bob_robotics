@@ -469,7 +469,12 @@ public:
     //! Stop the gantry moving, optionally specifying a specific axis
     void stopMoving(BYTE axis = XYZ_Axis) const noexcept
     {
-        P1240MotStop(m_BoardId, axis, axis * SlowStop);
+        LRESULT res;
+        res = P1240MotStop(m_BoardId, axis, axis);
+        LOGW_IF(res) << "Gantry error 0x" << std::hex << res << " occurred while stopping gantry";
+
+        res = P1240MotReset(m_BoardId);
+        LOGW_IF(res) << "Gantry error 0x" << std::hex << res << " occurred while resetting gantry";
     }
 
     //! Check if the gantry is moving
