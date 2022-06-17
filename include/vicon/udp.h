@@ -210,39 +210,6 @@ class UDPClient
 {
 private:
     /*
-     * A simple wrapper around char[N]. We need this because we use a fixed-size
-     * char array as a key for m_ObjectData and using a naked char[N] won't work
-     * (because it doesn't have a constructor).
-     */
-#define COMMA ,
-    BOB_PACKED(template<size_t N>
-    struct CharArray
-    {
-        char data[N];
-
-        CharArray(const char *str)
-        {
-            strcpy(data COMMA str);
-        }
-
-        operator char *()
-        {
-            return data;
-        }
-
-        operator const char *() const
-        {
-            return data;
-        }
-
-        bool operator==(const CharArray<N> &other) const
-        {
-            return strcmp(data COMMA other) == 0;
-        }
-    });
-#undef COMMA
-
-    /*
      * NB: The first member of this struct *should* be object ID, but the
      * Vicon system seems to just give a value of zero for every item, which
      * isn't terribly helpful. So instead we distinguish objects based on their
@@ -251,7 +218,7 @@ private:
     BOB_PACKED(struct RawObjectData {
         uint8_t unused;
         uint16_t itemDataSize;
-        CharArray<24> objectName;
+        std::array<char, 24> objectName;
         double position[3];
         double attitude[3];
     });
@@ -333,39 +300,35 @@ public:
 
         // Convert to fixed-size char array
         BOB_ASSERT(name.size() < 24);
-        char bytes[24];
-        strcpy(bytes, name.c_str());
+        std::array<char, 24> bytes;
+        strcpy(bytes.data(), name.c_str());
 
         std::lock_guard<std::mutex> guard(m_ObjectMutex);
         return m_ObjectData.at(bytes);
     }
 
-     //! Get current pose information for first object
-     ObjectDataType getObjectData() const
-     {
-         // Note: We return by value because m_ObjectData is protected by mutex
-         waitUntilConnected();
-         std::lock_guard<std::mutex> guard(m_ObjectMutex);
-         return m_ObjectData.begin()->second;
-     }
+    //! Get current pose information for first object
+    ObjectDataType getObjectData() const
+    {
+        // Note: We return by value because m_ObjectData is protected by mutex
+        waitUntilConnected();
+        std::lock_guard<std::mutex> guard(m_ObjectMutex);
+        return m_ObjectData.begin()->second;
+    }
 
-     auto getObjectReference(Stopwatch::Duration timeoutDuration = 10s) const
-     {
-         waitUntilConnected();
-         std::lock_guard<std::mutex> guard(m_ObjectMutex);
-         return ObjectReference<ObjectDataType>(*this,
-                                                m_ObjectData.begin()->first,
-                                                timeoutDuration);
-     }
-
-    //! Returns an object whose pose is updated by the Vicon system over time
-    auto getObjectReference(const std::string& name,
-                            Stopwatch::Duration timeoutDuration = 10s) const
+    ObjectReference<ObjectDataType> getObjectReference(Stopwatch::Duration timeoutDuration = 10s) const
     {
         waitUntilConnected();
-        return ObjectReference<ObjectDataType>(*this,
-                                               name.c_str(),
-                                               timeoutDuration);
+        std::lock_guard<std::mutex> guard(m_ObjectMutex);
+        return { *this, m_ObjectData.begin()->first.data(), timeoutDuration };
+    }
+
+    //! Returns an object whose pose is updated by the Vicon system over time
+    ObjectReference<ObjectDataType> getObjectReference(const std::string &name,
+                                                       Stopwatch::Duration timeoutDuration = 10s) const
+    {
+        waitUntilConnected();
+        return { *this, name.c_str(), timeoutDuration };
     }
 
     bool connected() const { return m_IsConnected; }
@@ -392,8 +355,8 @@ private:
 
         // ...and, if not, create one
         if (pos == m_ObjectData.cend()) {
-            LOGI << "Vicon: Found new object: " << data.objectName;
-            pos = m_ObjectData.emplace(data.objectName, ObjectDataType { data.objectName }).first;
+            LOGI << "Vicon: Found new object: " << data.objectName.data();
+            pos = m_ObjectData.emplace(data.objectName, ObjectDataType { data.objectName.data() }).first;
         }
 
         /*
@@ -468,6 +431,14 @@ private:
         close(socket);
     }
 
+    struct CmpChar {
+        template<size_t N>
+        bool operator()(const std::array<char, N> &strA, const std::array<char, N> &strB) const
+        {
+            return (strncmp(strA.data(), strB.data(), N) == 0);
+        }
+    };
+
     struct HashChar {
         //--------------------------------------------------------------------------
         /*! \brief This function returns the 32-bit hash of a string
@@ -481,7 +452,7 @@ private:
         //! 2. It will not produce the same results on little-endian and big-endian
         //!    machines.
         template<size_t N>
-        uint32_t operator()(const CharArray<N> &str) const
+        uint32_t operator()(const std::array<char, N> &str) const
         {
             // 'm' and 'r' are mixing constants generated offline.
             // They're not really 'magic', they just happen to work well.
@@ -489,13 +460,13 @@ private:
             const unsigned int r = 24;
 
             // String length
-            size_t len = strlen(str);
+            size_t len = strlen(str.data());
 
             // Initialize the hash to a 'random' value
             uint32_t h = 0xc70f6907 ^ (uint32_t)len;
 
             // Mix 4 bytes at a time into the hash
-            const char *data = str;
+            const char *data = str.data();
             while (len >= 4) {
                 // **NOTE** one of the assumptions of the original MurmurHash2 was that
                 // "We can read a 4-byte value from any address without crashing".
@@ -543,7 +514,7 @@ private:
      * then we could get a heap allocation with every data packet received for
      * longer object names.
      */
-    std::unordered_map<CharArray<24>, ObjectDataType, HashChar> m_ObjectData;
+    std::unordered_map<std::array<char, 24>, ObjectDataType, HashChar, CmpChar> m_ObjectData;
     std::atomic<bool> m_ShouldQuit;
     mutable std::timed_mutex m_ConnectionMutex;
     bool m_IsConnected = false;

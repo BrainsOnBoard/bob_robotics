@@ -16,9 +16,11 @@
 #include "imgproc/opencv_unwrap_360.h"
 #include "imgproc/mask.h"
 #include "navigation/image_database.h"
+#include "navigation/read_objects.h"
 #include "net/server.h"
 #include "robots/robot_type.h"
 #ifdef USE_VICON
+#include "robots/control/tank_pid.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
 #endif // USE_VICON
@@ -53,6 +55,7 @@ enum class State
     Invalid,
     WaitToTrain,
     Training,
+    ReturnToStart,
     WaitToTest,
     Testing,
     DrivingForward,
@@ -119,9 +122,9 @@ public:
             bestSnapshotAsync.wait();
 
             // Create netsinks
-            m_LiveNetSink = std::make_unique<Video::NetSink>(*m_LiveConnection, config.getCroppedRect().size(), "live");
-            m_SnapshotNetSink = std::make_unique<Video::NetSink>(*m_SnapshotConnection, config.getCroppedRect().size(), "snapshot");
-            m_BestSnapshotNetSink = std::make_unique<Video::NetSink>(*m_BestSnapshotConnection, config.getCroppedRect().size(), "best_snapshot");
+            m_LiveNetSink.emplace(*m_LiveConnection, config.getCroppedRect().size(), "live");
+            m_SnapshotNetSink.emplace(*m_SnapshotConnection, config.getCroppedRect().size(), "snapshot");
+            m_BestSnapshotNetSink.emplace(*m_BestSnapshotConnection, config.getCroppedRect().size(), "best_snapshot");
 
             // Start background threads for transmitting images
             m_LiveConnection->runInBackground();
@@ -134,6 +137,9 @@ public:
 #ifdef USE_VICON
             // Connect to port specified in config
             m_ViconTracking.connect(m_Config.getViconTrackingPort());
+
+            // Get Vicon tracking object
+            m_ViconObject.emplace(m_ViconTracking.getObjectReference(m_Config.getViconTrackingObjectName()));
 #else
             throw std::runtime_error("You must rebuild with -DUSE_VICON=ON");
 #endif
@@ -154,7 +160,27 @@ public:
         }
 
         if (m_Config.shouldUseIMU()){
-            m_IMU = std::make_unique<BN055>();
+            m_IMU.emplace();
+        }
+
+         // If a training path is specified
+        if(!m_Config.getTrainingPath().empty()) {
+            // Give error if Vicon tracking isn't enabled
+            if(!m_Config.shouldUseViconTracking()) {
+                throw std::runtime_error("Snapshot bot can only follow a pre-programmed training path if Vicon tracking is enabled");
+            }
+
+#ifdef USE_VICON
+            // Load training route
+            m_TrainingRoute = Navigation::readObjects(m_Config.getTrainingPath()).at(0);
+            LOGI << "Loaded training route with " << m_TrainingRoute.size() << " points from " << m_Config.getTrainingPath();
+
+            // Create tank PID
+            m_TankPID.emplace(
+                *m_Robot, *m_ViconObject, m_Config.getTankPIDKP(), m_Config.getTankPIDKI(), m_Config.getTankPIDKD(),
+                m_Config.getTankPIDDistanceTolerance(), m_Config.getTankPIDAngleTolerance(),
+                m_Config.getTankPIDStartTurningThreshold(), m_Config.getTankPIDAverageSpeed());
+#endif // USE_VICON
         }
 
         // If we should train
@@ -167,7 +193,12 @@ public:
                                  m_Config.getSkipFrames(), &m_BackgroundEx);
 
             // Start directly in testing state
-            m_StateMachine.transition(State::WaitToTest);
+            if(!m_Config.getTrainingPath().empty() && m_Config.shouldReturnToStart()) {
+                m_StateMachine.transition(State::ReturnToStart);
+            }
+            else {
+                m_StateMachine.transition(State::WaitToTest);
+            }
         }
 
     }
@@ -240,6 +271,18 @@ private:
                     m_LiveConnection->getSocketWriter().send("SNAPSHOT_BOT_STATE TRAINING\n");
                 }
 
+#ifdef USE_VICON
+                // If we have a training route
+                if(!m_TrainingRoute.empty()) {
+                    // Set iterator to first waypoint
+                    m_CurrentTrainingRouteWaypoint = m_TrainingRoute.cbegin();
+
+                    // Start moving towards it
+                    m_TankPID->moveTo(*m_CurrentTrainingRouteWaypoint);
+                    LOGI << "Moving to waypoint (" << m_CurrentTrainingRouteWaypoint->x() << ", " << m_CurrentTrainingRouteWaypoint->y() << ")";
+                }
+#endif // USE_VICON
+
                 // For saving images + metadata
                 makeRecorder(m_TrainDatabase);
 
@@ -248,6 +291,34 @@ private:
                 m_TrainingStopwatch.start();
             }
             else if(event == Event::Update) {
+#ifdef USE_VICON
+                // If we have a training route
+                if(!m_TrainingRoute.empty()) {
+                    // If we've reached waypoint
+                    if(!m_TankPID->pollPositioner()) {
+                        // Move on to next waypoint
+                        m_CurrentTrainingRouteWaypoint++;
+
+                        // Stop robot
+                        m_Robot->stopMoving();
+
+                        // If there're more waypoints to go, move to next waypoint
+                        if (m_CurrentTrainingRouteWaypoint != m_TrainingRoute.cend()) {
+                            LOGI << "Moving to waypoint (" << m_CurrentTrainingRouteWaypoint->x() << ", " << m_CurrentTrainingRouteWaypoint->y() << ")";
+                            m_TankPID->moveTo(*m_CurrentTrainingRouteWaypoint);
+                        }
+                        else {
+                            LOGI << "Reached last training waypoint";
+                            if(m_Config.shouldReturnToStart()) {
+                                m_StateMachine.transition(State::ReturnToStart);
+                            }
+                            else {
+                                m_StateMachine.transition(State::WaitToTest);
+                            }
+                        }
+                    }
+                }
+#endif // USE_VICON
                 // If A is pressed
                 if(m_Joystick.isPressed(HID::JButton::A) || (m_Config.shouldAutoTrain() && m_TrainingStopwatch.elapsed() > m_Config.getTrainInterval())) {
                     // Update last train time
@@ -332,6 +403,29 @@ private:
                 m_ProcessedSnapshots.clear();
             }
         }
+#ifdef USE_VICON
+        else if(state == State::ReturnToStart) {
+            if (event == Event::Enter) {
+                LOGI << "Returning to start of training route";
+
+                // Assert that we have a training route
+                BOB_ASSERT(!m_TrainingRoute.empty());
+
+                // Start moving towards first point in training route
+                m_TankPID->moveTo(m_TrainingRoute.front());
+                LOGD << "Moving to waypoint (" << m_TrainingRoute.front().x() << ", " << m_TrainingRoute.front().y() << ")";
+            } else if (event == Event::Update) {
+                // If we've reached waypoint
+                if (!m_TankPID->pollPositioner()) {
+                    // Stop robot
+                    m_Robot->stopMoving();
+
+                    // Transition to waiting to test state
+                    m_StateMachine.transition(State::WaitToTest);
+                }
+            }
+        }
+#endif // USE_VICON
         else if(state == State::WaitToTest) {
             if(event == Event::Enter) {
                 LOGI << "Press B to start testing" ;
@@ -346,7 +440,7 @@ private:
                     // Create new image database in subfolder of training database
                     const auto testingPath = m_TrainDatabase.getPath() / "testing";
                     filesystem::create_directory(testingPath);
-                    m_TestDatabase = std::make_unique<ImageDatabase>(Path::getNewPath(testingPath), Navigation::DatabaseOptions::Write);
+                    m_TestDatabase.emplace(Path::getNewPath(testingPath), Navigation::DatabaseOptions::Write);
 
                     // Extra fields for test algorithms
                     std::vector<std::string> fieldNames = m_Memory->getCSVFieldNames();
@@ -572,23 +666,31 @@ private:
     size_t m_TestImageIndex;
 
     // IMU device
-    std::unique_ptr<BN055> m_IMU;
+    std::experimental::optional<BN055> m_IMU;
 
 #ifdef USE_VICON
     // Vicon tracking interface
     Vicon::UDPClient<Vicon::ObjectData> m_ViconTracking;
 
+    // Vicon tracking object
+    std::experimental::optional<Vicon::ObjectReference<Vicon::ObjectData>> m_ViconObject;
+
+    // PID controller for driving robot
+    std::experimental::optional<Robots::TankPID<ROBOT_TYPE, Vicon::ObjectReference<Vicon::ObjectData>>> m_TankPID;
 
     // Vicon capture control interface
     Vicon::CaptureControl m_ViconCaptureControl;
-#endif
 
+    // Vector of points to drive between
+    std::vector<Vector2<millimeter_t>> m_TrainingRoute;
+    std::vector<Vector2<millimeter_t>>::const_iterator m_CurrentTrainingRouteWaypoint;
+#endif
 
     // For training data
     ImageDatabase m_TrainDatabase;
 
     // For testing data
-    std::unique_ptr<ImageDatabase> m_TestDatabase;
+    std::experimental::optional<ImageDatabase> m_TestDatabase;
 
     // For recording training and testing data
     std::unique_ptr<ImageDatabase::RouteRecorder> m_Recorder;
@@ -604,9 +706,9 @@ private:
     std::unique_ptr<Net::Connection> m_BestSnapshotConnection;
 
     // Sinks for video to send over server
-    std::unique_ptr<Video::NetSink> m_LiveNetSink;
-    std::unique_ptr<Video::NetSink> m_SnapshotNetSink;
-    std::unique_ptr<Video::NetSink> m_BestSnapshotNetSink;
+    std::experimental::optional<Video::NetSink> m_LiveNetSink;
+    std::experimental::optional<Video::NetSink> m_SnapshotNetSink;
+    std::experimental::optional<Video::NetSink> m_BestSnapshotNetSink;
 
     // For catching exceptions on background threads
     BackgroundExceptionCatcher &m_BackgroundEx;

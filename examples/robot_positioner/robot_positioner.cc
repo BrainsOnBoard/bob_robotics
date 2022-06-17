@@ -62,7 +62,7 @@ public:
       : m_Vicon(51001)
       , m_ViconObject(m_Vicon.getObjectReference())
       , m_Positioner(m_Tank,
-                     m_ViconObject,
+                     *m_ViconObject,
                      StoppingDistance,
                      AllowedHeadingError,
                      K1,
@@ -179,7 +179,7 @@ public:
 private:
     Robots::Tank::SlowedTank<ROBOT_TYPE> m_Tank;
     Vicon::UDPClient<> m_Vicon;
-    Vicon::ObjectReference<> m_ViconObject;
+    std::unique_ptr<Vicon::ObjectReference<>> m_ViconObject;
     HID::Joystick m_Joystick;
     Robots::RobotPositioner<decltype(m_Tank) &, decltype(m_ViconObject)> m_Positioner;
     FSM<State> m_StateMachine;

@@ -37,6 +37,7 @@ public:
     bool shouldUseInfoMax() const{ return m_UseInfoMax; }
     bool shouldSaveTestingDiagnostic() const{ return m_SaveTestingDiagnostic; }
     bool shouldStreamOutput() const{ return m_StreamOutput; }
+    bool shouldReturnToStart() const{ return m_ReturnToStart; }
     bool shouldUseODK2() const{ return m_ODK2; }
     bool shouldUseWebcam() const{ return m_Webcam; }
     bool shouldDriveRobot() const{ return m_DriveRobot; }
@@ -51,6 +52,8 @@ public:
     const WindowConfig &getPMFwdConfig() const{ return m_PMFwdConfig; }
 
     const filesystem::path &getOutputPath() const{ return m_OutputPath; }
+    const filesystem::path &getTrainingPath() const{ return m_TrainingPath; }
+    const std::string &getTestingSuffix() const{ return m_TestingSuffix; }
 
     const cv::Size &getUnwrapRes() const{ return m_UnwrapRes; }
     const cv::Rect &getCroppedRect() const{ return m_CroppedRect; }
@@ -77,6 +80,13 @@ public:
     int getViconCaptureControlPort() const { return m_ViconCaptureControlPort; }
     const std::string &getViconCaptureControlPath() const{ return m_ViconCaptureControlPath; }
 
+    float getTankPIDKP() const{ return m_TankPIDKP; }
+    float getTankPIDKI() const{ return m_TankPIDKI; }
+    float getTankPIDKD() const{ return m_TankPIDKD; }
+    units::length::meter_t getTankPIDDistanceTolerance() const{ return units::length::meter_t(m_TankPIDDistanceTolerance); }
+    units::angle::degree_t getTankPIDAngleTolerance() const{ return units::angle::degree_t(m_TankPIDAngleTolerance); }
+    units::angle::degree_t getTankPIDStartTurningThreshold() const{ return units::angle::degree_t(m_TankPIDStartTurningThreshold); }
+    float getTankPIDAverageSpeed() const{ return m_TankPIDAverageSpeed; }
     bool shouldUseIMU() const {return m_UseIMU; }
 
     int getServerListenPort() const{ return m_ServerListenPort; }
@@ -116,6 +126,9 @@ private:
     // Should we transmit visual output
     bool m_StreamOutput;
 
+    // Should we automatically drive back to start of route
+    bool m_ReturnToStart;
+
     // Should we use the ODK2 camera
     bool m_ODK2;
 
@@ -127,6 +140,12 @@ private:
 
     // Path to store snapshots etc
     filesystem::path m_OutputPath;
+
+    // Path to load training paths from
+    filesystem::path m_TrainingPath;
+
+    // Suffix to add to end of testing images and csvs
+    std::string m_TestingSuffix;
 
     // Should we save image database as a video file
     bool m_RecordVideo;
@@ -198,6 +217,16 @@ private:
     std::string m_ViconCaptureControlHost;
     int m_ViconCaptureControlPort;
     std::string m_ViconCaptureControlPath;
+
+    // Proportional, Integral and Derivatives for Tank PID
+    float m_TankPIDKP;
+    float m_TankPIDKI;
+    float m_TankPIDKD;
+
+    float m_TankPIDDistanceTolerance;
+    float m_TankPIDAngleTolerance;
+    float m_TankPIDStartTurningThreshold;
+    float m_TankPIDAverageSpeed;
 
     // IMU capture settings
     bool m_UseIMU;

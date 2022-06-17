@@ -26,7 +26,7 @@ if(USE_ODK)
     list(APPEND MODULES video/odk2)
 endif()
 if(USE_VICON)
-    list(APPEND MODULES vicon)
+    list(APPEND MODULES robots/control vicon)
 endif()
 
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS ${MODULES})
