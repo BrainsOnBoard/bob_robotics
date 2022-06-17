@@ -2,7 +2,6 @@
 # -*- coding: utf8 -*-
 import bob_robotics.navigation as bobnav
 from bob_robotics.navigation import imgproc as ip
-import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
