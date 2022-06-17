@@ -21,11 +21,11 @@ function(make_base_target)
     # C++14 if not already set.
     #
     # Unfortunately, the ranges lib only works with VS2019+ and only then when
-    # the C++ standard is set to C++17.
-    # (Even then there are bugs, e.g.: https://github.com/ericniebler/range-v3/issues/1367)
+    # the C++ standard is set to C++17. Even then, I get compile errors which go
+    # away when using C++20, so let's just use that.
     if(NOT CMAKE_CXX_STANDARD)
         if(MSVC)
-            set(CMAKE_CXX_STANDARD 17 PARENT_SCOPE)
+            set(CMAKE_CXX_STANDARD 20 PARENT_SCOPE)
         else()
             set(CMAKE_CXX_STANDARD 14 PARENT_SCOPE)
         endif()
