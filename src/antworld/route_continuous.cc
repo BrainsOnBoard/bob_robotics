@@ -321,7 +321,7 @@ void RouteContinuous::rebuildRoute()
                                    units::length::meter_t(segmentEnd[0] - segmentStart[0])));
 
         // Calculate segment length and
-        const meter_t segmentLength(distance(segmentStart, segmentEnd));
+        const meter_t segmentLength(AntWorld::distance(segmentStart, segmentEnd));
         m_CumulativeDistance.push_back(m_CumulativeDistance.back() + segmentLength);
     }
 
