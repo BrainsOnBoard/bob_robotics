@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <fstream>
 #include <limits>
+#include <numeric>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
