@@ -15,6 +15,6 @@ def get_git_version():
             version += '.dirty'
         return version
 
-    except sp.CalledProcessError:
+    except:
         warn('Could not get current git commit; version of code is unknown')
         return '1.0+(unknown)'
