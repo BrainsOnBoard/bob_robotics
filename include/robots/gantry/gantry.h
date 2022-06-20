@@ -213,9 +213,9 @@ public:
          * Save the target position of the line move to split interpolation
          * velocity into axis velocity
          */
-        LastLineTarget[0] = x;
-        LastLineTarget[1] = y;
-        LastLineTarget[2] = z;
+        m_LastLineTarget[0] = x;
+        m_LastLineTarget[1] = y;
+        m_LastLineTarget[2] = z;
 
         refreshSpeeds();
     }
@@ -244,9 +244,9 @@ public:
               |_____\ <-- theta_xy_z
                 h_x_y
             */
-        double x = abs((double) LastLineTarget[0].value() - (double) currentPosition[0].value());
-        double y = abs((double) LastLineTarget[1].value() - (double) currentPosition[1].value());
-        double z = abs((double) LastLineTarget[2].value() - (double) currentPosition[2].value());
+        double x = abs((double) m_LastLineTarget[0].value() - (double) currentPosition[0].value());
+        double y = abs((double) m_LastLineTarget[1].value() - (double) currentPosition[1].value());
+        double z = abs((double) m_LastLineTarget[2].value() - (double) currentPosition[2].value());
 
         //NOTE: when the num or denum in the atan function are 0 it return inf, not as it should 0 or pi/2 rads
         double h_x_y = 0;
@@ -309,18 +309,18 @@ public:
     void setSpeed(meters_per_second_t x_speed, meters_per_second_t y_speed, meters_per_second_t z_speed)
     {
         DWORD PulseRate = (DWORD) round(x_speed.value() / MetersPerSecondPerPulseRate[1]);
-        TargetSpeeds[0] = PulseRate;
+        m_TargetSpeeds[0] = PulseRate;
         PulseRate = (DWORD) round(y_speed.value() / MetersPerSecondPerPulseRate[1]);
-        TargetSpeeds[1] = PulseRate;
+        m_TargetSpeeds[1] = PulseRate;
         PulseRate = (DWORD) round(z_speed.value() / MetersPerSecondPerPulseRate[2]);
-        TargetSpeeds[2] = PulseRate;
+        m_TargetSpeeds[2] = PulseRate;
         refreshSpeeds();
     }
 
     //! Set interpolation speed when moving the gantry using line movement
     void setSpeed(meters_per_second_t velocity)
     {
-        interpolationVelocity = velocity;
+        m_InterpolationVelocity = velocity;
         refreshSpeeds();
     }
 
@@ -346,15 +346,15 @@ public:
         if (m_IsMovingLine) {
             std::array<double, 2> angles = calcMoveAngles();
 
-            DWORD intSpeed = (DWORD) round(interpolationVelocity.value() * ((sin(angles[1]) / MetersPerSecondPerPulseRate[2]) + cos(angles[1]) * ((cos(angles[0]) / MetersPerSecondPerPulseRate[0]) + (sin(angles[0]) / MetersPerSecondPerPulseRate[1]))));
+            DWORD intSpeed = (DWORD) round(m_InterpolationVelocity.value() * ((sin(angles[1]) / MetersPerSecondPerPulseRate[2]) + cos(angles[1]) * ((cos(angles[0]) / MetersPerSecondPerPulseRate[0]) + (sin(angles[0]) / MetersPerSecondPerPulseRate[1]))));
 
             LOGD << "Speed " << intSpeed << " " << angles[0] << " " << angles[1];
 
             checkError(P1240MotChgDV(m_BoardId, X_Axis, intSpeed), "Could not set interpolation speed");
         } else {
-            checkError(P1240MotChgDV(m_BoardId, X_Axis, TargetSpeeds[0]), "Could not set x-axis speed");
-            checkError(P1240MotChgDV(m_BoardId, Y_Axis, TargetSpeeds[1]), "Could not set y-axis speed");
-            checkError(P1240MotChgDV(m_BoardId, Z_Axis, TargetSpeeds[2]), "Could not set z-axis speed");
+            checkError(P1240MotChgDV(m_BoardId, X_Axis, m_TargetSpeeds[0]), "Could not set x-axis speed");
+            checkError(P1240MotChgDV(m_BoardId, Y_Axis, m_TargetSpeeds[1]), "Could not set y-axis speed");
+            checkError(P1240MotChgDV(m_BoardId, Z_Axis, m_TargetSpeeds[2]), "Could not set z-axis speed");
         }
     }
 
@@ -614,12 +614,13 @@ public:
     static constexpr std::array<millimeter_t, 3> Limits = { 2996_mm, 1793_mm, 1203_mm };
 
 private:
-    BYTE m_BoardId;
+    const BYTE m_BoardId;
     bool m_IsMovingLine = false;
-    std::array<DWORD, 3> TargetSpeeds = { 1200, 1200, 1200 }; //currently set speed in pulse rate
-    meters_per_second_t interpolationVelocity = 1_m / 5_s;
-    std::array<millimeter_t, 3> LastLineTarget = { 0_mm, 0_mm, 0_mm }; //used to determine the axis speeds when using line movement
-    std::array<double, 3> MetersPerSecondPerPulseRate = {
+    std::array<DWORD, 3> m_TargetSpeeds = { 1200, 1200, 1200 }; //currently set speed in pulse rate
+    meters_per_second_t m_InterpolationVelocity = 1_m / 5_s;
+    std::array<millimeter_t, 3> m_LastLineTarget = { 0_mm, 0_mm, 0_mm }; //used to determine the axis speeds when using line movement
+
+    static constexpr std::array<double, 3> MetersPerSecondPerPulseRate = {
         /*x: */ 0.00007078890696,                      //The x-axis in a test covered 1000.01 mm in 369361 ms at a pulse rate of 100  0.00007078890696
         /*y: */ 0.00006473947430178168828507012561122, //The y-axis in a test covered 1000.10 mm in 369388 ms at a pulse rate of 100
         /*z: */ 0.00004032951665,                      //The z-axis in a test covered 1000.03 mm in 369388 ms at a pulse rate of 100
