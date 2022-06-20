@@ -65,13 +65,14 @@ public:
 
     void train(const ImageSet &imageSet)
     {
-        auto train = [this](const cv::Mat &image) {
-            m_Algo.train(image);
+        // For some reason using ranges::for_each here yields a crash
+        const auto rng = imageSet.toRange();
+        for (auto it = rng.begin(); it != rng.end(); ++it) {
+            m_Algo.train(*it);
 
             // Check for Ctrl+C etc.
             checkPythonErrors();
-        };
-        ranges::for_each(imageSet.toRange(), train);
+        }
     }
 
 private:
