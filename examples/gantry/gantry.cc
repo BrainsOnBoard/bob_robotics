@@ -25,9 +25,9 @@ int bobMain(int, char **)
     Robots::Gantry gantry;
 
     // Return gantry to its home position
-    LOGI << "Homing gantry...\n";
+    LOGI << "Homing gantry...";
     gantry.raiseAndHome();
-    LOGI << "Gantry homed.\n";
+    LOGI << "Gantry homed.";
 
     // Show gantry camera stream
     Video::OpenCVInput cam(0, "gantry");
@@ -35,17 +35,17 @@ int bobMain(int, char **)
     Video::Display display(cam, { 576, 720 });
 
     // Move the gantry to the specified coordinates
-    LOGI << "Moving gantry...\n";
+    LOGI << "Moving gantry...";
     gantry.setPosition(500_mm, 500_mm, 0_mm);
     do {
         display.update();
     } while (gantry.isMoving());
-    LOGI << "Gantry moved.\n";
+    LOGI << "Gantry moved.";
 
     // Print the gantry's current position
     const auto pos = gantry.getPosition();
     LOGI << "Gantry is at: " << pos[0] << ", " << pos[1] << ", "
-         << pos[2] << "\n";
+         << pos[2];
 
     return EXIT_SUCCESS;
 }
