@@ -181,12 +181,6 @@ public:
         checkError(P1240SetDrivingSpeed(m_BoardId, Z_Axis, pulses[2]), "Could not set driving speed");
     }
 
-    void setAcceleration()
-    {
-        checkError(P1240SetAcceleration(m_BoardId, XY_Axis, 100), "Could not set acceleration");
-        checkError(P1240SetDeceleration(m_BoardId, XY_Axis, 100, 0), "Could not set deceleration");
-    }
-
     /**!
      * \brief Set the position of the gantry in the arena
      *
