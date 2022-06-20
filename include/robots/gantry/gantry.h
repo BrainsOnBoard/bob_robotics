@@ -523,10 +523,6 @@ public:
     {
         // Repeatedly poll card to check whether gantry is moving
         while (isMoving(axis)) {
-
-            std::array<meters_per_second_t, 3> velo = getVelocity();
-            LOGD << "Velocity: " << velo[0] << ", " << velo[1] << ", " << velo[2];
-
             std::this_thread::sleep_for(10ms);
         }
 
