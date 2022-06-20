@@ -8,9 +8,11 @@
 #include "plog/Log.h"
 #include "third_party/units.h"
 
+// Windows.h - NB: Must come before include of Ads1240.h!
+#include "Windows.h"
+
 // Gantry-specifc includes
 #include "Ads1240.h"
-#include "Windows.h"
 
 // Standard C++ includes
 #include <algorithm>
@@ -293,7 +295,7 @@ public:
         const LONG endXp = endX.value() * PulsesPerMillimetre[0];
         const LONG centreYp = centreY.value() * PulsesPerMillimetre[1];
         const LONG endYp = endY.value() * PulsesPerMillimetre[1];
-        
+
         checkError(P1240MotArc(m_BoardId, XY_Axis, 0, antiClockwise, centreXp, centreYp, endXp, endYp), "Could not start arc move");
     }
 
