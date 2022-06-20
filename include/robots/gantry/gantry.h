@@ -280,7 +280,7 @@ public:
             }
         }
 
-        checkError(P1240MotCmove(m_BoardId, axis, negative), "Could not start continuous move");
+        checkError(P1240MotCmove(m_BoardId, axis, negative * axis), "Could not start continuous move");
     }
 
     void arcXY(millimeter_t centreX, millimeter_t centreY, millimeter_t endX, millimeter_t endY, bool antiClockwise = false)
