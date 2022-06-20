@@ -1,4 +1,4 @@
-%% Plot velocities saved by gantry_continuous.exe
+%% Plot velocities saved by gantry_log_velocities.exe
 figure; hold on
 data = csvread('gantry_move.csv');
 for i = 2:4
