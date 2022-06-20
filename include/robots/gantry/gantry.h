@@ -302,7 +302,7 @@ public:
      */
     void setSpeed(meters_per_second_t x_speed, meters_per_second_t y_speed, meters_per_second_t z_speed)
     {
-        DWORD PulseRate = (DWORD) round(x_speed.value() / MetersPerSecondPerPulseRate[1]);
+        DWORD PulseRate = (DWORD) round(x_speed.value() / MetersPerSecondPerPulseRate[0]);
         m_TargetSpeeds[0] = PulseRate;
         PulseRate = (DWORD) round(y_speed.value() / MetersPerSecondPerPulseRate[1]);
         m_TargetSpeeds[1] = PulseRate;
