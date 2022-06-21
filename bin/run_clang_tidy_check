@@ -45,6 +45,7 @@ EXCLUDE_CHECKS = (
     'concurrency-mt-unsafe',
     'clang-analyzer-webkit*',
     'clang-diagnostic-ignored-optimization-argument',
+    'clang-diagnostic-unused-command-line-argument',
     'misc-non-private-member-variables-in-classes',
     'modernize-avoid-c-arrays',
     'modernize-concat-nested-namespaces',
