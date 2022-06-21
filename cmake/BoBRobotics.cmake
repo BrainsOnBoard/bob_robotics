@@ -17,6 +17,21 @@ function(make_base_target)
     # Define DEBUG macro, if appropriate
     target_compile_definitions(bob_base INTERFACE "$<$<CONFIG:DEBUG>:DEBUG>")
 
+    # BoB robotics uses C++14 features, so set the minimum required standard to
+    # C++14 if not already set.
+    #
+    # Unfortunately, the ranges lib only works with VS2019+ and only then when
+    # the C++ standard is set to C++17. Even then, I get compile errors which go
+    # away when using C++20, so let's just use that.
+    if(NOT CMAKE_CXX_STANDARD)
+        if(MSVC)
+            set(CMAKE_CXX_STANDARD 20 PARENT_SCOPE)
+        else()
+            set(CMAKE_CXX_STANDARD 14 PARENT_SCOPE)
+        endif()
+    endif()
+    set(CMAKE_CXX_STANDARD_REQUIRED TRUE PARENT_SCOPE)
+
     # For some reason, these flags seem not to be applied to targets by default
     # (maybe because we're setting target_compile_options explicitly below?) so
     # add them here. All targets linking to bob_base will then inherit these
@@ -114,11 +129,5 @@ endif()
 if(NOT "${CMAKE_CURRENT_LIST_DIR}" IN_LIST CMAKE_MODULE_PATH)
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
 endif()
-
-# Build with C++14
-if(NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 14)
-endif()
-set(CXX_STANDARD_REQUIRED TRUE)
 
 get_filename_component(BOB_ROBOTICS_PATH .. ABSOLUTE BASE_DIR "${CMAKE_CURRENT_LIST_DIR}")
