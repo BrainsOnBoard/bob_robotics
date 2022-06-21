@@ -7,8 +7,8 @@ set(ARSDK_LIBRARIES ${FFMPEG_LIBRARIES})
 if(FFMPEG_FOUND AND DEFINED ENV{ARSDK_ROOT_DIR} AND EXISTS "$ENV{ARSDK_ROOT_DIR}")
     set(ARSDK_ROOT_DIR "$ENV{ARSDK_ROOT_DIR}")
     set(_ARSDK_STAGING "${ARSDK_ROOT_DIR}/out/arsdk-native/staging")
-    set(ARSDK_LIBRARY_DIRS "${_ARSDK_STAGING}/usr/lib")
-    set(ARSDK_INCLUDE_DIRS "${_ARSDK_STAGING}/usr/include")
+    list(APPEND ARSDK_LIBRARY_DIRS "${_ARSDK_STAGING}/usr/lib")
+    list(APPEND ARSDK_INCLUDE_DIRS "${_ARSDK_STAGING}/usr/include")
 
     foreach(LIB arsal ardiscovery arcontroller arnetworkal arcommands mux pomp
             json-c arstream arstream2 arnetwork rtsp sdp ulog armedia futils)
