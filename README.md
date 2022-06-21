@@ -14,4 +14,9 @@ The main requirements are as follows:
 * Open CV 3.X or 4.X - OpenCV releases can be downloaded from https://opencv.org. Installation instructions for Jetson TX1 can be found [here](https://devtalk.nvidia.com/default/topic/965134/opencv-3-1-compilation-on-tx1-lets-collect-the-quot-definitive-quot-cmake-settings-). When using Open CV 4.X, build Open CV with the ``-DOPENCV_GENERATE_PKGCONFIG=ON and -DOPENCV_PC_FILE_NAME=opencv.pc`` cmake options to enable pkg config in a backward-compatible manner.
 
 ## Examples
-Example projects covering most of the capabilities of BoB robotics can be found [in the examples folder](examples).
+Example projects covering most of the capabilities of BoB robotics can be found
+[in the examples folder](examples).
+
+[CMake](https://cmake.org) is used as the build system and
+[vcpkg](https://vcpkg.io) is used for external dependencies on Windows. For more
+details see our documentation [here](cmake/README.md).
