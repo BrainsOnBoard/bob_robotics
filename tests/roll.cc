@@ -33,3 +33,27 @@ TEST(Roll, RollRight)
 
     EXPECT_TRUE(equal(views::all(rolled), views::all(rolledExpected)));
 }
+
+TEST(Roll, RollLeftFloat)
+{
+    cv::Mat_<float> rolled;
+    BoBRobotics::ImgProc::rollLeft(BarImageFloat, rolled, 1);
+
+    cv::Mat_<float> rolledExpected{ rolled.size(), CV_32F };
+    rolledExpected = 1.f;
+    rolledExpected.colRange(0, 2) = 0;
+
+    EXPECT_TRUE(equal(views::all(rolled), views::all(rolledExpected)));
+}
+
+TEST(Roll, RollRightFloat)
+{
+    cv::Mat_<float> rolled;
+    BoBRobotics::ImgProc::rollRight(BarImageFloat, rolled, 1);
+
+    cv::Mat_<float> rolledExpected{ rolled.size(), CV_32F };
+    rolledExpected = 1.f;
+    rolledExpected.colRange(2, 4) = 0;
+
+    EXPECT_TRUE(equal(views::all(rolled), views::all(rolledExpected)));
+}

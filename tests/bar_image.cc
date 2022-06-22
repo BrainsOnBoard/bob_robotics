@@ -8,3 +8,11 @@ createBarImage()
     im.colRange(1, 3) = cv::Scalar(0);
     return im;
 }
+
+cv::Mat
+getBarImageFloat()
+{
+    cv::Mat im;
+    BarImage.convertTo(im, CV_32F, 1.f / 255.f);
+    return im;
+}
