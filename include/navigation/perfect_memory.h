@@ -2,9 +2,10 @@
 
 // BoB robotics includes
 #include "common/macros.h"
-#include "differencers.h"
-#include "insilico_rotater.h"
-#include "perfect_memory_store_raw.h"
+#include "imgproc/convert_scale.h"
+#include "navigation/differencers.h"
+#include "navigation/insilico_rotater.h"
+#include "navigation/perfect_memory_store_raw.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -46,6 +47,7 @@ public:
     PerfectMemory(const cv::Size &unwrapRes, Ts &&... args)
       : m_UnwrapRes(unwrapRes)
       , m_Store(unwrapRes, std::forward<Ts>(args)...)
+      , m_ScratchImage(unwrapRes, CV_8UC1)
     {}
 
     //------------------------------------------------------------------------
@@ -58,13 +60,10 @@ public:
     //------------------------------------------------------------------------
     void train(const cv::Mat &image, const ImgProc::Mask &mask = ImgProc::Mask{})
     {
-        const auto &unwrapRes = getUnwrapResolution();
-        BOB_ASSERT(image.cols == unwrapRes.width);
-        BOB_ASSERT(image.rows == unwrapRes.height);
-        BOB_ASSERT(image.type() == CV_8UC1);
+        convertImage(image);
 
         // Add snapshot
-        m_Store.addSnapshot(image, mask);
+        m_Store.addSnapshot(m_ScratchImage, mask);
     }
 
     float test(const cv::Mat &image, const ImgProc::Mask &mask, const Window &window) const
@@ -116,16 +115,6 @@ public:
     //! Get the resolution of images
     const cv::Size &getUnwrapResolution() const { return m_UnwrapRes; }
 
-protected:
-    //------------------------------------------------------------------------
-    // Protected API
-    //------------------------------------------------------------------------
-    float calcSnapshotDifference(const cv::Mat &image,
-                                 const ImgProc::Mask &mask, size_t snapshot) const
-    {
-        return m_Store.calcSnapshotDifference(image, mask, snapshot);
-    }
-
 private:
     //------------------------------------------------------------------------
     // Private members
@@ -136,11 +125,8 @@ private:
 
     void testInternal(const cv::Mat &image, const ImgProc::Mask &mask, const Window &window) const
     {
-        const auto &unwrapRes = getUnwrapResolution();
-        BOB_ASSERT(image.cols == unwrapRes.width);
-        BOB_ASSERT(image.rows == unwrapRes.height);
-        BOB_ASSERT(image.type() == CV_8UC1);
-        BOB_ASSERT(mask.isValid(unwrapRes));
+        convertImage(image);
+        BOB_ASSERT(mask.isValid(getUnwrapResolution()));
 
         BOB_ASSERT(window.first < getNumSnapshots());
         BOB_ASSERT(window.second <= getNumSnapshots());
@@ -152,9 +138,31 @@ private:
         tbb::parallel_for(tbb::blocked_range<size_t>(window.first, window.second),
             [&](const auto &r) {
                 for (size_t s = r.begin(); s != r.end(); ++s) {
-                    m_Differences[s - window.first] = calcSnapshotDifference(image, mask, s);
+                    m_Differences[s - window.first] = calcSnapshotDifference(m_ScratchImage, mask, s);
                 }
             });
+    }
+
+protected:
+    //------------------------------------------------------------------------
+    // Protected API
+    //------------------------------------------------------------------------
+    mutable cv::Mat m_ScratchImage;
+
+    float calcSnapshotDifference(const cv::Mat &image,
+                                 const ImgProc::Mask &mask, size_t snapshot) const
+    {
+        return m_Store.calcSnapshotDifference(image, mask, snapshot);
+    }
+
+    void convertImage(const cv::Mat &image) const
+    {
+        BOB_ASSERT(image.channels() == 1);
+        const auto &unwrapRes = getUnwrapResolution();
+        BOB_ASSERT(image.cols == unwrapRes.width);
+        BOB_ASSERT(image.rows == unwrapRes.height);
+
+        ImgProc::convertScale(image, m_ScratchImage, CV_8U);
     }
 };
 
@@ -223,7 +231,16 @@ public:
     template<class... Ts>
     auto getHeading(const cv::Mat &image, ImgProc::Mask mask, typename PerfectMemory<Store>::Window window, Ts &&... args) const
     {
-        auto rotater = InSilicoRotater::create(this->getUnwrapResolution(), mask, image, std::forward<Ts>(args)...);
+        /*
+         * We don't *need* to do this conversion here, as
+         * PerfectMemory<>::test() will accept non-uint8 images as inputs, but
+         * by doing so we only have to do the conversion once as opposed to once
+         * per rotation.
+         */
+        this->convertImage(image);
+        auto rotater = InSilicoRotater::create(this->getUnwrapResolution(),
+                                               mask, this->m_ScratchImage,
+                                               std::forward<Ts>(args)...);
         calcImageDifferences(window, rotater);
 
         // Now get the minimum for each snapshot and the column this corresponds to
