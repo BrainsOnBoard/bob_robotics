@@ -30,12 +30,15 @@ void trainRoute(PM &pm, const std::vector<cv::Mat> &images)
 }
 }
 
-int bobMain(int, char **)
+int bobMain(int argc, char **argv)
 {
     const cv::Size imSize(180, 50);
     units::angle::degree_t heading;
 
-    const ImageDatabase imdb{ Path::getRepoPath() / "tools/ant_world_db_creator/ant1_route1" };
+    BOB_ASSERT(argc <= 2);
+
+    filesystem::path dbPath = (argc == 2) ? argv[1] : (Path::getRepoPath() / "tools/ant_world_db_creator/ant1_route1");
+    const ImageDatabase imdb{ std::move(dbPath) };
     const auto snapshots = imdb.readImages(imSize);
     LOGI << "Loaded " << snapshots.size() << " snapshots";
 
@@ -147,13 +150,9 @@ int bobMain(int, char **)
         // Time testing phase
         Timer<> t{ "Time taken for testing: " };
 
-        // Treat snapshot #10 as test data
-        cv::Mat snap = cv::imread((Path::getRepoPath() / "tools/ant_world_db_creator/ant1_route1/image_00010.png").str(), cv::IMREAD_GRAYSCALE);
-        BOB_ASSERT(!snap.empty());
-        cv::resize(snap, snap, imSize);
         size_t snapshot;
         float difference;
-        std::tie(heading, snapshot, difference, std::ignore) = pm.getHeading(snap);
+        std::tie(heading, snapshot, difference, std::ignore) = pm.getHeading(snapshots[10]);
         LOGI << "Heading: " << heading;
         LOGI << "Best-matching snapshot: #" << snapshot;
         LOGI << "Difference score: " << difference;
