@@ -46,8 +46,6 @@ struct InSilicoRotater
         {
             BOB_ASSERT(image.cols == unwrapRes.width);
             BOB_ASSERT(image.rows == unwrapRes.height);
-            BOB_ASSERT(image.type() == CV_8UC1);
-            BOB_ASSERT(image.isContinuous());
             BOB_ASSERT(beginRoll < endRoll);
             BOB_ASSERT((distance(endRoll, beginRoll) % scanStep) == 0);
         }

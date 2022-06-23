@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "common/macros.h"
+#include "imgproc/convert_scale.h"
 #include "imgproc/mask.h"
 #include "navigation/insilico_rotater.h"
 
@@ -173,14 +174,12 @@ public:
 
     void calculateUY(const cv::Mat &image)
     {
-        BOB_ASSERT(image.type() == CV_8UC1);
-
         const cv::Size &unwrapRes = getUnwrapResolution();
         BOB_ASSERT(image.cols == unwrapRes.width);
         BOB_ASSERT(image.rows == unwrapRes.height);
 
-        // Convert image to vector of floats
-        m_U = m_Weights * getNetInputs(image) * m_TanhScalingFactor;
+        convertImage(image);
+        m_U = m_Weights * getNetInputs() * m_TanhScalingFactor;
         m_Y = tanh(m_U.array());
     }
 
@@ -192,7 +191,8 @@ public:
 
     VectorType getNetOutputs(const cv::Mat &image) const
     {
-        return m_Weights * getNetInputs(image);
+        convertImage(image);
+        return m_Weights * getNetInputs();
     }
 
 private:
@@ -203,7 +203,7 @@ private:
     VectorType m_U, m_Y;
 
     template<class T>
-    static auto toZScore(const T &vec)
+    static VectorType toZScore(const T &vec)
     {
         const FloatType mean = vec.mean();
 
@@ -213,14 +213,14 @@ private:
     }
 
     //! Converts image to VectorType and normalises
-    VectorType getNetInputs(const cv::Mat &image) const
+    VectorType getNetInputs() const
     {
-        Eigen::Map<Eigen::Matrix<uint8_t, Eigen::Dynamic, 1>> map(image.data, image.cols * image.rows);
-        const auto vec = map.cast<FloatType>();
+        Eigen::Map<VectorType> vec(reinterpret_cast<FloatType *>(m_ScratchImage.data),
+                                   m_ScratchImage.cols * m_ScratchImage.rows);
 
         switch (m_Normalisation) {
         case Normalisation::None:
-            return vec / 255.0;
+            return vec;
         case Normalisation::ZScore:
             return toZScore(vec);
         default:
@@ -233,6 +233,19 @@ private:
     static auto matrixSD(const T &mat)
     {
         return (mat.array() * mat.array()).rowwise().mean().sqrt();
+    }
+
+protected:
+    mutable cv::Mat m_ScratchImage;
+
+    void convertImage(const cv::Mat &image) const
+    {
+        BOB_ASSERT(image.channels() == 1);
+        const auto &unwrapRes = getUnwrapResolution();
+        BOB_ASSERT(image.cols == unwrapRes.width);
+        BOB_ASSERT(image.rows == unwrapRes.height);
+
+        ImgProc::convertScale(image, m_ScratchImage, cv::DataType<FloatType>::type);
     }
 }; // InfoMax
 
@@ -272,8 +285,17 @@ public:
     {
         using radian_t = units::angle::radian_t;
 
+        /*
+         * We don't *need* to do this conversion here, as
+         * PerfectMemory<>::test() will accept non-float images as inputs, but
+         * by doing so we only have to do the conversion once as opposed to once
+         * per rotation.
+         */
+        this->convertImage(image);
         const cv::Size unwrapRes = this->getUnwrapResolution();
-        auto rotater = InSilicoRotater::create(unwrapRes, mask, image, std::forward<Ts>(args)...);
+        auto rotater = InSilicoRotater::create(unwrapRes, mask,
+                                               this->m_ScratchImage,
+                                               std::forward<Ts>(args)...);
         calcImageDifferences(rotater);
 
         // Find index of lowest difference

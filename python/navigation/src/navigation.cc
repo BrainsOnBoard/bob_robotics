@@ -51,17 +51,31 @@ type_caster<cv::Mat>::load(handle src, bool)
 
     auto *arr = reinterpret_cast<PyArrayObject *>(obj);
 
-    /*
-     * It would be totally trivial to add other types, but we're only
-     * interested in uint8-type images for now.
-     */
     int cvType;
     switch (PyArray_TYPE(arr)) {
     case NPY_UINT8:
         cvType = CV_8U;
         break;
+    case NPY_INT8:
+        cvType = CV_8S;
+        break;
+    case NPY_UINT16:
+        cvType = CV_16U;
+        break;
+    case NPY_INT16:
+        cvType = CV_16S;
+        break;
+    case NPY_INT32:
+        cvType = CV_32S;
+        break;
+    case NPY_FLOAT32:
+        cvType = CV_32F;
+        break;
+    case NPY_FLOAT64:
+        cvType = CV_64F;
+        break;
     default:
-        throw std::runtime_error{ "Only uint8-type arrays are allowed" };
+        throw std::runtime_error{ "Numpy array could not be converted to OpenCV matrix (invalid type)" };
     }
 
     /*
