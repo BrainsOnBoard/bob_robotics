@@ -8,7 +8,7 @@ if(NOT MSVC)
 endif()
 
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS navigation)
-find_package(BoBThirdParty REQUIRED COMPONENTS pybind11)
+find_package(BoBThirdParty REQUIRED COMPONENTS pybind11 range-v3)
 
 # NB: These are extra modules only available to scikit-build
 find_package(PythonExtensions REQUIRED)
@@ -17,7 +17,8 @@ include_directories(${NumPy_INCLUDE_DIRS})
 
 pybind11_add_module(_navigation MODULE src/algos.cc src/database.cc src/navigation.cc)
 install(TARGETS _navigation LIBRARY DESTINATION bob_robotics/navigation)
-target_link_libraries(_navigation PRIVATE ${BoBRobotics_LIBRARIES})
+target_link_libraries(_navigation PRIVATE ${BoBRobotics_LIBRARIES}
+                      ${BoBThirdParty_LIBRARIES})
 
 # On Linux I found I was getting errors like this: free(): invalid pointer
 # I suspect this is to do with free() and malloc() from libc taking

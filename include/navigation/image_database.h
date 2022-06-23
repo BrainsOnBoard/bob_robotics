@@ -8,9 +8,6 @@
 
 // Third-party includes
 #include "plog/Log.h"
-#include "range/v3/algorithm.hpp"
-#include "range/v3/view.hpp"
-#include "range/v3/iterator.hpp"
 #include "third_party/optional.hpp"
 #include "third_party/path.h"
 #include "third_party/units.h"
@@ -564,19 +561,15 @@ public:
         }
     }
 
-    template<class Func, class Range>
-    void forEachImage(const Func &func, const Range &range,
+    template<class Func, class Container>
+    void forEachImage(const Func &func, const Container &container,
                       bool greyscale = true) const
     {
-        /*
-         * Unfortunately tbb requires that its range argument be a proper
-         * container class -- a range type won't do.
-         */
         std::vector<std::pair<size_t, size_t>> idx;
         size_t i = 0;
-        ranges::for_each(ranges::views::all(range), [&](size_t j) {
-            idx.emplace_back(i++, j);
-        });
+        for (auto it = container.begin(); it != container.end(); ++it) {
+            idx.emplace_back(i++, *it);
+        }
 
         forEachImage(func, idx, greyscale);
     }
