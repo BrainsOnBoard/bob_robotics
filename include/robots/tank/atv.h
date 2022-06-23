@@ -19,7 +19,7 @@ class ATV
   : public TankBase<ATV>
 {
 public:
-    ATV(const char *frontPath = "/dev/ttyACM0", const char *rearPath = "/dev/ttyACM1",
+    ATV(const char *frontPath = "/dev/ttyACM1", const char *rearPath = "/dev/ttyACM0",
         uint8_t frontAddress = 0x80, uint8_t rearAddress = 0x80);
 
     //----------------------------------------------------------------------------
