@@ -487,10 +487,12 @@ private:
         // Also log Vicon frame number, if present
         fieldNames.emplace_back("Frame");
 
-        // Also log the imu data
-        fieldNames.emplace_back("IMU yaw [degrees]");
-        fieldNames.emplace_back("IMU pitch [degrees]");
-        fieldNames.emplace_back("IMU roll [degrees]");
+        if (m_Config.shouldUseIMU()) {
+            // Also log the imu data
+            fieldNames.emplace_back("IMU yaw [degrees]");
+            fieldNames.emplace_back("IMU pitch [degrees]");
+            fieldNames.emplace_back("IMU roll [degrees]");
+        }
 
         // Record as video file or images according to user's preference
         if (m_Config.shouldRecordVideo()) {
