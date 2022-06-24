@@ -3,7 +3,7 @@ include(../cmake/BoBRobotics.cmake)
 project(tests)
 
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS gps imgproc navigation video)
-find_package(BoBThirdParty REQUIRED googletest)
+find_package(BoBThirdParty REQUIRED googletest range-v3)
 find_package(Eigen3 REQUIRED)
 
 add_executable(tests bar_image.cc circstat.cc dct.cc differencers.cc geometry.cc
