@@ -8,8 +8,8 @@
 // BoBRobotics::RoboClaw
 //----------------------------------------------------------------------------
 namespace BoBRobotics {
-RoboClaw::RoboClaw(const char *path, uint8_t address, int maxRetry)
-:   m_SerialInterface(path), m_Address(address), m_MaxRetry(maxRetry)
+RoboClaw::RoboClaw(const char *path, uint8_t address)
+:   m_SerialInterface(path), m_Address(address)
 {
     auto tty = m_SerialInterface.getAttributes();
 
@@ -89,34 +89,29 @@ int RoboClaw::getMotor2Speed()
 //----------------------------------------------------------------------------
 std::string RoboClaw::getVersion()
 {
-    // Retry
-    for(int r = 0; r < m_MaxRetry; r++) {
-        // Write address and command
-        CRC crc;
-        write(crc, m_Address, static_cast<uint8_t>(Command::GETVERSION));
+    // Write address and command
+    CRC crc;
+    write(crc, m_Address, static_cast<uint8_t>(Command::GETVERSION));
 
-        // Read maximum version characters
-        uint8_t version[48];
-        for(uint8_t &c : version) {
-            m_SerialInterface.readByte(c);
-            crc.update(c);
+    // Read maximum version characters
+    uint8_t version[48];
+    for(uint8_t &c : version) {
+        m_SerialInterface.readByte(c);
+        crc.update(c);
 
-            // If end of string is reached
-            if(c == '\0') {
-                // Check CRC against one returned by device
-                if(!crc.check(m_SerialInterface)) {
-                    throw std::runtime_error("CRC check failed");
-                }
-
-                // Return string
-                return reinterpret_cast<char*>(version);
+        // If end of string is reached
+        if(c == '\0') {
+            // Check CRC against one returned by device
+            if(!crc.check(m_SerialInterface)) {
+                throw std::runtime_error("CRC check failed");
             }
-        }
 
-        throw std::runtime_error("Version string not correctly terminated");
+            // Return string
+            return reinterpret_cast<char*>(version);
+        }
     }
 
-    throw std::runtime_error("Unable to read to serial port");
+    throw std::runtime_error("Version string not correctly terminated");
 }
 //----------------------------------------------------------------------------
 float RoboClaw::getBatteryVoltage()

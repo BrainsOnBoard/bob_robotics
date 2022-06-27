@@ -14,7 +14,7 @@ namespace BoBRobotics {
 class RoboClaw
 {
 public:
-    RoboClaw(const char *path = SerialInterface::DefaultLinuxDevicePath, uint8_t address = 0x80, int maxRetry = 2);
+    RoboClaw(const char *path = SerialInterface::DefaultLinuxDevicePath, uint8_t address = 0x80);
 
     //------------------------------------------------------------------------
     // Enumerations
@@ -266,26 +266,25 @@ private:
     template<typename ...Data>
     void writeCommand(Command command, Data... data)
     {
-        for(int r = 0; r < m_MaxRetry; r++) {
-            // Start CRC calculation
-            CRC crc;
+        // Start CRC calculation
+        CRC crc;
 
-            // Write data
-            write(crc, m_Address, static_cast<uint8_t>(command), data...);
+        // Write data
+        write(crc, m_Address, static_cast<uint8_t>(command), data...);
 
-            // Write CRC
-            // **NOTE** RoboClaw is big endian so SerialInterface::write wouldn't work
-            m_SerialInterface.writeByte(crc.get() >> 8);
-            m_SerialInterface.writeByte(crc.get());
+        // Write CRC
+        // **NOTE** RoboClaw is big endian so SerialInterface::write wouldn't work
+        m_SerialInterface.writeByte(crc.get() >> 8);
+        m_SerialInterface.writeByte(crc.get());
 
-            // If byte is read successfully
-            uint8_t response;
-            if(m_SerialInterface.readByte(response) && response == 0xFF) {
-                return;
-            }
+        // If byte is read successfully
+        uint8_t response;
+        if(m_SerialInterface.readByte(response) && response == 0xFF) {
+            return;
         }
-
-        throw std::runtime_error("Unable to write to serial port");
+        else {
+            throw std::runtime_error("Invalid response");
+        }
     }
 
     //! End-stop of variadic expandion
@@ -346,24 +345,17 @@ private:
     template<typename ...Data>
     void readCommand(Command command, Data... data)
     {
-        for(int r = 0; r < m_MaxRetry; r++) {
-            // Write address and command
-            CRC crc;
-            write(crc, m_Address, static_cast<uint8_t>(command));
+        // Write address and command
+        CRC crc;
+        write(crc, m_Address, static_cast<uint8_t>(command));
 
-            // Read data
-            read(crc, data...);
+        // Read data
+        read(crc, data...);
 
-            // Check CRC
-            if(crc.check(m_SerialInterface)) {
-                return;
-            }
-            else {
-                throw std::runtime_error("CRC check failed");
-            }
+        // Check CRC
+        if(!crc.check(m_SerialInterface)) {
+            throw std::runtime_error("CRC check failed");
         }
-
-        throw std::runtime_error("Unable to read to serial port");
     }
 
     //------------------------------------------------------------------------
@@ -374,9 +366,6 @@ private:
 
     //! Address of RoboClaw we're targetting
     const uint8_t m_Address;
-
-    //! Number of times to retry failed reads and writes
-    const int m_MaxRetry;
 };
 }   // namespace BoBRobotics
 
