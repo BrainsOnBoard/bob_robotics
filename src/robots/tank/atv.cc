@@ -10,7 +10,7 @@ namespace Tank {
 ATV::ATV(const char *frontPath, const char *rearPath, uint8_t frontAddress, uint8_t rearAddress)
 :   m_FrontController(frontPath, frontAddress), m_RearController(rearPath, rearAddress)
 {
-    // Sometimes Norbots get stuck driving, so let's stop it if we need to
+    // Sometimes robots get stuck driving, so let's stop it if we need to
     stopMoving();
 }
 
