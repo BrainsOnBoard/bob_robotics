@@ -2,15 +2,12 @@
 
 set -e
 
-# Make virtual environment
-rm -rf virtualenv
-python -m venv virtualenv
-. virtualenv/bin/activate
+# We use poetry for managing dependencies
+python -m pip install poetry
+poetry install
 
-# Install necessary packages, including BoB navigation module
-pip install matplotlib numpy pandas pytest scikit-build scipy wheel
-cd "$(dirname $0)"
-python setup.py build install
+# Build package
+poetry build
 
 # Run tests
-pytest -v --junitxml=../../pytest_test_results.xml
+poetry run pytest -v --junitxml=../../pytest_test_results.xml

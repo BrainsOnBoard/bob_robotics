@@ -40,6 +40,4 @@ if(DEFINED SKBUILD)
     target_compile_definitions(_navigation PRIVATE BOB_VERSION=\"${BOB_VERSION}\")
 endif()
 
-if(WIN32)
-    install(SCRIPT copy_dlls.cmake)
-endif(WIN32)
+install(SCRIPT copy_shared_libs.cmake)
