@@ -39,8 +39,7 @@ void readIntegerSize(const cv::FileNode &node, size_t &value, size_t defaultValu
 }
 
 Config::Config()
-  : m_UseBinaryImage(false)
-  , m_UseHorizonVector(false)
+  : m_ImageInputType("raw")
   , m_Train(true)
   , m_UseInfoMax(false)
   , m_SaveTestingDiagnostic(false)
@@ -99,9 +98,9 @@ void
 Config::read(const cv::FileNode &node)
 {
         // Read settings
-        // **NOTE** we use cv::read rather than stream operators as we want to use current values as defaults
-        cv::read(node["shouldUseBinaryImage"], m_UseBinaryImage, m_UseBinaryImage);
-        cv::read(node["shouldUseHorizonVector"], m_UseHorizonVector, m_UseHorizonVector);
+        // **NOTE** we use cv::read rather than stream operators as we want to
+        // use current values as defaults
+        cv::read(node["imageInputType"], m_ImageInputType, m_ImageInputType);
         cv::read(node["shouldTrain"], m_Train, m_Train);
         cv::read(node["shouldUseInfoMax"], m_UseInfoMax, m_UseInfoMax);
         cv::read(node["shouldSaveTestingDiagnostic"], m_SaveTestingDiagnostic, m_SaveTestingDiagnostic);
@@ -113,10 +112,6 @@ Config::read(const cv::FileNode &node)
         cv::read(node["shouldUseIMU"], m_UseIMU, m_UseIMU);
         cv::read(node["videoCodec"], m_VideoCodec, m_VideoCodec);
         cv::read(node["videoFileExtension"], m_VideoFileExtension, m_VideoFileExtension);
-
-
-        // Assert that configuration is valid
-        BOB_ASSERT(!m_UseBinaryImage || !m_UseHorizonVector);
 
         // **YUCK** why does OpenCV (at least my version) not have a cv::read overload for std::string!?
         cv::String outputPath;
@@ -220,8 +215,7 @@ void
 Config::write(cv::FileStorage &fs) const
 {
     fs << "{";
-    fs << "shouldUseBinaryImage" << shouldUseBinaryImage();
-    fs << "shouldUseHorizonVector" << shouldUseHorizonVector();
+    fs << "imageInputType" << getImageInputType();
     fs << "shouldTrain" << shouldTrain();
     fs << "shouldUseInfoMax" << shouldUseInfoMax();
     fs << "shouldSaveTestingDiagnostic" << shouldSaveTestingDiagnostic();

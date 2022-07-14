@@ -19,5 +19,10 @@ cd build
 # it and it's easier just to enable it everywhere. If we don't do this then we
 # get errors when trying to link shared library files against the BoB static
 # libraries.
-cmake -DCMAKE_CXX_FLAGS=-fPIC -DCMAKE_EXPORT_COMPILE_COMMANDS=1 "$@" ..
+#
+# The --allow-multiple-definition is in there because otherwise I get errors
+# caused by symbols being defined multiple times though, weirdly, only when
+# building everything. It's harmless so just suppress it.
+cmake -DCMAKE_CXX_FLAGS="-fPIC -Wl,--allow-multiple-definition" \
+    -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DBUILD_TEST=ON "$@" ..
 make -k -j $(nproc)

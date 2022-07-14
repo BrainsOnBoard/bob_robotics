@@ -1,8 +1,7 @@
 %YAML:1.0
 ---
 config:
-   shouldUseBinaryImage: 0
-   shouldUseHorizonVector: 0
+   imageInputType: raw
    shouldTrain: 1
    shouldUseInfoMax: 0
    shouldSaveTestingDiagnostic: 1
@@ -10,6 +9,7 @@ config:
    shouldUseODK2: 0
    shouldUseWebcam: 0
    shouldDriveRobot: 1
+   shouldUseIMU: 0
    outputPath: demo
    shouldRecordVideo: 1
    videoCodec: XVID
@@ -25,6 +25,7 @@ config:
    maskImageFilename: ""
    watershedMarkerImageFilename: "segmentation.png"
    joystickDeadzone: 2.5000000000000000e-01
+   joystickGain: 1.
    autoTrain: 1
    trainInterval: 100.
    testFrameSkip: 1

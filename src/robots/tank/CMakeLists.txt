@@ -3,4 +3,4 @@ include(../../../cmake/BoBRobotics.cmake)
 project(robots/tank)
 
 find_package(BoBRobotics REQUIRED)
-BoB_module(norbot.cc)
+BoB_module(norbot.cc atv.cc)

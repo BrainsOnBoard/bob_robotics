@@ -36,7 +36,7 @@ find_package(BoBThirdParty REQUIRED COMPONENTS matplotlibcpp)
 
 For more details, see the [example CMakeLists.txt file](example_CMakeLists.txt).
 ## Building projects
-To build a project with CMake, use the standard procedure:
+To build a project with CMake on *nix, use the standard procedure:
 ```sh
 mkdir build
 cd build
@@ -56,13 +56,12 @@ robotics CMake file can find your installed packages.
 
 You can then install any needed packages like so:
 ```bat
-.\vcpkg.exe install opencv
+.\vcpkg install opencv
 ```
 
-Note that CMake *also* defaults to building 32-bit binaries on Windows; if you
-want a 64-bit build you have to enable it explicitly:
+Visual Studio project files can then be generated like so:
 ```bat
-cmake.exe -DCMAKE_GENERATOR_PLATFORM=x64 ..
+cmake ..
 ```
 
 You may need to set your build type in Visual Studio to ``Release`` as sometimes

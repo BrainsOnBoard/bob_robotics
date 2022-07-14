@@ -101,6 +101,26 @@ std::pair<cv::Mat, Mask> ImageInputRaw::processSnapshot(const cv::Mat &snapshot)
 }
 
 //----------------------------------------------------------------------------
+// ImageInputHistEq
+//----------------------------------------------------------------------------
+ImageInputHistEq::ImageInputHistEq(const Config &config, const cv::Size &unwrapSize, std::unique_ptr<OpenCVUnwrap360> unwrapper)
+  : ImageInput(config, unwrapSize, std::move(unwrapper))
+  , m_HistEq(getUnwrapSize(), CV_8UC1)
+{
+}
+//----------------------------------------------------------------------------
+std::pair<cv::Mat, Mask> ImageInputHistEq::processSnapshot(const cv::Mat &snapshot)
+{
+    // Convert to greyscale
+    cv::cvtColor(snapshot, m_HistEq, cv::COLOR_BGR2GRAY);
+
+    cv::equalizeHist(m_HistEq, m_HistEq);
+
+    // Return cropped and unwrapped image
+    return preprocess(m_HistEq);
+}
+
+//----------------------------------------------------------------------------
 // ImageInputBinary
 //----------------------------------------------------------------------------
 ImageInputBinary::ImageInputBinary(const Config &config, const cv::Size &unwrapSize, std::unique_ptr<OpenCVUnwrap360> unwrapper)
@@ -200,21 +220,24 @@ std::pair<cv::Mat, Mask> ImageInputHorizon::processSnapshot(const cv::Mat &snaps
     return { m_HorizonVector, imageAndMask.second };
 }
 
-std::unique_ptr<ImageInput> createImageInput(const Config& config,
-                                             const cv::Size &unwrapSize,
-                                             std::unique_ptr<OpenCVUnwrap360> unwrapper)
+#define CHECK_IMAGE_INPUT_TYPE(type)                                                 \
+    do {                                                                             \
+        if (config.getImageInputType() == type::OptionName) {                        \
+            LOGI << "Creating " #type;                                               \
+            return std::make_unique<type>(config, unwrapSize, std::move(unwrapper)); \
+        }                                                                            \
+    } while (false)
+
+std::unique_ptr<ImageInput>
+createImageInput(const Config &config,
+                 const cv::Size &unwrapSize,
+                 std::unique_ptr<OpenCVUnwrap360> unwrapper)
 {
     // Create image input
-    if(config.shouldUseHorizonVector()) {
-        LOGI << "Creating ImageInputHorizon";
-        return std::make_unique<ImageInputHorizon>(config, unwrapSize, std::move(unwrapper));
-    }
-    else if(config.shouldUseBinaryImage()) {
-        LOGI << "Creating ImageInputBinary";
-        return std::make_unique<ImageInputBinary>(config, unwrapSize, std::move(unwrapper));
-    }
-    else {
-        LOGI << "Creating ImageInputRaw";
-        return std::make_unique<ImageInputRaw>(config, unwrapSize, std::move(unwrapper));
-    }
+    CHECK_IMAGE_INPUT_TYPE(ImageInputRaw);
+    CHECK_IMAGE_INPUT_TYPE(ImageInputBinary);
+    CHECK_IMAGE_INPUT_TYPE(ImageInputHorizon);
+    CHECK_IMAGE_INPUT_TYPE(ImageInputHistEq);
+
+    throw std::runtime_error("Unknown image input type: " + config.getImageInputType());
 }

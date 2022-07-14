@@ -4,9 +4,11 @@
 // Third-party includes
 #include "plog/Log.h"
 #include "plog/Appenders/ColorConsoleAppender.h"
+#include "plog/Initializers/RollingFileInitializer.h"
 
 // Standard C++ includes
 #include <exception>
+#include <iomanip>
 
 // Standard C includes
 #include <cstring>

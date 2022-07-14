@@ -8,9 +8,6 @@
 
 // Third-party includes
 #include "plog/Log.h"
-#include "range/v3/algorithm.hpp"
-#include "range/v3/view.hpp"
-#include "range/v3/iterator.hpp"
 #include "third_party/optional.hpp"
 #include "third_party/path.h"
 #include "third_party/units.h"
@@ -515,19 +512,9 @@ public:
     //! Check if database contains a video file cf. multiple image files
     bool isVideoType() const;
 
-    template<class Func, class Range>
-    void forEachImage(const Func &func, const Range &range,
-                      bool greyscale = true) const
+    template<class Func>
+    void forEachImage(const Func& func, const std::vector<std::pair<size_t, size_t>>& idx, bool greyscale = true) const
     {
-        const auto rangeView = ranges::views::all(range);
-
-        /*
-         * Unfortunately tbb requires that its range argument be a proper
-         * container class -- a range type won't do.
-         */
-        std::vector<std::pair<size_t, size_t>> idx;
-        ranges::copy(rangeView | ranges::views::enumerate, ranges::back_inserter(idx));
-
         // If database consists of individual image files...
         if (m_VideoFilePath.empty()) {
             const auto load = [&](const auto &pair) {
@@ -543,16 +530,24 @@ public:
         BOB_ASSERT(cap.isOpened());
 
         cv::Mat img;
-        size_t cur = 0;
+        size_t curFrame = 0;
+
+        // Skip to first frame
+        for (; curFrame < m_FrameNumbers[0]; curFrame++) {
+            BOB_ASSERT(cap.grab());
+        }
+
         for (const auto &pair : idx) {
+            const auto nextFrame = m_FrameNumbers[pair.second];
+
             /*
              * It is possible to explicitly jump to a given frame with OpenCV,
              * but that turns out to be reeeeeeeaaaally slow. Instead we just
              * grab the frames one by one, discarding those we don't want.
              * Note: This assumes that the range of values increases monotonically!
              */
-            BOB_ASSERT(pair.second >= cur);
-            for (; cur <= pair.second && cap.grab(); cur++)
+            BOB_ASSERT(nextFrame >= curFrame);
+            for (; curFrame <= nextFrame && cap.grab(); curFrame++)
                 ;
 
             // Copy the grabbed frame into img
@@ -566,15 +561,32 @@ public:
         }
     }
 
+    template<class Func, class Container>
+    void forEachImage(const Func &func, const Container &container,
+                      bool greyscale = true) const
+    {
+        std::vector<std::pair<size_t, size_t>> idx;
+        size_t i = 0;
+        for (auto it = container.begin(); it != container.end(); ++it) {
+            idx.emplace_back(i++, *it);
+        }
+
+        forEachImage(func, idx, greyscale);
+    }
+
     template<class Func>
     void forEachImage(const Func &func, size_t frameSkip = 1,
                       bool greyscale = true) const
     {
         BOB_ASSERT(frameSkip > 0);
 
-        using namespace ranges::views;
-        const auto range = iota(0, (int)size()) | stride(frameSkip);
-        forEachImage(func, range, greyscale);
+        std::vector<std::pair<size_t, size_t>> idx;
+        idx.reserve(size());
+        for (size_t i = 0; i < size(); i++) {
+            idx.emplace_back(i, i * frameSkip);
+        }
+
+        forEachImage(func, idx, greyscale);
     }
 
     /**!
@@ -593,6 +605,7 @@ private:
     filesystem::path m_Path, m_VideoFilePath;
     const std::string m_EntriesFileName;
     std::vector<Entry> m_Entries;
+    std::vector<size_t> m_FrameNumbers;
     std::unique_ptr<cv::FileStorage> m_MetadataYAML;
     cv::Size m_Resolution;
     std::tm m_CreationTime;

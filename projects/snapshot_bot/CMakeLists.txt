@@ -46,6 +46,9 @@ add_custom_command(TARGET snapshot_bot
 add_executable(offline_train offline_train.cc)
 target_link_libraries(offline_train PRIVATE snapshot_bot_common)
 
+add_executable(rewrite_config rewrite_config.cc)
+target_link_libraries(rewrite_config PRIVATE snapshot_bot_common)
+
 configure_file(mask.png "${CMAKE_CURRENT_BINARY_DIR}" COPYONLY)
 configure_file(segmentation.png "${CMAKE_CURRENT_BINARY_DIR}" COPYONLY)
 configure_file(config_demo.yaml "${CMAKE_CURRENT_BINARY_DIR}" COPYONLY)

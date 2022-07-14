@@ -69,8 +69,30 @@ public:
     //----------------------------------------------------------------------------
     virtual std::pair<cv::Mat, Mask> processSnapshot(const cv::Mat &snapshot) override;
 
+    static constexpr const char *OptionName = "raw";
+
 private:
     cv::Mat m_Greyscale;
+};
+
+//----------------------------------------------------------------------------
+// ImageInputHistEq
+//----------------------------------------------------------------------------
+// Simply returns grayscale images that have been normalised with histeq
+class ImageInputHistEq : public ImageInput
+{
+public:
+    ImageInputHistEq(const Config &config, const cv::Size &unwrapSize, std::unique_ptr<OpenCVUnwrap360> unwrapper);
+
+    //----------------------------------------------------------------------------
+    // ImageInput virtuals
+    //----------------------------------------------------------------------------
+    virtual std::pair<cv::Mat, Mask> processSnapshot(const cv::Mat &snapshot) override;
+
+    static constexpr const char *OptionName = "histeq";
+
+private:
+    cv::Mat m_HistEq;
 };
 
 //----------------------------------------------------------------------------
@@ -87,6 +109,8 @@ public:
     //----------------------------------------------------------------------------
     virtual std::pair<cv::Mat, Mask> processSnapshot(const cv::Mat &snapshot) override;
     virtual cv::Size getOutputSize() const override { return cv::Size(getUnwrapSize().width - 2, getUnwrapSize().height - 2); }
+
+    static constexpr const char *OptionName = "binary";
 
 protected:
     //----------------------------------------------------------------------------
@@ -133,6 +157,8 @@ public:
     {
         return cv::Size(getUnwrapSize().width - 2, 1);
     }
+
+    static constexpr const char *OptionName = "horizon";
 
 private:
     //----------------------------------------------------------------------------
