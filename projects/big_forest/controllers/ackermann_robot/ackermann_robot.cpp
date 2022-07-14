@@ -52,6 +52,19 @@ int main(int argc, char **argv) {
     std::cout << "helloszia"  << std::endl;
 
 
+    double speed = 40;
+    double key_1 = 49;
+    double key_9 = 59;
+    int key_R = 82;
+    int key_S = 83;
+    int key_T = 84;
+    bool recording_mode = false;
+    bool test_mode = false;
+    int last_keypress = -1;
+    bool isTestRunning = false;
+    bool isRecordRunning = false;
+    bool didRecordStop = true;
+    bool didTestStop = true;
 
 
     // feedback loop: step simulation until an exit event is received
@@ -71,29 +84,95 @@ int main(int argc, char **argv) {
             disp->imageDelete(w_img_ref);
 
             cv::imshow("Gray", resized);
-            //cv::waitKey(1);
+            cv::waitKey(1);
 
         }
 
-        driver->setCruisingSpeed(15.0);
 
-        int c = kb->getKey();
+        int key = kb->getKey(); // first keypress
+        // add velocity
+        if (key == 315) {
+            driver->setCruisingSpeed(speed);
+        }
+        // setting target speed with the numbers
+        if (key >= key_1 && key < key_9) {
+            // the speed is 1-9(keys) * 10
+            speed = (double)(key-key_1) * (key_9-key_1);
+            driver->setCruisingSpeed(speed);
+            std::cout << " speed is " << speed << " km/h" << std::endl;
+        }
+        // recording mode
+        if (key == key_R) {
+
+            if (isTestRunning) {
+                std::cout << " you are currently testing, stop it first" << std::endl;
+            }
+            else if (recording_mode == false && isRecordRunning == false){
+                std::cout << "recording mode enabled" << std::endl;
+                recording_mode = true;
+                isRecordRunning = true;
+            }
+
+
+        }
+
+        // stop recording
+        if (key == key_S) {
+
+            if (recording_mode && isRecordRunning == true) {
+                std::cout << "stop recording" << std::endl;
+                recording_mode = false;
+                isRecordRunning = false;
+            }
+            if (test_mode && isTestRunning) {
+                std::cout << "stop testing" << std::endl;
+                test_mode = false;
+                isTestRunning = false;
+            }
+        }
+
+
+        // test mode
+        if (key == key_T) {
+            if (isRecordRunning) {
+                std::cout << " you are currently recording, stop it first" << std::endl;
+            }
+            else if(test_mode == false && isTestRunning == false) {
+                std::cout << "test mode" << std::endl;
+                test_mode = true;
+                isTestRunning = true;
+
+            }
+        }
+
+
+        if (key == -1) {
+            driver->setCruisingSpeed(0.0);
+        }
+
+        if (last_keypress != key) {
+            if (key != 314 && key != 315 && key != 316) {// exclude arrows from printing
+                std::cout << " keypress: " << key << std::endl;
+            }
+        }
+        last_keypress = key;
+
+
+        int c = kb->getKey(); // second keypress (a key combination's second key)
         if(c>=0) {
-            if (c == 314) {
-
+            if (c == 314 || key == 314) {
+                // turn left
                 driver->setSteeringAngle(-0.52);
             }
 
-            else if (c == 316) {
+            else if(c == 316 || key == 316) {
                 driver->setSteeringAngle(0.52);
             }
+        } else {
+            driver->setSteeringAngle(0.0);
+        }
 
 
-            std::cout << " keypress: " << c << std::endl;
-        }
-        else {
-             driver->setSteeringAngle(0.0);
-        }
     }
 
     delete driver;
