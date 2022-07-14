@@ -3,12 +3,13 @@ WorldInfo {
   basicTimeStep 16
 }
 Viewpoint {
-  orientation -0.14226263582377285 -0.2608267174546978 0.9548459383116628 5.245223348689495
-  position -259.49663058562976 286.2014546256095 52.31225170584896
+  orientation 0.1823341025149267 0.2788829352480764 -0.942856608126333 1.212585394400859
+  position -308.4131105425708 424.33662692182486 137.0356403718284
   follow "vehicle"
   followType "Mounted Shot"
 }
 TexturedBackground {
+  texture "noon_cloudy_countryside"
 }
 TexturedBackgroundLight {
 }
@@ -16,9 +17,9 @@ UnevenTerrain {
   translation 0 0 -6.68
   size 500 500 25
   appearance SandyGround {
-    colorOverride 0.193332 0.126177 0.0380255
+    colorOverride 0.368627 0.388235 0.243137
     textureTransform TextureTransform {
-      scale 50 50
+      scale 2 2
     }
   }
 }
