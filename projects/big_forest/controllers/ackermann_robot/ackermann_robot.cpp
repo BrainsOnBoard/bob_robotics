@@ -267,7 +267,7 @@ int bobMain(int argc, char **argv) {
             std::array<degree_t, 3> attitude{ degree_t(yaw), degree_t(pitch), degree_t(roll) };
             recorder->record({ BoBRobotics::Vector3<meter_t>(meter_t(x_pos),meter_t(y_pos),meter_t(z_pos)), attitude },
                                 current_image, speed_value,
-                                steering_angle,
+                                steering_angle.value(),
                                 elapsed.value());
             catcher.check();
         }
