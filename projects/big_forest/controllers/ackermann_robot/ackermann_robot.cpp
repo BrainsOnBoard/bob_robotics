@@ -10,18 +10,27 @@
 #include <webots/GPS.hpp>
 #include <webots/InertialUnit.hpp>
 #include "common/path.h"
+#include "common/stopwatch.h"
+#include "common/pose.h"
+#include "common/bn055_imu.h"
+#include "common/background_exception_catcher.h"
 #include "navigation/image_database.h"
 #include "imgproc/dct_hash.h"
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
 
-#include <Eigen/Dense>
-#include <Eigen/Core>
 
+// Standard C includes
+#include <ctime>
+#include <chrono>
+#include <string.h>
 
-using Eigen::Matrix3d;
-using Eigen::Vector3f;
+#include <plog/Log.h>
+#include <plog/Init.h>
+#include <plog/Formatters/TxtFormatter.h>
+#include <plog/Appenders/DebugOutputAppender.h>
+#include "plog/Initializers/RollingFileInitializer.h"
 
 cv::Mat get_cam_image(const unsigned char *image, int width, int height) {
     /* Matrix which contains the BGRA image from Webots' camera */
@@ -31,7 +40,7 @@ cv::Mat get_cam_image(const unsigned char *image, int width, int height) {
 }
 
 // time in [ms] of a simulation step
-#define TIME_STEP 16
+#define TIME_STEP 50 // frame rate 20 fps
 
 #define MAX_SPEED 6.28
 
@@ -40,12 +49,19 @@ cv::Mat get_cam_image(const unsigned char *image, int width, int height) {
 
 // All the webots classes are defined in the "webots" namespace
 using namespace webots;
-
+using namespace std::literals;
+using namespace units::angle;
+using namespace units::length;
+using namespace units::literals;
+using namespace units::time;
 // entry point of the controller
-int main(int argc, char **argv) {
+int bobMain(int argc, char **argv) {
 
 
+    plog::init(plog::debug, "Hello.txt"); //
 
+    BoBRobotics::BackgroundExceptionCatcher catcher;
+    catcher.trapSignals();
     Supervisor *robot = new Driver();
     Driver *driver = driver->getDriverInstance();
     webots::GPS *gps = driver->getGPS("GPS");
@@ -83,6 +99,25 @@ int main(int argc, char **argv) {
     bool didRecordStop = true;
     bool didTestStop = true;
 
+    tm currentTime;
+    const auto rawTime = std::time(nullptr);
+    const auto &systemTime = *gmtime(&rawTime);
+    currentTime.tm_mday = systemTime.tm_mday;
+    currentTime.tm_mon = systemTime.tm_mon;
+    currentTime.tm_year = systemTime.tm_year;
+
+    std::string db_name = "database_entries.csv";
+    std::string db_path = "../simulation_databases";
+
+    //BoBRobotics::Navigation::ImageDatabase database{db_path, BoBRobotics::Navigation::DatabaseOptions::Overwrite};
+    BoBRobotics::Navigation::ImageDatabase database{currentTime};
+    BoBRobotics::Stopwatch sw;
+    units::time::millisecond_t elapsed;
+
+    auto recorder = database.createRouteRecorder("png", std::vector<std::string>{"Speed",
+                                                           "Steering angle [degrees]",
+                                                           "Timestamp [ms]"});
+
 
 
     // feedback loop: step simulation until an exit event is received
@@ -94,16 +129,22 @@ int main(int argc, char **argv) {
         cv::Mat processed_image;
 
         const double speed_value = gps->getSpeed();
+
+
         const double *pos = gps->getValues();
         const double *orientation = imu->getRollPitchYaw();
         double yaw = orientation[0];
         double pitch = orientation[1];
         double roll = orientation[2];
+        double steering_angle = driver->getSteeringAngle();
 
 
+        double x_pos = pos[0];
+        double y_pos = pos[1];
+        double z_pos = pos[2];
 
         if (current_step % 20 == 0) {
-            std::cout << "X: " << pos[0] << "Y: " << pos[1] << "Z: " << pos[2]
+            std::cout << "X: " << x_pos << "Y: " << y_pos << "Z: " << z_pos
                 << "Yaw: " << yaw << "Pitch: " << pitch << "Roll: " << roll << std::endl;
         }
 
@@ -141,6 +182,13 @@ int main(int argc, char **argv) {
             driver->setCruisingSpeed(speed);
             std::cout << " speed is " << speed << " km/h" << std::endl;
         }
+        // q button press
+        if (key == 81) {
+            std::cout << "quitting, cleaning up..." << std::endl;
+
+            break;
+        }
+
         // recording mode
         if (key == key_R) {
 
@@ -151,6 +199,7 @@ int main(int argc, char **argv) {
                 std::cout << "recording mode enabled" << std::endl;
                 recording_mode = true;
                 isRecordRunning = true;
+                sw.start();
             }
 
 
@@ -163,6 +212,7 @@ int main(int argc, char **argv) {
                 std::cout << "stop recording" << std::endl;
                 recording_mode = false;
                 isRecordRunning = false;
+
             }
             if (test_mode && isTestRunning) {
                 std::cout << "stop testing" << std::endl;
@@ -212,10 +262,28 @@ int main(int argc, char **argv) {
             driver->setSteeringAngle(0.0);
         }
 
+        if (recording_mode && isRecordRunning) {
+            units::time::millisecond_t elapsed = sw.elapsed();
+            std::array<degree_t, 3> attitude{ degree_t(yaw), degree_t(pitch), degree_t(roll) };
+            recorder->record({ BoBRobotics::Vector3<meter_t>(meter_t(x_pos),meter_t(y_pos),meter_t(z_pos)), attitude },
+                                current_image, speed_value,
+                                steering_angle,
+                                elapsed.value());
+            catcher.check();
+        }
+
+
         current_step++;
     }
-
-    delete driver;
+    //::sync();
+    std::cout << "done" << std::endl;
+    //delete driver;
+    //delete robot;
+    //delete gps;
+    //delete imu;
+    //delete cm;
+    //delete disp;
+    //delete kb;
     return 0; //EXIT_SUCCESS
 }
 
