@@ -3,9 +3,9 @@ WorldInfo {
   basicTimeStep 16
 }
 Viewpoint {
-  orientation 0.1823341025149267 0.2788829352480764 -0.942856608126333 1.212585394400859
-  position -308.4131105425708 424.33662692182486 137.0356403718284
-  follow "vehicle"
+  orientation 0.47355453122478225 0.6789438676105395 -0.5610537680031378 1.7867587824236586
+  position -206.2663068039182 194.7169237411574 327.6112187441299
+  follow "RC_CAR"
   followType "Mounted Shot"
 }
 TexturedBackground {
@@ -921,7 +921,14 @@ DEF TREES Group {
 BmwX5 {
   translation -200.84 199.815 7.3
   rotation 0 0 1 -1.047195307179586
+  name "RC_CAR"
   controller "<extern>"
+  sensorsSlotFront [
+    DEF GPS GPS {
+      translation -3.41 0 0
+      name "GPS"
+    }
+  ]
   sensorsSlotRear [
     Display {
       translation -2.95 0 0.24
@@ -941,8 +948,9 @@ BmwX5 {
     }
   ]
   sensorsSlotCenter [
-    InertialUnit {
+    DEF IMU InertialUnit {
       translation 0 0 0.42
+      name "IMU"
     }
   ]
   window "generic_window"
