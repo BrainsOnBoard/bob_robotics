@@ -932,8 +932,8 @@ BmwX5 {
   sensorsSlotRear [
     Display {
       translation -2.95 0 0.24
-      width 360
-      height 90
+      width 600
+      height 600
     }
   ]
   sensorsSlotTop [
