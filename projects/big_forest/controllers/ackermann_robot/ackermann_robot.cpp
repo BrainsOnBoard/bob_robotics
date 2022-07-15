@@ -133,10 +133,10 @@ int bobMain(int argc, char **argv) {
 
         const double *pos = gps->getValues();
         const double *orientation = imu->getRollPitchYaw();
-        double yaw = orientation[0];
-        double pitch = orientation[1];
-        double roll = orientation[2];
-        double steering_angle = driver->getSteeringAngle();
+        auto yaw = radian_t(orientation[0]);
+        auto pitch = radian_t(orientation[1]);
+        auto roll = radian_t(orientation[2]);
+        auto steering_angle = radian_t(driver->getSteeringAngle());
 
 
         double x_pos = pos[0];
