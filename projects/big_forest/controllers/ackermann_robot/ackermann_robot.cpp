@@ -7,11 +7,21 @@
 #include <webots/vehicle/Car.hpp>
 #include <webots/vehicle/Driver.hpp>
 #include <webots/Device.hpp>
+#include <webots/GPS.hpp>
+#include <webots/InertialUnit.hpp>
 #include "common/path.h"
+#include "navigation/image_database.h"
 #include "imgproc/dct_hash.h"
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
+
+#include <Eigen/Dense>
+#include <Eigen/Core>
+
+
+using Eigen::Matrix3d;
+using Eigen::Vector3f;
 
 cv::Mat get_cam_image(const unsigned char *image, int width, int height) {
     /* Matrix which contains the BGRA image from Webots' camera */
@@ -38,6 +48,9 @@ int main(int argc, char **argv) {
 
     Supervisor *robot = new Driver();
     Driver *driver = driver->getDriverInstance();
+    webots::GPS *gps = driver->getGPS("GPS");
+    webots::InertialUnit *imu = driver->getInertialUnit("IMU");
+
     Camera *cm;
     Display *disp = driver->getDisplay("display");
     Keyboard *kb = new Keyboard();
@@ -45,11 +58,14 @@ int main(int argc, char **argv) {
     cm=driver->getCamera("CAM");
     cm->enable(TIME_STEP);
     kb->enable(TIME_STEP);
+    gps->enable(TIME_STEP);
+    imu->enable(TIME_STEP);
     int width = cm->getWidth();
     int height = cm->getHeight();
 
 
-    std::cout << "helloszia"  << std::endl;
+
+    std::cout << "controller started "  << std::endl;
 
 
     double speed = 40;
@@ -67,15 +83,32 @@ int main(int argc, char **argv) {
     bool didTestStop = true;
 
 
-    // feedback loop: step simulation until an exit event is received
-    while (robot->step(TIME_STEP) != -1) {
 
+
+    // feedback loop: step simulation until an exit event is received
+    int current_step = 0;
+    while (robot->step(TIME_STEP) != -1) {
 
         cv::Mat current_image = get_cam_image(cm->getImage(),width, height);
         cv::Mat gray_image, resized;
         cv::Mat processed_image;
-        if (!current_image.empty()) {
 
+        const double speed_value = gps->getSpeed();
+        const double *pos = gps->getValues();
+        const double *orientation = imu->getRollPitchYaw();
+        double yaw = orientation[0];
+        double pitch = orientation[1];
+        double roll = orientation[2];
+
+        if (current_step % 20 == 0) {
+            std::cout << "X: " << pos[0] << "Y: " << pos[1] << "Z: " << pos[2]
+                << "Yaw: " << yaw << "Pitch: " << pitch << "Roll: " << roll << std::endl;
+        }
+
+
+
+
+        if (!current_image.empty()) {
 
             cv::cvtColor(current_image, gray_image,cv::COLOR_BGRA2GRAY);
             cv::resize(gray_image, resized, cv::Size(RESIZED_WIDTH ,RESIZED_HEIGHT));
@@ -172,7 +205,7 @@ int main(int argc, char **argv) {
             driver->setSteeringAngle(0.0);
         }
 
-
+        current_step++;
     }
 
     delete driver;
