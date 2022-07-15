@@ -35,7 +35,7 @@ set (PROJECT_LIBRARIES libCppDriver.so libgeneric_robot_window.so)
 include_directories($ENV{WEBOTS_HOME}/include/controller/cpp)
 
 
-find_package(BoBRobotics QUIET REQUIRED COMPONENTS imgproc)
+find_package(BoBRobotics QUIET REQUIRED COMPONENTS imgproc navigation video)
 
 
 add_executable(ackermann_robot ackermann_robot.cpp)
