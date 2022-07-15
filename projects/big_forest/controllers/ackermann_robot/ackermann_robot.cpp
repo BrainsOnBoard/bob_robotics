@@ -53,6 +53,7 @@ int main(int argc, char **argv) {
 
     Camera *cm;
     Display *disp = driver->getDisplay("display");
+    disp->setColor(0xFFFFFF);
     Keyboard *kb = new Keyboard();
 
     cm=driver->getCamera("CAM");
@@ -84,7 +85,6 @@ int main(int argc, char **argv) {
 
 
 
-
     // feedback loop: step simulation until an exit event is received
     int current_step = 0;
     while (robot->step(TIME_STEP) != -1) {
@@ -100,6 +100,8 @@ int main(int argc, char **argv) {
         double pitch = orientation[1];
         double roll = orientation[2];
 
+
+
         if (current_step % 20 == 0) {
             std::cout << "X: " << pos[0] << "Y: " << pos[1] << "Z: " << pos[2]
                 << "Yaw: " << yaw << "Pitch: " << pitch << "Roll: " << roll << std::endl;
@@ -112,14 +114,19 @@ int main(int argc, char **argv) {
 
             cv::cvtColor(current_image, gray_image,cv::COLOR_BGRA2GRAY);
             cv::resize(gray_image, resized, cv::Size(RESIZED_WIDTH ,RESIZED_HEIGHT));
-            webots::ImageRef* w_img_ref = disp->imageNew(RESIZED_WIDTH, RESIZED_HEIGHT, resized.data, Display::BGRA);
-            disp->imagePaste(w_img_ref,0,0);
-            disp->imageDelete(w_img_ref);
-
             cv::imshow("Gray", resized);
             cv::waitKey(1);
-
         }
+
+        double const PI = 3.14159265358979323;
+        //draw trajectory
+        int x = pos[0];
+        int y = pos[1];
+        float angle_rot = 270.0f; // degrees, not radians
+        float radians = angle_rot * (PI / 180.0f); 	// convert degrees to radians
+        int nx = x * cos(radians) - y * sin(radians);
+        int ny = x * sin(radians) + y * cos(radians);
+        disp->drawPixel(int(ny)+250, int(nx)+350);
 
 
         int key = kb->getKey(); // first keypress
