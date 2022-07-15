@@ -145,7 +145,7 @@ int bobMain(int argc, char **argv) {
 
         if (current_step % 20 == 0) {
             std::cout << "X: " << x_pos << "Y: " << y_pos << "Z: " << z_pos
-                << "Yaw: " << yaw << "Pitch: " << pitch << "Roll: " << roll << std::endl;
+                << "Yaw: " << degree_t(yaw) << "Pitch: " << degree_t(pitch) << "Roll: " << degree_t(roll) << std::endl;
         }
 
 
@@ -264,10 +264,10 @@ int bobMain(int argc, char **argv) {
 
         if (recording_mode && isRecordRunning) {
             units::time::millisecond_t elapsed = sw.elapsed();
-            std::array<degree_t, 3> attitude{ degree_t(yaw), degree_t(pitch), degree_t(roll) };
+            std::array<degree_t, 3> attitude{ degree_t(roll), degree_t(pitch), degree_t(yaw) };
             recorder->record({ BoBRobotics::Vector3<meter_t>(meter_t(x_pos),meter_t(y_pos),meter_t(z_pos)), attitude },
                                 current_image, speed_value,
-                                steering_angle.value(),
+                                degree_t(steering_angle).value(),
                                 elapsed.value());
             catcher.check();
         }
