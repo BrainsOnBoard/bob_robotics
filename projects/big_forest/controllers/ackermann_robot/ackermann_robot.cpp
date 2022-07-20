@@ -32,6 +32,8 @@
 #include <plog/Appenders/DebugOutputAppender.h>
 #include "plog/Initializers/RollingFileInitializer.h"
 
+#include "hash_matcher.h"
+
 cv::Mat get_cam_image(const unsigned char *image, int width, int height) {
     /* Matrix which contains the BGRA image from Webots' camera */
     cv::Mat img = cv::Mat(cv::Size(width, height), CV_8UC4);
@@ -58,7 +60,34 @@ using namespace units::time;
 int bobMain(int argc, char **argv) {
 
 
-    plog::init(plog::debug, "Hello.txt"); //
+    bool show_images = true;    // show visual
+    int seq_length = 70;        // sequence length
+    int roll_step = 180;         // number of rotations for a view
+    cv::Size unwrapRes(180,45); // resolution of the unwrrapped video
+    bool createVideo = false;    // if true, it saves unwrapped video
+    bool unwrap = false;         // if true, videos will be unwrapped
+    int skipstep = 4;           // skip frames in training matrix
+    int testRoute_skipstep =1;
+    int num_datasets = 2;
+    int testRouteNum = 0;
+    int dataset_num = 0;
+
+    double const PI = 3.14159265358979323;
+
+    Route route_vector;
+    DTHW sequence_matcher;
+
+    std::unique_ptr<BoBRobotics::Navigation::ImageDatabase::RouteRecorder> recorder;
+
+
+    Route route = Route(dataset_num,roll_step, skipstep, unwrap, createVideo, unwrapRes);
+    std::cout << " creating Hash matrix" << std::endl;
+    HashMatrix hashMat(route.nodes, roll_step);
+    route.set_hash_matrix(hashMat);
+    route_vector = route;
+    sequence_matcher = DTHW(route_vector.getHashMatrix(), roll_step, 1000); // init sequence matcher with training matrices
+    std::cout << " route is initialized" << std::endl;
+
 
     BoBRobotics::BackgroundExceptionCatcher catcher;
     catcher.trapSignals();
@@ -80,10 +109,7 @@ int bobMain(int argc, char **argv) {
     int width = cm->getWidth();
     int height = cm->getHeight();
 
-
-
     std::cout << "controller started "  << std::endl;
-
 
     double speed = 40;
     double key_1 = 49;
@@ -106,20 +132,7 @@ int bobMain(int argc, char **argv) {
     currentTime.tm_mon = systemTime.tm_mon;
     currentTime.tm_year = systemTime.tm_year;
 
-    std::string db_name = "database_entries.csv";
-    std::string db_path = "../simulation_databases";
-
-    //BoBRobotics::Navigation::ImageDatabase database{db_path, BoBRobotics::Navigation::DatabaseOptions::Overwrite};
-    BoBRobotics::Navigation::ImageDatabase database{currentTime};
     BoBRobotics::Stopwatch sw;
-    units::time::millisecond_t elapsed;
-
-    auto recorder = database.createRouteRecorder("png", std::vector<std::string>{"Speed",
-                                                           "Steering angle [degrees]",
-                                                           "Timestamp [ms]"});
-
-
-
     // feedback loop: step simulation until an exit event is received
     int current_step = 0;
     while (robot->step(TIME_STEP) != -1) {
@@ -127,27 +140,17 @@ int bobMain(int argc, char **argv) {
         cv::Mat current_image = get_cam_image(cm->getImage(),width, height);
         cv::Mat gray_image, resized;
         cv::Mat processed_image;
-
         const double speed_value = gps->getSpeed();
-
-
         const double *pos = gps->getValues();
         const double *orientation = imu->getRollPitchYaw();
         auto yaw = radian_t(orientation[0]);
         auto pitch = radian_t(orientation[1]);
         auto roll = radian_t(orientation[2]);
         auto steering_angle = radian_t(driver->getSteeringAngle());
-
-
+        // get positions
         double x_pos = pos[0];
         double y_pos = pos[1];
         double z_pos = pos[2];
-
-        if (current_step % 20 == 0) {
-            std::cout << "X: " << x_pos << "Y: " << y_pos << "Z: " << z_pos
-                << "Yaw: " << degree_t(yaw) << "Pitch: " << degree_t(pitch) << "Roll: " << degree_t(roll) << std::endl;
-        }
-
 
 
 
@@ -155,20 +158,8 @@ int bobMain(int argc, char **argv) {
 
             cv::cvtColor(current_image, gray_image,cv::COLOR_BGRA2GRAY);
             cv::resize(gray_image, resized, cv::Size(RESIZED_WIDTH ,RESIZED_HEIGHT));
-            cv::imshow("Gray", resized);
-            cv::waitKey(1);
+
         }
-
-        double const PI = 3.14159265358979323;
-        //draw trajectory
-        int x = pos[0];
-        int y = pos[1];
-        float angle_rot = 270.0f; // degrees, not radians
-        float radians = angle_rot * (PI / 180.0f); 	// convert degrees to radians
-        int nx = x * cos(radians) - y * sin(radians);
-        int ny = x * sin(radians) + y * cos(radians);
-        disp->drawPixel(int(ny)+250, int(nx)+350);
-
 
         int key = kb->getKey(); // first keypress
         // add velocity
@@ -199,6 +190,10 @@ int bobMain(int argc, char **argv) {
                 std::cout << "recording mode enabled" << std::endl;
                 recording_mode = true;
                 isRecordRunning = true;
+                BoBRobotics::Navigation::ImageDatabase database{currentTime};
+                recorder = database.createRouteRecorder("png", std::vector<std::string>{"Speed",
+                                                            "Steering angle [degrees]",
+                                                            "Timestamp [ms]"});
                 sw.start();
             }
 
@@ -232,6 +227,17 @@ int bobMain(int argc, char **argv) {
                 test_mode = true;
                 isTestRunning = true;
 
+                disp->setColor(0xFF00FF);
+                for (auto n : route.nodes) {
+                    int xx = meter_t(millimeter_t(n.x)).value();
+                    int yy = meter_t(millimeter_t(n.y)).value();
+                    float angle_rot1 = 270.0f; // degrees, not radians
+                    float radians1 = angle_rot1 * (PI / 180.0f); 	// convert degrees to radians
+                    int nx1 = xx * cos(radians1) - yy * sin(radians1);
+                    int ny1 = xx * sin(radians1) + yy * cos(radians1);
+
+                    disp->drawPixel(int(ny1)+250, int(nx1)+350);
+                }
             }
         }
 
@@ -265,12 +271,106 @@ int bobMain(int argc, char **argv) {
         if (recording_mode && isRecordRunning) {
             units::time::millisecond_t elapsed = sw.elapsed();
             std::array<degree_t, 3> attitude{ degree_t(roll), degree_t(pitch), degree_t(yaw) };
+
             recorder->record({ BoBRobotics::Vector3<meter_t>(meter_t(x_pos),meter_t(y_pos),meter_t(z_pos)), attitude },
                                 current_image, speed_value,
-                                degree_t(steering_angle).value(),
+                               degree_t(steering_angle).value(),
                                 elapsed.value());
             catcher.check();
         }
+
+
+        if (test_mode && isTestRunning) {
+
+            units::time::millisecond_t elapsed;
+            cv::Mat img_gray;
+            cv::cvtColor(current_image, img_gray, cv::COLOR_BGRA2GRAY);
+            cv::Mat resized_gray;
+            cv::resize(img_gray, resized_gray, unwrapRes);
+
+            cv::Mat conv;
+            resized.convertTo(conv, CV_32F, 1.0 / 255);
+            auto hash = DCTHash::computeHash(conv); // current hash of test set
+
+            std::vector<cv::Mat> img_rots(roll_step); // need to make it with fix size
+            std::vector<std::bitset<64>> hash_rots = HashMatrix::getHashRotations(resized ,roll_step, img_rots);
+
+            int rot_size = hash_rots.size();
+            int half_rot = rot_size/ 2;
+
+            sequence_matcher.addToShortSequence(hash,seq_length);
+            auto seq_index = sequence_matcher.getBestMatch();
+
+            int pixel_step = int(360.0 / (float)roll_step);
+            int seq_match_angle = seq_index.second * pixel_step;
+
+            int seq_angle;
+            if (seq_match_angle < 180) {
+                seq_angle = seq_match_angle;
+            } else {
+                seq_angle = seq_match_angle -360;
+            }
+
+            int min_value;
+            auto single_match = HashMatrix::getSingleMatch(hash, route_vector.getHashMatrix(),min_value,roll_step );
+            cv::Mat img_match = route_vector.nodes[seq_index.first].image;
+            driver->setCruisingSpeed(speed);
+
+            auto rad_angle= radian_t(degree_t(seq_angle));
+            driver->setSteeringAngle(-rad_angle.value());
+
+
+            std::cout << " single = " << single_match.second  << " sequence = " <<seq_index.first <<  "seq_angle= " << seq_match_angle << std::endl;
+            cv::imshow("match", img_match);
+
+
+
+            //cv::imshow("Gray", resized);
+
+              // can change ordering here << ang matrix >>
+            std::vector<std::vector<int>> ang_distances;
+            cv::waitKey(1);
+/*
+
+            for (int rh = half_rot; rh < rot_size; rh++) {
+                std::vector<int> row_distances;
+                for (RouteNode route_node : route_vector.nodes) {
+                    auto img_hash = route_node.image_hash;
+                    auto dist = DCTHash::distance(hash_rots[rh], img_hash);
+                    row_distances.push_back(dist);
+                }
+                ang_distances.push_back(row_distances);
+            }
+            for (int rh = 0; rh < half_rot; rh++) {
+                std::vector<int> row_distances;
+                for (RouteNode route_node : route_vector.nodes) {
+                    auto img_hash = route_node.image_hash;
+                    auto dist = DCTHash::distance(hash_rots[rh], img_hash);
+                    row_distances.push_back(dist);
+                }
+                ang_distances.push_back(row_distances);
+            }
+*/
+
+          //  cv::Mat prev_costMat = show_angle_matrix(ang_distances);
+          //  cv::imshow("angle_dist_mat", prev_costMat);
+
+
+
+        }
+
+        disp->setColor(0xFFFFFF);
+
+        //draw trajectory
+        int x = pos[0];
+        int y = pos[1];
+        float angle_rot = 270.0f; // degrees, not radians
+        float radians = angle_rot * (PI / 180.0f); 	// convert degrees to radians
+        int nx = x * cos(radians) - y * sin(radians);
+        int ny = x * sin(radians) + y * cos(radians);
+        disp->drawPixel(int(ny)+250, int(nx)+350);
+
+
 
 
         current_step++;
