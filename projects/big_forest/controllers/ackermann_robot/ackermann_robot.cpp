@@ -64,13 +64,14 @@ int bobMain(int argc, char **argv) {
     int seq_length = 70;        // sequence length
     int roll_step = 180;         // number of rotations for a view
     cv::Size unwrapRes(180,45); // resolution of the unwrrapped video
+    const int IMG_WIDTH = unwrapRes.width;
     bool createVideo = false;    // if true, it saves unwrapped video
     bool unwrap = false;         // if true, videos will be unwrapped
     int skipstep = 4;           // skip frames in training matrix
     int testRoute_skipstep =1;
     int num_datasets = 2;
     int testRouteNum = 0;
-    int dataset_num = 0;
+    int dataset_num = 1;
 
     double const PI = 3.14159265358979323;
 
@@ -78,6 +79,7 @@ int bobMain(int argc, char **argv) {
     DTHW sequence_matcher;
 
     std::unique_ptr<BoBRobotics::Navigation::ImageDatabase::RouteRecorder> recorder;
+    std::unique_ptr<BoBRobotics::Navigation::ImageDatabase> database;
 
 
     Route route = Route(dataset_num,roll_step, skipstep, unwrap, createVideo, unwrapRes);
@@ -190,10 +192,14 @@ int bobMain(int argc, char **argv) {
                 std::cout << "recording mode enabled" << std::endl;
                 recording_mode = true;
                 isRecordRunning = true;
-                BoBRobotics::Navigation::ImageDatabase database{currentTime};
-                recorder = database.createRouteRecorder("png", std::vector<std::string>{"Speed",
+                database = std::unique_ptr<BoBRobotics::Navigation::ImageDatabase>(new BoBRobotics::Navigation::ImageDatabase{currentTime});
+
+                recorder = database->createRouteRecorder("png", std::vector<std::string>{"Speed",
                                                             "Steering angle [degrees]",
                                                             "Timestamp [ms]"});
+
+
+
                 sw.start();
             }
 
@@ -207,6 +213,8 @@ int bobMain(int argc, char **argv) {
                 std::cout << "stop recording" << std::endl;
                 recording_mode = false;
                 isRecordRunning = false;
+                recorder->save();
+
 
             }
             if (test_mode && isTestRunning) {
@@ -290,7 +298,7 @@ int bobMain(int argc, char **argv) {
 
             cv::Mat conv;
             resized.convertTo(conv, CV_32F, 1.0 / 255);
-            auto hash = DCTHash::computeHash(conv); // current hash of test set
+            auto hash = DCTHash::computeHash(conv.clone()); // current hash of test set
 
             std::vector<cv::Mat> img_rots(roll_step); // need to make it with fix size
             std::vector<std::bitset<64>> hash_rots = HashMatrix::getHashRotations(resized ,roll_step, img_rots);
@@ -301,7 +309,7 @@ int bobMain(int argc, char **argv) {
             sequence_matcher.addToShortSequence(hash,seq_length);
             auto seq_index = sequence_matcher.getBestMatch();
 
-            int pixel_step = int(360.0 / (float)roll_step);
+            int pixel_step = int(IMG_WIDTH / (float)roll_step);
             int seq_match_angle = seq_index.second * pixel_step;
 
             int seq_angle;
@@ -319,44 +327,11 @@ int bobMain(int argc, char **argv) {
             auto rad_angle= radian_t(degree_t(seq_angle));
             driver->setSteeringAngle(-rad_angle.value());
 
-
             std::cout << " single = " << single_match.second  << " sequence = " <<seq_index.first <<  "seq_angle= " << seq_match_angle << std::endl;
             cv::imshow("match", img_match);
-
-
-
-            //cv::imshow("Gray", resized);
-
               // can change ordering here << ang matrix >>
             std::vector<std::vector<int>> ang_distances;
             cv::waitKey(1);
-/*
-
-            for (int rh = half_rot; rh < rot_size; rh++) {
-                std::vector<int> row_distances;
-                for (RouteNode route_node : route_vector.nodes) {
-                    auto img_hash = route_node.image_hash;
-                    auto dist = DCTHash::distance(hash_rots[rh], img_hash);
-                    row_distances.push_back(dist);
-                }
-                ang_distances.push_back(row_distances);
-            }
-            for (int rh = 0; rh < half_rot; rh++) {
-                std::vector<int> row_distances;
-                for (RouteNode route_node : route_vector.nodes) {
-                    auto img_hash = route_node.image_hash;
-                    auto dist = DCTHash::distance(hash_rots[rh], img_hash);
-                    row_distances.push_back(dist);
-                }
-                ang_distances.push_back(row_distances);
-            }
-*/
-
-          //  cv::Mat prev_costMat = show_angle_matrix(ang_distances);
-          //  cv::imshow("angle_dist_mat", prev_costMat);
-
-
-
         }
 
         disp->setColor(0xFFFFFF);
