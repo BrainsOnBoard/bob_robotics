@@ -15,7 +15,7 @@
 #include <thrust/extrema.h>
 
 
-
+const int BLOCKSIZE = 256;
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
 {
@@ -82,9 +82,9 @@ class GPUHasher
     GPUHasher() {}
 
     // allocate memory using the training matrix [num_elements x num_rotations]
-    void initGPU(std::vector<std::bitset<64>> hashMat, int sequence_size, int num_rotations, int num_elements) {
+    void initGPU(unsigned long long int *l_hash_mat, int hash_mat_size, int sequence_size, int num_rotations) {
 
-        N = hashMat.size();
+        N = hash_mat_size;
         num_rows = N/num_rotations;
         num_cols = num_rotations;
         d_sequence_size = sequence_size;
