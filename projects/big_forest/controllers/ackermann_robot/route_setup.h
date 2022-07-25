@@ -44,9 +44,10 @@ struct dataset_paths {
     dataset_paths() {
         std::string dataset0 = "20220715_000000_2";
         std::string dataset1 = "20220715_000000_4";
+        std::string dataset2 = "20220722_17901390081418180";
         dataset_path_array.push_back(dataset0);
         dataset_path_array.push_back(dataset1);
-
+        dataset_path_array.push_back(dataset2);
     }
 };
 
@@ -334,7 +335,7 @@ class HashMatrix
     //! gets the minimum element of a matrix and it's 2d indices
     template <typename T>
     static void argmin_matrix(std::vector<T> &matrix, int width, int &min_col, int &min_row, T &min_value) {
-        T min = 10000000000.0; // init with big number
+        T min = 1000000000; // init with big number
         int index_min = 0;
         for (size_t i=0; i< matrix.size(); i++) {
             if (matrix[i] <= min) {
@@ -430,7 +431,6 @@ class Route {
 
 
             node.image_hash = BoBRobotics::ImgProc::DCTHash::computeHash(img2);
-            cv::imshow("test", img1);
             nodes.push_back(node);
 
 
