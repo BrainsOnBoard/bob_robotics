@@ -57,8 +57,8 @@ cv::Mat get_cam_image(const unsigned char *image, int width, int height) {
 
 #define MAX_SPEED 6.28
 
-#define RESIZED_WIDTH 360
-#define RESIZED_HEIGHT 90
+#define RESIZED_WIDTH 255// 255
+#define RESIZED_HEIGHT 64 // 64
 
 // All the webots classes are defined in the "webots" namespace
 using namespace webots;
@@ -71,7 +71,7 @@ using namespace units::time;
 int main(int argc, char **argv) {
 
     bool show_images = true;    // show visual
-    int seq_length = 200;        // sequence length
+    int seq_length = 96;        // sequence length
     int roll_step = RESIZED_WIDTH;         // number of rotations for a view
     cv::Size unwrapRes(RESIZED_WIDTH,RESIZED_HEIGHT); // resolution of the unwrrapped video
     const int IMG_WIDTH = unwrapRes.width;
@@ -87,35 +87,50 @@ int main(int argc, char **argv) {
 
     Route route_vector;
     DTHW sequence_matcher;
+    GPUHasher g_hasher;
+    //g_hasher.testOrdering();
 
     std::unique_ptr<BoBRobotics::Navigation::ImageDatabase::RouteRecorder> recorder;
     std::unique_ptr<BoBRobotics::Navigation::ImageDatabase> database;
     Route route = Route(dataset_num,roll_step, skipstep, unwrap, createVideo, unwrapRes);
     std::cout << " creating Hash matrix" << std::endl;
     HashMatrix hashMat(route.nodes, roll_step);
+
     int hash_mat_size = hashMat.getMatrix().size();
-    unsigned long long int *l_hash_mat = hashMat.getHashMatUL();
-    unsigned long long int l_sequence[seq_length];
+    unsigned long long int* l_hash_mat = (unsigned long long int*) malloc(hash_mat_size*sizeof(unsigned long long int));
+    hashMat.getHashMatUL(l_hash_mat);
+    unsigned long long int* l_sequence = (unsigned long long int*) malloc(seq_length*sizeof(unsigned long long int));
     int *l_cost_matrix;
     unsigned int d_sequence_size = seq_length;
 
 
-    /// just for testing -remove it after !!!!
-    for (int test = 0; test < d_sequence_size; test++) {
-        l_sequence[test] = l_hash_mat[test*roll_step];
-    }
-
-    GPUHasher g_hasher;
+    std::cout << " create GPU matrix" << std::endl;
     g_hasher.initGPU(l_hash_mat, hash_mat_size, d_sequence_size, roll_step);
-    g_hasher.getDistanceMatrix(l_sequence);
-    g_hasher.downloadDistanceMatrix(true);
-    cv::waitKey(0);
+    g_hasher.uploadSequence(l_hash_mat);
 
+    for (int s = d_sequence_size; s < hash_mat_size/roll_step; s++) {
+
+        g_hasher.addToSequence(&l_hash_mat[s*roll_step]);
+        g_hasher.getDistanceMatrix();
+        //cudaDeviceSynchronize();
+        //g_hasher.calculate_accumulated_cost_matrix();
+        std::cout << " seq :" << s <<  std::endl;
+
+
+
+        cv::Mat host_mat1 = g_hasher.downloadDistanceMatrix();
+        cv::normalize(host_mat1, host_mat1, 0, 255, cv::NORM_MINMAX);
+        cv::applyColorMap(host_mat1, host_mat1, cv::COLORMAP_JET);
+        cv::imshow("gpu_mat", host_mat1);
+        cv::waitKey(1);
+
+    }
+    cudaDeviceSynchronize();
 
 
     // <<<<< GPU >>>>>>
 
-    /*
+/*
 
     route.set_hash_matrix(hashMat);
     route_vector = route;
