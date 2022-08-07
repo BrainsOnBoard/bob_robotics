@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
     Route route_vector;
     DTHW sequence_matcher;
     GPUHasher g_hasher;
-    //g_hasher.testOrdering();
+    g_hasher.testOrdering();
 
     std::unique_ptr<BoBRobotics::Navigation::ImageDatabase::RouteRecorder> recorder;
     std::unique_ptr<BoBRobotics::Navigation::ImageDatabase> database;

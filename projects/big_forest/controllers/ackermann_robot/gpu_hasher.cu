@@ -27,39 +27,75 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 }
 
 
-
+__device__ int counter = 0;
 
 // number of blocks = number of rows * 2 - 1, number of threads/block = number of rows (<= blockSize)
 __global__ void kernel_order_dist_matrix(int *d_dist_mat, int *d_ordered_dist_mat, int row_n, int col_n) {
     int uid = blockIdx.x*blockDim.x + threadIdx.x;
     int bid = blockIdx.x;
     int tid = threadIdx.x;
-    int col, row, next_row, next_col;
+    int current_row, current_col, col, row, next_row, next_col;
+    extern __shared__ int s_diagonals[];
 
-    if (tid == 0) {
-        d_ordered_dist_mat[0] = d_dist_mat[0];
-    }
+
     // each block processes a diagonal line [-1,+1] direction
     // start of the row - increasing diagonal elements
-    if (bid < row_n && tid > 0 && bid > 0) {
+    if (bid <= row_n-1) {
 
-        next_row = blockIdx.x - tid;
-        next_col = tid;
-        // check bounds
-        if ((next_row > 0 && next_row < row_n) && (next_col > 0 && next_col < col_n)) {
-            d_ordered_dist_mat[uid] = d_dist_mat[next_row*row_n + next_col];
-        }
 
-    } else {
-        // diagonal line elements decreasing
-        next_row = row_n - 1; // last row
-        next_col = (blockIdx.x - row_n-1) + tid;       //
-        // check bounds
-        if ((next_row > 0 && next_row < row_n) && (next_col > 0 && next_col < col_n)) {
-            d_ordered_dist_mat[uid] = d_dist_mat[next_row*row_n + next_col];
+        if (tid == 0) {
+            current_row = bid;
+            current_col = 0;
+            s_diagonals[0] = d_dist_mat[current_row * col_n + current_col];
+        } else {
+            next_row = bid - tid;
+            next_col = tid;
+            if ((next_row >= 0) && (next_col < bid+1)) {
+                s_diagonals[tid] = d_dist_mat[next_row * col_n + next_col];
+            }
         }
-    }
+    // after half of the diagonal matrix is processed
+
+    }/* else {
+        if (tid ==0) {
+            current_row = row_n - 1;
+            current_col = bid - row_n -1;
+            s_diagonals[0] = d_dist_mat[current_row * row_n + current_col];
+        } else {
+            // diagonal line elements decreasing
+            next_row = row_n - 1 - tid; // last row
+            next_col = (bid - row_n-1) + tid;
+            // check bounds
+            if ((next_row >= bid-row_n -1 ) && (next_col < col_n)) {
+                s_diagonals[tid] = d_dist_mat[current_row * row_n + next_col];
+            }
+        }
+    }*/
     __syncthreads();
+    if (bid <=row_n-1) {
+        int c_sum = (bid*(bid+1))/2;
+        if (bid == 0) {
+
+            d_ordered_dist_mat[0] = s_diagonals[0];
+        } else {
+            int diag_index = tid;
+            if (diag_index <= bid) {
+                d_ordered_dist_mat[c_sum+tid] = s_diagonals[diag_index];
+
+            }
+        }
+
+
+    } else { // diagonal line elements decreasing
+
+        //int diag_index = tid;
+        //if (diag_index <= col_n-1) {
+        //    d_ordered_dist_mat[(row_n -1)*row_n + (row_n - 1 - bid)] = s_diagonals[tid];
+//
+        //}
+    }
+
+
 
 }
 
@@ -174,21 +210,36 @@ class GPUHasher
     }
 
     void testOrdering() {
-        int *l_test = (int *) malloc(15 * sizeof(int));
-        int *l_ordered_test = (int *) malloc(15 * sizeof(int));
-        for (int i = 0; i < 15; i++) {
-            l_test[i] = i;
+        int rows = 5;
+        int cols = 6;
+        int *l_test = (int *) malloc(rows*cols * sizeof(int));
+        int *l_ordered_test = (int *) malloc(rows*cols * sizeof(int));
+
+
+
+
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j <cols ; j++) {
+                l_test[i*cols+j] = i*cols+j;
+                printf("%02d, ", l_test[i*cols+j]);
+
+            }
+            std::cout << std::endl;
         }
+        std::cout << std::endl << std::endl;
         int *d_test;
         int *d_ordered_test;
-        gpuErrchk( cudaMalloc(&d_test, 15*sizeof(int)));
-        gpuErrchk( cudaMemcpy(d_test, l_test, 15*sizeof(int), cudaMemcpyHostToDevice));
-        gpuErrchk( cudaMalloc(&d_ordered_test, 15*sizeof(int)));
-        kernel_order_dist_matrix<<<5, 3>>>(d_test, d_ordered_test, 5, 3);
-        cudaMemcpy(l_ordered_test, d_ordered_test, 15*sizeof(int), cudaMemcpyDeviceToHost);
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j <5 ; j++) {
-                std::cout << l_ordered_test[i*3+j] << ", ";
+        gpuErrchk( cudaMalloc(&d_test, rows*cols*sizeof(int)));
+        gpuErrchk( cudaMemcpy(d_test, l_test, rows*cols*sizeof(int), cudaMemcpyHostToDevice));
+        gpuErrchk( cudaMalloc(&d_ordered_test, rows*cols*sizeof(int)));
+        kernel_order_dist_matrix<<<2*rows, cols, rows>>>(d_test, d_ordered_test, rows, cols);
+        cudaMemcpy(l_ordered_test, d_ordered_test, rows*cols*sizeof(int), cudaMemcpyDeviceToHost);
+        std::cout << std::endl << std::endl;
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j <cols ; j++) {
+
+                printf("%02d, ", l_ordered_test[i*cols+j]);
             }
             std::cout << std::endl;
         }
@@ -225,7 +276,7 @@ class GPUHasher
     }
 
     void calculate_accumulated_cost_matrix() {
-        kernel_order_dist_matrix<<<num_rows*2, d_sequence_size>>>(d_cost_matrix, d_ordered_cost_mat, num_rows, num_cols);
+        kernel_order_dist_matrix<<<num_rows*2, d_sequence_size, num_rows>>>(d_cost_matrix, d_ordered_cost_mat, num_rows, num_cols);
     }
 
     cv::Mat downloadDistanceMatrix() {
