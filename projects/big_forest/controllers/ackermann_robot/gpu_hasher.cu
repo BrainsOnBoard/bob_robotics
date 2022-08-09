@@ -79,17 +79,16 @@ __global__ void kernel_order_dist_matrix(int *d_dist_mat, int *d_ordered_dist_ma
             d_ordered_dist_mat[last - tid - c_sum] = s_diagonals[BLOCKSIZE+bid-diag_index];
         }
     } else {
-        next_row = (row_n - 1) - tid;
-        next_col = (row_n-1-bid)+tid;
-        if (next_row > 0 && next_col < col_n) {
+        next_row = (row_n-1-tid);
+        next_col = 1+((bid-row_n)+tid);
+
+        if (next_row >= 0 && next_col < col_n && next_col > 0 && ( bid%row_n < (col_n-row_n) )) {
             s_diagonals[tid] = d_dist_mat[next_row*col_n + next_col];
         }
         __syncthreads();
         if (tid < row_n) {
-
-            int b_row_n = bid*col_n+tid;
-            d_ordered_dist_mat[b_row_n] = s_diagonals[tid];
-
+            int num_elements = sum_diag  + (bid-(row_n))*row_n +tid;
+            d_ordered_dist_mat[num_elements] = s_diagonals[tid];
         }
     }
 }
@@ -111,8 +110,6 @@ __device__ void warp_reduce(volatile int *s_data, int tid) {
 }
 
 
-
-
 // number of blocks = number of unique elements, number of threads/block = number of rotations (<= blockSize)
 __global__ void kernel_calculateMatrixBlock_row(
                                     unsigned long long int hash,          // sequence of hash [should be the block size]
@@ -127,8 +124,6 @@ __global__ void kernel_calculateMatrixBlock_row(
     __shared__ unsigned long long int s_rotations[BLOCKSIZE];
     __shared__ int s_dist_mat_row[BLOCKSIZE];
 
-
-
     s_rotations[tid] = d_training_matrix[uid]; // load each rotation row to each block of share memory
     __syncthreads();
     s_dist_mat_row[tid] = __popc(hash ^ s_rotations[tid]);
@@ -140,7 +135,6 @@ __global__ void kernel_calculateMatrixBlock_row(
         if(tid < stride)
         {
             s_dist_mat_row[tid]  = min(s_dist_mat_row[tid],s_dist_mat_row[tid + stride]);
-
         }
     }
 
@@ -149,11 +143,9 @@ __global__ void kernel_calculateMatrixBlock_row(
     // save the best rotation in the column
     if (tid == 0) {
         d_rotation_dist_matrix_col[bid] = s_dist_mat_row[0];
-
     }
 
 }
-
 
 __global__ void kernel_construct_distance_matrix(unsigned long long int *d_sequence, unsigned long long int *d_training_matrix, int *d_distance_matrix, int sequence_size, int N) {
     int uid = blockIdx.x*blockDim.x + threadIdx.x;
@@ -201,8 +193,8 @@ class GPUHasher
     }
 
     void testOrdering() {
-        int rows = 3;
-        int cols = 5;
+        int rows = 7;
+        int cols = 10;
         int *l_test = (int *) malloc(rows*cols * sizeof(int));
         int *l_ordered_test = (int *) malloc(rows*cols * sizeof(int));
         for (int i = 0; i < rows; i++) {
@@ -219,7 +211,7 @@ class GPUHasher
         gpuErrchk( cudaMalloc(&d_test, rows*cols*sizeof(int)));
         gpuErrchk( cudaMemcpy(d_test, l_test, rows*cols*sizeof(int), cudaMemcpyHostToDevice));
         gpuErrchk( cudaMalloc(&d_ordered_test, rows*cols*sizeof(int)));
-        kernel_order_dist_matrix<<<cols, BLOCKSIZE, BLOCKSIZE*2>>>(d_test, d_ordered_test, rows, cols);
+        kernel_order_dist_matrix<<<cols, BLOCKSIZE, BLOCKSIZE*2>>>(d_test, d_ordered_test, rows, cols); //
         cudaMemcpy(l_ordered_test, d_ordered_test, rows*cols*sizeof(int), cudaMemcpyDeviceToHost);
         std::cout << std::endl << std::endl;
         for (int i = 0; i < rows; i++) {
