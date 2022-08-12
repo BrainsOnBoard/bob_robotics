@@ -160,12 +160,15 @@ __global__ void kernel_calculate_accumulated_cost_matrix(int *D, const int *C, c
             for (int j = 0; j < i; j++) { c_sd += rows-1 - j; }
             c_sum+= c_sd;
 
-            int up = D[(c_sum+tid)-c_sd+1];
-            int left = D[(c_sum+tid)-c_sd];
-            int up_left = D[(c_sum+tid)-2*c_sd];
+            int up_offset = rows-1 - i;
+            int left_offset = rows -i;
+            int up_left_offset = (2*left_offset);
+
+            int up = D[(c_sum+tid)-up_offset];
+            int left = D[(c_sum+tid)-left_offset];
+            int up_left = D[(c_sum+tid)-up_left_offset];
             printf("C %d, tid %d  ---- up %d, left %d, upleft %d\n", C[c_sum+tid], tid, up, left,up_left);
             D[c_sum + tid] = C[c_sum+tid] + min(min(up, left), up_left);
-
         }
         __syncthreads();
     }
