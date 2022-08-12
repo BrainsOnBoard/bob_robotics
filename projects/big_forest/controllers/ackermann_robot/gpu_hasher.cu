@@ -48,8 +48,6 @@ __global__ void kernel_transpose(int *odata, int *idata, int width, int height)
 	}
 }
 
-
-
 // number of blocks = number of rows * 2 - 1, number of threads/block = number of rows (<= blockSize)
 __global__ void kernel_order_dist_matrix(int *d_dist_mat, int *d_ordered_dist_mat, int row_n, int col_n) {
     int bid = blockIdx.x;
@@ -57,16 +55,14 @@ __global__ void kernel_order_dist_matrix(int *d_dist_mat, int *d_ordered_dist_ma
     int current_row, current_col, col, row, next_row, next_col, opp_row, opp_col;
     extern __shared__ int s_diagonals[];
     int sum_diag = (row_n * (row_n + 1))/2;
-
-
     int c_sum = (bid*(bid+1))/2;
+
     if (bid <= row_n-1) {
         next_row = bid - tid;
         next_col = tid;
-
         opp_row =  row_n -1- tid;
         opp_col =  col_n -1- bid + tid;
-
+        // load the elements from increasing and decreasing diagonals
         if ((next_row >= 0) && (next_col < bid+1)) {
             s_diagonals[tid] = d_dist_mat[next_row * col_n + next_col];
             s_diagonals[BLOCKSIZE+tid] = d_dist_mat[opp_row * col_n + opp_col];
@@ -81,7 +77,7 @@ __global__ void kernel_order_dist_matrix(int *d_dist_mat, int *d_ordered_dist_ma
     } else {
         next_row = (row_n-1-tid);
         next_col = 1+((bid-row_n)+tid);
-
+        // load the elements from the diagonals with same size
         if (next_row >= 0 && next_col < col_n && next_col > 0 && ( bid%row_n < (col_n-row_n) )) {
             s_diagonals[tid] = d_dist_mat[next_row*col_n + next_col];
         }
@@ -93,8 +89,86 @@ __global__ void kernel_order_dist_matrix(int *d_dist_mat, int *d_ordered_dist_ma
     }
 }
 
-__global__ void kernel_calculate_accumulated_cost_matrix() {
+__global__ void kernel_reorder_matrix(int *D, int *D_ord, int *D_index_matrix) {
+    int bid = blockIdx.x;
+    int tid = threadIdx.x;
+    int uid = blockIdx.x*blockDim.x + threadIdx.x;
 
+    int ind = D_index_matrix[uid];
+    D[ind] = D_ord[uid];
+}
+
+__global__ void kernel_calculate_accumulated_cost_matrix(int *D, const int *C, const int rows, const int cols) {
+
+    int bid = blockIdx.x;
+    int tid = threadIdx.x;
+    int uid = blockIdx.x*blockDim.x + threadIdx.x;
+    extern __shared__ int s_diag[]; // we store 3 diagonals in the shared memory - current and last 2
+    for (int i = 0; i < rows; i++) {
+        int c_sum = (i*(i+1))/2;
+        int row_offset = c_sum + tid;
+        // increasing diagonals
+        if (tid <= i && tid < rows) {
+            if (tid == i) {
+                // only copy element
+                D[row_offset] = C[row_offset];
+            }
+            else if (tid == 0) {
+                // first element of the column - cumulative sum
+                D[c_sum] = C[c_sum] + D[c_sum - i];
+            } else {
+                if (tid > 0) {
+                // calculating square indices
+                    int c_sum_prev = ((i-1)*(i))/2;
+                    int offset = (c_sum - c_sum_prev);
+                    int up = D[(c_sum + tid)-offset];
+                    int left = D[(c_sum + tid) - (offset +1)];
+                    int up_left = D[(c_sum + tid) - (2*offset)];
+                    D[c_sum + tid] = C[c_sum + tid] + min(min(up, left), up_left);
+                }
+            }
+        }
+        __syncthreads();
+    }
+    __syncthreads();
+
+    // diagonal elements have the same number across iterations
+    for (int i = 0; i < cols-rows; i++) {
+        // next element in memory = the cum. sum of n rows + iteration * thread id
+        int offset = ((rows)*(rows+1))/2 + (i*(rows) +tid);
+        if (tid < rows) {
+            if (tid == rows-1) {
+                // only copy element (first row copy)
+                D[offset] = C[offset];
+            } else {
+                int up = D[offset-rows+1];
+                int left = D[(offset -rows)];
+                int up_left = D[(offset - (2*rows-1))];
+                D[offset] = C[offset] + min(min(up, left), up_left);
+            }
+        }
+        __syncthreads();
+    }
+
+    __syncthreads();
+    // start decreasing
+    for (int i = 0; i <rows-1 ; i++) {
+        if (tid < rows-1 -i) {
+            // all elements so far
+            int c_sum =cols*rows -(rows*(rows-1))/2;
+            int c_sd = 0;
+            for (int j = 0; j < i; j++) { c_sd += rows-1 - j; }
+            c_sum+= c_sd;
+
+            int up = D[(c_sum+tid)-c_sd+1];
+            int left = D[(c_sum+tid)-c_sd];
+            int up_left = D[(c_sum+tid)-2*c_sd];
+            printf("C %d, tid %d  ---- up %d, left %d, upleft %d\n", C[c_sum+tid], tid, up, left,up_left);
+            D[c_sum + tid] = C[c_sum+tid] + min(min(up, left), up_left);
+
+        }
+        __syncthreads();
+    }
 }
 
 
@@ -108,7 +182,6 @@ __device__ void warp_reduce(volatile int *s_data, int tid) {
         s_data[tid] = min(s_data[tid],s_data[tid +  1]);
     }
 }
-
 
 // number of blocks = number of unique elements, number of threads/block = number of rotations (<= blockSize)
 __global__ void kernel_calculateMatrixBlock_row(
@@ -153,7 +226,6 @@ __global__ void kernel_construct_distance_matrix(unsigned long long int *d_seque
     if (uid < sequence_size) {
         kernel_calculateMatrixBlock_row<<<N,BLOCKSIZE>>>(hash, d_training_matrix, &d_distance_matrix[uid*N], N);
     }
-    cudaDeviceSynchronize();
 }
 
 __global__ void kernel_shift_elements(unsigned long long int *d_sequence, unsigned long long int *d_tmp_seq, int d_sequence_size) {
@@ -163,10 +235,6 @@ __global__ void kernel_shift_elements(unsigned long long int *d_sequence, unsign
         __syncthreads();
         d_sequence[uid] = d_tmp_seq[uid];
     }
-}
-
-__global__ void kernel_flip(int *odata, int *idata, int width, int height) {
-    __shared__ int row[BLOCKSIZE]; // each block will store a row of halt the matrix
 }
 
 
@@ -200,7 +268,7 @@ class GPUHasher
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j <cols ; j++) {
                 l_test[i*cols+j] = i*cols+j;
-                printf("%02d, ", l_test[i*cols+j]);
+                printf("%03d, ", l_test[i*cols+j]);
 
             }
             std::cout << std::endl;
@@ -208,19 +276,38 @@ class GPUHasher
         std::cout << std::endl << std::endl;
         int *d_test;
         int *d_ordered_test;
+        int *d_index_matrix;
+        int *d_D;
         gpuErrchk( cudaMalloc(&d_test, rows*cols*sizeof(int)));
         gpuErrchk( cudaMemcpy(d_test, l_test, rows*cols*sizeof(int), cudaMemcpyHostToDevice));
         gpuErrchk( cudaMalloc(&d_ordered_test, rows*cols*sizeof(int)));
-        kernel_order_dist_matrix<<<cols, BLOCKSIZE, BLOCKSIZE*2>>>(d_test, d_ordered_test, rows, cols); //
+        gpuErrchk( cudaMalloc(&d_index_matrix, rows*cols*sizeof(int)));
+        gpuErrchk( cudaMalloc(&d_D, rows*cols*sizeof(int)));
+        kernel_order_dist_matrix<<<cols, rows, BLOCKSIZE*2>>>(d_test, d_ordered_test, rows, cols); //
+        cudaMemcpy(d_index_matrix, d_ordered_test, rows*cols*sizeof(int), cudaMemcpyDeviceToDevice);
         cudaMemcpy(l_ordered_test, d_ordered_test, rows*cols*sizeof(int), cudaMemcpyDeviceToHost);
         std::cout << std::endl << std::endl;
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j <cols ; j++) {
 
-                printf("%02d, ", l_ordered_test[i*cols+j]);
+                printf("%03d, ", l_ordered_test[i*cols+j]);
             }
             std::cout << std::endl;
         }
+
+        kernel_calculate_accumulated_cost_matrix<<<1, rows, 3*rows>>>(d_D, d_ordered_test, rows,cols);
+        cudaDeviceSynchronize();
+        kernel_reorder_matrix<<<1, rows*cols>>>(d_test,d_D, d_index_matrix);
+        cudaMemcpy(l_test, d_test, rows*cols*sizeof(int), cudaMemcpyDeviceToHost);
+        std::cout << std::endl << std::endl;
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j <cols ; j++) {
+
+                printf("%03d, ", l_test[i*cols+j]);
+            }
+            std::cout << std::endl;
+        }
+
     }
 
     // upload a hash sequence to the gpu
