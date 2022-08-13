@@ -71,7 +71,7 @@ using namespace units::time;
 int main(int argc, char **argv) {
 
     bool show_images = true;    // show visual
-    int seq_length = 96;        // sequence length
+    int seq_length = 128;        // sequence length
     int roll_step = RESIZED_WIDTH;         // number of rotations for a view
     cv::Size unwrapRes(RESIZED_WIDTH,RESIZED_HEIGHT); // resolution of the unwrrapped video
     const int IMG_WIDTH = unwrapRes.width;
@@ -80,15 +80,13 @@ int main(int argc, char **argv) {
     int skipstep = 1;           // skip frames in training matrix
     int num_datasets = 2;
     int testRouteNum = 0;
-
     int dataset_num = 0; // dataset to test
-
     double const PI = 3.14159265358979323;
 
     Route route_vector;
     DTHW sequence_matcher;
-    GPUHasher g_hasher;
-    g_hasher.testOrdering();
+
+
 
     std::unique_ptr<BoBRobotics::Navigation::ImageDatabase::RouteRecorder> recorder;
     std::unique_ptr<BoBRobotics::Navigation::ImageDatabase> database;
@@ -99,21 +97,21 @@ int main(int argc, char **argv) {
     int hash_mat_size = hashMat.getMatrix().size();
     unsigned long long int* l_hash_mat = (unsigned long long int*) malloc(hash_mat_size*sizeof(unsigned long long int));
     hashMat.getHashMatUL(l_hash_mat);
-    unsigned long long int* l_sequence = (unsigned long long int*) malloc(seq_length*sizeof(unsigned long long int));
+    unsigned long long int l_sequence[seq_length];
     int *l_cost_matrix;
     unsigned int d_sequence_size = seq_length;
 
 
     std::cout << " create GPU matrix" << std::endl;
+    GPUHasher g_hasher;
     g_hasher.initGPU(l_hash_mat, hash_mat_size, d_sequence_size, roll_step);
     g_hasher.uploadSequence(l_hash_mat);
+
 
     for (int s = d_sequence_size; s < hash_mat_size/roll_step; s++) {
 
         g_hasher.addToSequence(&l_hash_mat[s*roll_step]);
         g_hasher.getDistanceMatrix();
-        //cudaDeviceSynchronize();
-        //g_hasher.calculate_accumulated_cost_matrix();
         std::cout << " seq :" << s <<  std::endl;
 
 
@@ -121,12 +119,22 @@ int main(int argc, char **argv) {
         cv::Mat host_mat1 = g_hasher.downloadDistanceMatrix();
         cv::normalize(host_mat1, host_mat1, 0, 255, cv::NORM_MINMAX);
         cv::applyColorMap(host_mat1, host_mat1, cv::COLORMAP_JET);
-        cv::imshow("gpu_mat", host_mat1);
+       // cv::imshow("gpu_mat", host_mat1);
+
+        g_hasher.calculate_accumulated_cost_matrix();
+        cv::Mat host_mat2 = g_hasher.downloadAccumulatedCostMatrix();
+        cv::normalize(host_mat2, host_mat2, 0, 255, cv::NORM_MINMAX);
+        cv::applyColorMap(host_mat2, host_mat2, cv::COLORMAP_JET);
+       // cv::imshow("gpu_mat2", host_mat2);
+
+        cv::Mat combined;
+        cv::vconcat(host_mat1, host_mat2, combined);
+        cv::imshow("gpu_mat2", combined);
         cv::waitKey(1);
 
     }
     cudaDeviceSynchronize();
-
+    cv::waitKey(0);
 
     // <<<<< GPU >>>>>>
 

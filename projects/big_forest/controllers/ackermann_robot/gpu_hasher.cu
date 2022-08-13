@@ -13,6 +13,7 @@
 
 #include <thrust/device_ptr.h>
 #include <thrust/extrema.h>
+#include <thrust/execution_policy.h>
 
 
 const int BLOCKSIZE = 256;
@@ -96,6 +97,8 @@ __global__ void kernel_reorder_matrix(int *D, int *D_ord, int *D_index_matrix) {
 
     int ind = D_index_matrix[uid];
     D[ind] = D_ord[uid];
+
+
 }
 
 __global__ void kernel_calculate_accumulated_cost_matrix(int *D, const int *C, const int rows, const int cols) {
@@ -167,7 +170,6 @@ __global__ void kernel_calculate_accumulated_cost_matrix(int *D, const int *C, c
             int up = D[(c_sum+tid)-up_offset];
             int left = D[(c_sum+tid)-left_offset];
             int up_left = D[(c_sum+tid)-up_left_offset];
-            printf("C %d, tid %d  ---- up %d, left %d, upleft %d\n", C[c_sum+tid], tid, up, left,up_left);
             D[c_sum + tid] = C[c_sum+tid] + min(min(up, left), up_left);
         }
         __syncthreads();
@@ -185,6 +187,13 @@ __device__ void warp_reduce(volatile int *s_data, int tid) {
         s_data[tid] = min(s_data[tid],s_data[tid +  1]);
     }
 }
+
+__global__ void kernel_fill_index_matrix(int *index_matrix) {
+    int uid = blockIdx.x*blockDim.x + threadIdx.x;
+    index_matrix[uid] = uid;
+}
+
+
 
 // number of blocks = number of unique elements, number of threads/block = number of rotations (<= blockSize)
 __global__ void kernel_calculateMatrixBlock_row(
@@ -253,70 +262,33 @@ class GPUHasher
         num_cols = num_rotations;
         d_sequence_size = sequence_size;
         l_cost_matrix = (int *) malloc(N * sizeof(int));
+        l_sequence = (unsigned long long int *) malloc(d_sequence_size * sizeof(unsigned long long int));
+        l_accumulated_cost_matrix = (int *) malloc(d_sequence_size * num_rows * sizeof(int));
 
         gpuErrchk( cudaMalloc(&d_ordered_cost_mat, d_sequence_size*num_rows*sizeof(int)));
         gpuErrchk( cudaMalloc(&d_tmp_seq, d_sequence_size*sizeof(unsigned long long int)) );
         gpuErrchk( cudaMalloc(&d_cost_matrix, d_sequence_size*num_rows*sizeof(int)));
+        gpuErrchk( cudaMalloc(&d_index_matrix, d_sequence_size*num_rows*sizeof(int)));
+        gpuErrchk( cudaMalloc(&d_index_matrix_ord, d_sequence_size*num_rows*sizeof(int)));
+        gpuErrchk( cudaMalloc(&d_accumulated_cost_mat, d_sequence_size*num_rows*sizeof(int)));
+        gpuErrchk( cudaMalloc(&d_accumulated_cost_mat_ord, d_sequence_size*num_rows*sizeof(int)));
         gpuErrchk( cudaMalloc(&d_sequence, d_sequence_size*sizeof(unsigned long long int)));
         gpuErrchk( cudaMalloc(&d_hash_mat, N*sizeof(unsigned long long int)));
         gpuErrchk( cudaMemcpy(d_hash_mat, l_hash_mat, N*sizeof(unsigned long long int), cudaMemcpyHostToDevice));
 
-    }
-
-    void testOrdering() {
-        int rows = 7;
-        int cols = 10;
-        int *l_test = (int *) malloc(rows*cols * sizeof(int));
-        int *l_ordered_test = (int *) malloc(rows*cols * sizeof(int));
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j <cols ; j++) {
-                l_test[i*cols+j] = i*cols+j;
-                printf("%03d, ", l_test[i*cols+j]);
-
-            }
-            std::cout << std::endl;
-        }
-        std::cout << std::endl << std::endl;
-        int *d_test;
-        int *d_ordered_test;
-        int *d_index_matrix;
-        int *d_D;
-        gpuErrchk( cudaMalloc(&d_test, rows*cols*sizeof(int)));
-        gpuErrchk( cudaMemcpy(d_test, l_test, rows*cols*sizeof(int), cudaMemcpyHostToDevice));
-        gpuErrchk( cudaMalloc(&d_ordered_test, rows*cols*sizeof(int)));
-        gpuErrchk( cudaMalloc(&d_index_matrix, rows*cols*sizeof(int)));
-        gpuErrchk( cudaMalloc(&d_D, rows*cols*sizeof(int)));
-        kernel_order_dist_matrix<<<cols, rows, BLOCKSIZE*2>>>(d_test, d_ordered_test, rows, cols); //
-        cudaMemcpy(d_index_matrix, d_ordered_test, rows*cols*sizeof(int), cudaMemcpyDeviceToDevice);
-        cudaMemcpy(l_ordered_test, d_ordered_test, rows*cols*sizeof(int), cudaMemcpyDeviceToHost);
-        std::cout << std::endl << std::endl;
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j <cols ; j++) {
-
-                printf("%03d, ", l_ordered_test[i*cols+j]);
-            }
-            std::cout << std::endl;
-        }
-
-        kernel_calculate_accumulated_cost_matrix<<<1, rows, 3*rows>>>(d_D, d_ordered_test, rows,cols);
+        kernel_fill_index_matrix<<<num_rows, d_sequence_size>>>(d_index_matrix_ord);
         cudaDeviceSynchronize();
-        kernel_reorder_matrix<<<1, rows*cols>>>(d_test,d_D, d_index_matrix);
-        cudaMemcpy(l_test, d_test, rows*cols*sizeof(int), cudaMemcpyDeviceToHost);
-        std::cout << std::endl << std::endl;
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j <cols ; j++) {
-
-                printf("%03d, ", l_test[i*cols+j]);
-            }
-            std::cout << std::endl;
-        }
+        kernel_order_dist_matrix<<<num_rows, d_sequence_size, BLOCKSIZE*2>>>(d_index_matrix_ord, d_index_matrix, d_sequence_size, num_rows);
+        cudaDeviceSynchronize();
 
     }
+
 
     // upload a hash sequence to the gpu
     void uploadSequence(unsigned long long int *sequence) {
         l_sequence = sequence;
-        gpuErrchk( cudaMemcpy(d_sequence, sequence, d_sequence_size*sizeof(unsigned long long int), cudaMemcpyHostToDevice));
+
+        gpuErrchk( cudaMemcpy(d_sequence, l_sequence, d_sequence_size*sizeof(unsigned long long int), cudaMemcpyHostToDevice));
     }
 
     // append one element to the hash sequence and pop front
@@ -339,7 +311,36 @@ class GPUHasher
     }
 
     void calculate_accumulated_cost_matrix() {
-        kernel_order_dist_matrix<<<num_rows*2, d_sequence_size, num_rows>>>(d_cost_matrix, d_ordered_cost_mat, num_rows, num_cols);
+        kernel_order_dist_matrix<<<num_rows, d_sequence_size, BLOCKSIZE*2>>>(d_cost_matrix, d_ordered_cost_mat, d_sequence_size, num_rows);
+        cudaDeviceSynchronize();
+        kernel_calculate_accumulated_cost_matrix<<<1, d_sequence_size, 3*d_sequence_size>>>(d_accumulated_cost_mat, d_ordered_cost_mat, d_sequence_size,num_rows);
+        cudaDeviceSynchronize();
+        kernel_reorder_matrix<<<num_rows, d_sequence_size>>>(d_accumulated_cost_mat_ord,d_accumulated_cost_mat, d_index_matrix);
+
+    }
+
+
+    int getMinIndex() {
+        thrust::device_ptr<int> g_ptr =  thrust::device_pointer_cast(&d_accumulated_cost_mat_ord[(d_sequence_size-1)*num_rows]);
+        int result_offset = thrust::min_element( g_ptr, g_ptr + (num_rows-1) ) -g_ptr;
+        int min_value = *(g_ptr + result_offset);
+
+        std::cout << " ind " << result_offset << " min = " << min_value << std::endl;
+        return result_offset;
+    }
+
+    cv::Mat downloadAccumulatedCostMatrix() {
+
+        gpuErrchk( cudaMemcpy(l_accumulated_cost_matrix, d_accumulated_cost_mat_ord, num_rows*d_sequence_size*sizeof(int), cudaMemcpyDeviceToHost) );
+        cv::cuda::GpuMat gpu_mat({d_sequence_size, num_rows, CV_32SC1, d_accumulated_cost_mat_ord});
+        cv::Mat host_mat;
+        gpu_mat.download(host_mat);
+        host_mat.convertTo(host_mat,CV_8UC1);
+
+        getMinIndex();
+
+
+        return host_mat;
     }
 
     // downloads the currant distance matrix in opencv mat
@@ -370,7 +371,12 @@ class GPUHasher
     unsigned long long int *d_tmp_seq;  // temporary sequence holder
     int *d_ordered_cost_mat;            // dist matrix ordered in zig zag for parallel sequence matching
     int *l_cost_matrix;                 // final cost matrix on host
+    int *l_accumulated_cost_matrix;
     int *d_cost_matrix;                 // final cost matrix on device
+    int *d_index_matrix;                // hold the indices for the ordered cost matrix
+    int *d_index_matrix_ord;
+    int *d_accumulated_cost_mat;        // accumulated cost matrix
+    int *d_accumulated_cost_mat_ord;        // accumulated cost matrix
 
     unsigned int d_sequence_size;       // size of the sequence
     int N;                              // total size of a hash matrix with rotations
