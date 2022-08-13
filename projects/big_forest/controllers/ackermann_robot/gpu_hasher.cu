@@ -10,6 +10,10 @@
 #include <chrono>
 #include <string.h>
 #include <bitset>
+#include <bit>
+#include <cstdint>
+
+
 
 #include <thrust/device_ptr.h>
 #include <thrust/extrema.h>
@@ -27,27 +31,6 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
    }
 }
 
-// from :
-// https://github.com/JonathanWatkins/CUDA/blob/master/NvidiaCourse/Exercises/transpose/transpose.cu
-__global__ void kernel_transpose(int *odata, int *idata, int width, int height)
-{
-	__shared__ int block[32][32];
-	unsigned int xIndex = blockIdx.x * 32 + threadIdx.x;
-	unsigned int yIndex = blockIdx.y * 32 + threadIdx.y;
-	if((xIndex < width) && (yIndex < height))
-	{
-		unsigned int index_in = yIndex * width + xIndex;
-		block[threadIdx.y][threadIdx.x] = idata[index_in];
-	}
-	__syncthreads();
-	xIndex = blockIdx.y * 32 + threadIdx.x;
-	yIndex = blockIdx.x * 32 + threadIdx.y;
-	if((xIndex < height) && (yIndex < width))
-	{
-		unsigned int index_out = yIndex * height + xIndex;
-		odata[index_out] = block[threadIdx.x][threadIdx.y];
-	}
-}
 
 // number of blocks = number of rows * 2 - 1, number of threads/block = number of rows (<= blockSize)
 __global__ void kernel_order_dist_matrix(int *d_dist_mat, int *d_ordered_dist_mat, int row_n, int col_n) {
@@ -262,6 +245,7 @@ class GPUHasher
         num_cols = num_rotations;
         d_sequence_size = sequence_size;
         l_cost_matrix = (int *) malloc(N * sizeof(int));
+        l_best_row = (unsigned long long int *) malloc(BLOCKSIZE * sizeof(unsigned long long int));
         l_sequence = (unsigned long long int *) malloc(d_sequence_size * sizeof(unsigned long long int));
         l_accumulated_cost_matrix = (int *) malloc(d_sequence_size * num_rows * sizeof(int));
 
@@ -320,13 +304,25 @@ class GPUHasher
     }
 
 
-    int getMinIndex() {
+    std::pair<int,int> getMinIndex(std::bitset<64> current_hash, std::vector<std::bitset<64>> hashmat) {
         thrust::device_ptr<int> g_ptr =  thrust::device_pointer_cast(&d_accumulated_cost_mat_ord[(d_sequence_size-1)*num_rows]);
         int result_offset = thrust::min_element( g_ptr, g_ptr + (num_rows-1) ) -g_ptr;
         int min_value = *(g_ptr + result_offset);
+        int min = 10000;
+        int best_rot = -1;
+        for (int i = 0; i < num_cols; i++) {
+            if (result_offset >= 0 && result_offset < num_rows) {
+                std::bitset<64> element = hashmat[result_offset*num_cols+i];
 
-        std::cout << " ind " << result_offset << " min = " << min_value << std::endl;
-        return result_offset;
+                int rot_hash_val = DCTHash::distance(element, current_hash);
+                if (rot_hash_val < min) {
+                    min = rot_hash_val;
+                    best_rot = i;
+                }
+            }
+        }
+        std::cout << " ind " << result_offset << " rotation = " << best_rot << std::endl;
+        return {result_offset, best_rot};
     }
 
     cv::Mat downloadAccumulatedCostMatrix() {
@@ -336,8 +332,6 @@ class GPUHasher
         cv::Mat host_mat;
         gpu_mat.download(host_mat);
         host_mat.convertTo(host_mat,CV_8UC1);
-
-        getMinIndex();
 
 
         return host_mat;
@@ -377,6 +371,7 @@ class GPUHasher
     int *d_index_matrix_ord;
     int *d_accumulated_cost_mat;        // accumulated cost matrix
     int *d_accumulated_cost_mat_ord;        // accumulated cost matrix
+    unsigned long long int *l_best_row;
 
     unsigned int d_sequence_size;       // size of the sequence
     int N;                              // total size of a hash matrix with rotations

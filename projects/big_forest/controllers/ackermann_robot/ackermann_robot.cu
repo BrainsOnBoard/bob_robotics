@@ -57,7 +57,7 @@ cv::Mat get_cam_image(const unsigned char *image, int width, int height) {
 
 #define MAX_SPEED 6.28
 
-#define RESIZED_WIDTH 255// 255
+#define RESIZED_WIDTH 256// 255
 #define RESIZED_HEIGHT 64 // 64
 
 // All the webots classes are defined in the "webots" namespace
@@ -95,17 +95,20 @@ int main(int argc, char **argv) {
     HashMatrix hashMat(route.nodes, roll_step);
 
     int hash_mat_size = hashMat.getMatrix().size();
+    auto hm = hashMat.getMatrix();
     unsigned long long int* l_hash_mat = (unsigned long long int*) malloc(hash_mat_size*sizeof(unsigned long long int));
     hashMat.getHashMatUL(l_hash_mat);
     unsigned long long int l_sequence[seq_length];
     int *l_cost_matrix;
     unsigned int d_sequence_size = seq_length;
-
+    for (int i = 0; i < d_sequence_size; i++) {
+        l_sequence[i] = l_hash_mat[i*BLOCKSIZE];
+    }
 
     std::cout << " create GPU matrix" << std::endl;
     GPUHasher g_hasher;
     g_hasher.initGPU(l_hash_mat, hash_mat_size, d_sequence_size, roll_step);
-    g_hasher.uploadSequence(l_hash_mat);
+    g_hasher.uploadSequence(l_sequence);
 
 
     for (int s = d_sequence_size; s < hash_mat_size/roll_step; s++) {
@@ -122,6 +125,7 @@ int main(int argc, char **argv) {
        // cv::imshow("gpu_mat", host_mat1);
 
         g_hasher.calculate_accumulated_cost_matrix();
+        g_hasher.getMinIndex(hm[s*roll_step],hm);
         cv::Mat host_mat2 = g_hasher.downloadAccumulatedCostMatrix();
         cv::normalize(host_mat2, host_mat2, 0, 255, cv::NORM_MINMAX);
         cv::applyColorMap(host_mat2, host_mat2, cv::COLORMAP_JET);
@@ -130,7 +134,7 @@ int main(int argc, char **argv) {
         cv::Mat combined;
         cv::vconcat(host_mat1, host_mat2, combined);
         cv::imshow("gpu_mat2", combined);
-        cv::waitKey(1);
+        cv::waitKey(0);
 
     }
     cudaDeviceSynchronize();
