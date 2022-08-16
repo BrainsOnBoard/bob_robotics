@@ -171,10 +171,24 @@ __device__ void warp_reduce(volatile int *s_data, int tid) {
     }
 }
 
+template <typename T>
+__device__ void warp_reduce_add(volatile T *s_data, int tid) {
+    if (tid < 32) {
+        s_data[tid] += s_data[tid + 32];
+        s_data[tid] += s_data[tid + 16];
+        s_data[tid] += s_data[tid +  8];
+        s_data[tid] += s_data[tid +  4];
+        s_data[tid] += s_data[tid +  2];
+        s_data[tid] += s_data[tid +  1];
+    }
+}
+
+
 __global__ void kernel_fill_index_matrix(int *index_matrix) {
     int uid = blockIdx.x*blockDim.x + threadIdx.x;
     index_matrix[uid] = uid;
 }
+
 
 
 
@@ -232,6 +246,65 @@ __global__ void kernel_shift_elements(unsigned long long int *d_sequence, unsign
     }
 }
 
+// roll image to the right by the number of pixels specified == turn left by x pixels
+template <typename T>
+__global__ void kernel_roll_image(T* rotated_image, T *image, int image_width, int pixel_to_rotate) {
+
+    int uid = blockIdx.x*blockDim.x + threadIdx.x;
+    int bid = blockIdx.x;
+    int tid = threadIdx.x;
+
+    // load each row to shred memory
+    extern __shared__ T image_row[];
+    image_row[tid] = image[uid];
+    __syncthreads();
+
+    if (tid <= pixel_to_rotate) {
+        rotated_image[uid] =image_row[image_width - 1 - pixel_to_rotate + tid];
+
+    } else {
+        rotated_image[uid] = image_row[ -(pixel_to_rotate+1) + tid];
+    }
+
+
+}
+
+// if n <= BLOCKSIZE
+__global__ void kernel_get_transform_matrix(float *T, int n) {
+    int uid = blockIdx.x*blockDim.x + threadIdx.x;
+    int bid = blockIdx.x;
+    int tid = threadIdx.x;
+
+    // shared memory
+    extern __shared__ float cache[];
+    float i = (float)tid;
+    float N = (float)n;
+    float PI = 3.141592654;
+    // different normalisation for first column
+    float k = 0;
+    if (tid == 0) { k = sqrt(1.0/N); } else { k= sqrt(2.0/N); }
+    // dot product
+    while (tid < n) { cache[tid] = ((2*i+1) * i*PI/(2*N)); }
+    __syncthreads();
+    float dotProduct = 0.0;
+    if (n >64) {
+        // summing the dot elements
+        for(unsigned int stride = (blockDim.x/2); stride > 32 ; stride /=2){
+            __syncthreads();
+            if(tid < stride) { cache[tid] += cache[tid + stride]; }
+        }
+        warp_reduce_add(cache, tid);
+        __syncthreads();
+    } else {
+
+        for (int j = 0; j < n-1; j++) {
+            dotProduct += cache[j + 1];
+
+        }
+    }
+    T[uid] = k * cos(dotProduct);
+}
+
 
 class GPUHasher
 {
@@ -239,7 +312,7 @@ class GPUHasher
     GPUHasher() {}
 
     // allocate memory using the training matrix [num_elements x num_rotations]
-    void initGPU(unsigned long long int *l_hash_mat, int hash_mat_size, int sequence_size, int num_rotations) {
+    void initGPU(unsigned long long int *l_hash_mat, int hash_mat_size, int sequence_size, int num_rotations, int img_width, int img_height) {
         N = hash_mat_size;
         num_rows = N/num_rotations;
         num_cols = num_rotations;
@@ -247,8 +320,14 @@ class GPUHasher
         l_cost_matrix = (int *) malloc(N * sizeof(int));
         l_best_row = (unsigned long long int *) malloc(BLOCKSIZE * sizeof(unsigned long long int));
         l_sequence = (unsigned long long int *) malloc(d_sequence_size * sizeof(unsigned long long int));
+        l_rot_img_data = (uchar *) malloc(img_height*img_width * sizeof(uchar));
         l_accumulated_cost_matrix = (int *) malloc(d_sequence_size * num_rows * sizeof(int));
+        m_image_width = img_width;
+        m_image_height = img_height;
 
+
+        gpuErrchk( cudaMalloc(&d_image, img_height*img_width*sizeof(uchar)));
+        gpuErrchk( cudaMalloc(&d_rolled_image, img_height*img_width*sizeof(uchar)));
         gpuErrchk( cudaMalloc(&d_ordered_cost_mat, d_sequence_size*num_rows*sizeof(int)));
         gpuErrchk( cudaMalloc(&d_tmp_seq, d_sequence_size*sizeof(unsigned long long int)) );
         gpuErrchk( cudaMalloc(&d_cost_matrix, d_sequence_size*num_rows*sizeof(int)));
@@ -260,15 +339,72 @@ class GPUHasher
         gpuErrchk( cudaMalloc(&d_hash_mat, N*sizeof(unsigned long long int)));
         gpuErrchk( cudaMemcpy(d_hash_mat, l_hash_mat, N*sizeof(unsigned long long int), cudaMemcpyHostToDevice));
 
+        gpuErrchk( cudaMalloc(&d_rolled_images, num_rotations*img_height*img_width*sizeof(uchar)));
+
         kernel_fill_index_matrix<<<num_rows, d_sequence_size>>>(d_index_matrix_ord);
         cudaDeviceSynchronize();
         kernel_order_dist_matrix<<<num_rows, d_sequence_size, BLOCKSIZE*2>>>(d_index_matrix_ord, d_index_matrix, d_sequence_size, num_rows);
         cudaDeviceSynchronize();
 
+        std::cout << " GPU initialized" << std::endl;
+
     }
 
+    void getDCTMatrix(float *T,int n) {
+        cudaMalloc(&T, n*n*sizeof(float));
+        kernel_get_transform_matrix<<<n, n, n>>>(T, n);
+    }
 
-    // upload a hash sequence to the gpu
+    template<typename T>
+    void printMatrix(T *d_matrix,int rows, int cols) {
+        T tmp[rows*cols];
+        cudaMemcpy(tmp, d_matrix, rows*cols*sizeof(T), cudaMemcpyDeviceToHost);
+        std::cout << std::fixed;
+        std::cout << std::setprecision(2);
+        std::cout << "-------------------------------------" << std::endl;
+        std::cout << "-------------Matrix start------------" << std::endl;
+        for (int i = 0; i < cols; i++) {
+            for (int j = 0; j < rows; j++) {
+                std::cout << " ["<< tmp[i*rows+j] << "] ";
+            }
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
+        std::cout << "-------------Matrix end--------------" << std::endl;
+        std::cout << "-------------------------------------" << std::endl;
+    }
+
+    // rolls images to get all the rotations
+    void get_rotations(const cv::Mat &image, std::vector<cv::Mat> &rotated_images, const int num_rotations) {
+        auto img_data = image.data;
+        int cols = image.cols;
+        int rows = image.rows;
+        auto type = image.type();
+
+
+
+        rotated_images.reserve(num_rotations);
+        cv::cuda::GpuMat gpu_mats[num_rotations];
+        gpuErrchk( cudaMemcpy(d_image, image.data, rows*cols*sizeof(uchar), cudaMemcpyHostToDevice) );
+        for (int i = 0; i < num_rotations; i++) {
+            int offset = i*cols*rows;
+            kernel_roll_image<<<rows, cols, cols*sizeof(uchar) >>>(d_rolled_images+offset, d_image, cols,i);
+        }
+        cudaDeviceSynchronize();
+
+
+        for (int i = 0; i < num_rotations; i++) {
+            int offset = i*cols*rows;
+            //gpuErrchk( cudaMemcpy(l_rot_img_data, d_rolled_images+offset, rows*cols*sizeof(uchar), cudaMemcpyDeviceToHost) );
+            //cv::Mat tmp = cv::Mat(cv::Size(cols,rows), type, &l_rot_img_data);
+            cv::cuda::GpuMat gpu_mat({rows,cols, type, d_rolled_images+offset});
+            cv::Mat tmp;
+            gpu_mat.download(tmp);
+            rotated_images.push_back(tmp.clone());
+        }
+    }
+
+    // upload a hash sequence to the gpu*
     void uploadSequence(unsigned long long int *sequence) {
         l_sequence = sequence;
 
@@ -370,13 +506,21 @@ class GPUHasher
     int *d_index_matrix;                // hold the indices for the ordered cost matrix
     int *d_index_matrix_ord;
     int *d_accumulated_cost_mat;        // accumulated cost matrix
-    int *d_accumulated_cost_mat_ord;        // accumulated cost matrix
+    int *d_accumulated_cost_mat_ord;    // accumulated cost matrix
+    int *d_T;
     unsigned long long int *l_best_row;
+    uchar* d_rolled_images;  // all rotations of an image
+    std::vector<uchar*> image_data_vector;
 
     unsigned int d_sequence_size;       // size of the sequence
     int N;                              // total size of a hash matrix with rotations
     int num_rows;                       // number of unique elements in a hash matrix
     int num_cols;                       // number of rotations in the training matrix
+    uchar *d_image;
+    uchar *d_rolled_image;
+    uchar *l_rot_img_data;
+    int m_image_width;
+    int m_image_height;
 
 };
 
