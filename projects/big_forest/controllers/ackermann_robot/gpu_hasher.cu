@@ -18,9 +18,11 @@
 #include <thrust/device_ptr.h>
 #include <thrust/extrema.h>
 #include <thrust/execution_policy.h>
+#include <cublas_v2.h>
 
 
 const int BLOCKSIZE = 256;
+const int BLOCK_DIM = 16;
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
 {
@@ -29,6 +31,51 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
       fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
       if (abort) exit(code);
    }
+}
+
+// source : nvidia.docs
+__global__ void kernel_matrix_multiply(float *a, float* b, float *c, int N) {
+    __shared__ float aTile[BLOCK_DIM][BLOCK_DIM], bTile[BLOCK_DIM][BLOCK_DIM];
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    float sum = 0.0f;
+    aTile[threadIdx.y][threadIdx.x] = a[row*BLOCK_DIM+threadIdx.x];
+    bTile[threadIdx.y][threadIdx.x] = b[threadIdx.y*N+col];
+    __syncthreads();
+    for (int i = 0; i < BLOCK_DIM; i++) {
+        sum += aTile[threadIdx.y][i]* bTile[i][threadIdx.x];
+    }
+    c[row*N+col] = sum;
+}
+
+//source:
+//github.com/JonathanWatkins/CUDA/blob/master/NvidiaCourse/Exercises/transpose/transpose.cu
+__global__ void kernel_transpose(float *odata, float *idata, int width, int height)
+{
+	__shared__ float block[BLOCK_DIM][BLOCK_DIM+1];
+
+	// read the matrix tile into shared memory
+    // load one element per thread from device memory (idata) and store it
+    // in transposed order in block[][]
+	unsigned int xIndex = blockIdx.x * BLOCK_DIM + threadIdx.x;
+	unsigned int yIndex = blockIdx.y * BLOCK_DIM + threadIdx.y;
+	if((xIndex < width) && (yIndex < height))
+	{
+		unsigned int index_in = yIndex * width + xIndex;
+		block[threadIdx.y][threadIdx.x] = idata[index_in];
+	}
+
+    // synchronise to ensure all writes to block[][] have completed
+	__syncthreads();
+
+	// write the transposed matrix tile to global memory (odata) in linear order
+	xIndex = blockIdx.y * BLOCK_DIM + threadIdx.x;
+	yIndex = blockIdx.x * BLOCK_DIM + threadIdx.y;
+	if((xIndex < height) && (yIndex < width))
+	{
+		unsigned int index_out = yIndex * height + xIndex;
+		odata[index_out] = block[threadIdx.x][threadIdx.y];
+	}
 }
 
 
@@ -159,7 +206,6 @@ __global__ void kernel_calculate_accumulated_cost_matrix(int *D, const int *C, c
     }
 }
 
-
 __device__ void warp_reduce(volatile int *s_data, int tid) {
     if (tid < 32) {
         s_data[tid] = min(s_data[tid],s_data[tid + 32]);
@@ -183,14 +229,10 @@ __device__ void warp_reduce_add(volatile T *s_data, int tid) {
     }
 }
 
-
 __global__ void kernel_fill_index_matrix(int *index_matrix) {
     int uid = blockIdx.x*blockDim.x + threadIdx.x;
     index_matrix[uid] = uid;
 }
-
-
-
 
 // number of blocks = number of unique elements, number of threads/block = number of rotations (<= blockSize)
 __global__ void kernel_calculateMatrixBlock_row(
@@ -270,40 +312,24 @@ __global__ void kernel_roll_image(T* rotated_image, T *image, int image_width, i
 }
 
 // if n <= BLOCKSIZE
-__global__ void kernel_get_transform_matrix(float *T, int n) {
+__global__ void kernel_get_transform_matrix(float *T) {
     int uid = blockIdx.x*blockDim.x + threadIdx.x;
     int bid = blockIdx.x;
     int tid = threadIdx.x;
 
-    // shared memory
-    extern __shared__ float cache[];
-    float i = (float)tid;
-    float N = (float)n;
+    float j = (float)tid;
+    float i = (float)bid;
+    float N = (float)blockDim.x;
     float PI = 3.141592654;
     // different normalisation for first column
-    float k = 0;
-    if (tid == 0) { k = sqrt(1.0/N); } else { k= sqrt(2.0/N); }
-    // dot product
-    while (tid < n) { cache[tid] = ((2*i+1) * i*PI/(2*N)); }
-    __syncthreads();
-    float dotProduct = 0.0;
-    if (n >64) {
-        // summing the dot elements
-        for(unsigned int stride = (blockDim.x/2); stride > 32 ; stride /=2){
-            __syncthreads();
-            if(tid < stride) { cache[tid] += cache[tid + stride]; }
-        }
-        warp_reduce_add(cache, tid);
-        __syncthreads();
+
+    if (bid == 0) {
+        T[uid] = sqrt(1.0/N);
     } else {
-
-        for (int j = 0; j < n-1; j++) {
-            dotProduct += cache[j + 1];
-
-        }
+        T[uid] = sqrt(2.0/N) *cos( ((2*j+1))/(2.0*N)*PI*i);
     }
-    T[uid] = k * cos(dotProduct);
 }
+
 
 
 class GPUHasher
@@ -324,8 +350,11 @@ class GPUHasher
         l_accumulated_cost_matrix = (int *) malloc(d_sequence_size * num_rows * sizeof(int));
         m_image_width = img_width;
         m_image_height = img_height;
+        // Create a handle for CUBLAS
+        cublasCreate(&handle);
 
-
+        gpuErrchk( cudaMalloc(&d_Ttr, 128*128*sizeof(float)));
+        gpuErrchk( cudaMalloc(&d_T, 128*128*sizeof(float)));
         gpuErrchk( cudaMalloc(&d_image, img_height*img_width*sizeof(uchar)));
         gpuErrchk( cudaMalloc(&d_rolled_image, img_height*img_width*sizeof(uchar)));
         gpuErrchk( cudaMalloc(&d_ordered_cost_mat, d_sequence_size*num_rows*sizeof(int)));
@@ -346,13 +375,61 @@ class GPUHasher
         kernel_order_dist_matrix<<<num_rows, d_sequence_size, BLOCKSIZE*2>>>(d_index_matrix_ord, d_index_matrix, d_sequence_size, num_rows);
         cudaDeviceSynchronize();
 
+        //getDCTMatrix(img_height, img_width);
+
+
         std::cout << " GPU initialized" << std::endl;
 
     }
 
-    void getDCTMatrix(float *T,int n) {
-        cudaMalloc(&T, n*n*sizeof(float));
-        kernel_get_transform_matrix<<<n, n, n>>>(T, n);
+    // Multiply the arrays A and B on GPU and save the result in C
+    // C(m,n) = A(m,k) * B(k,n)
+    void gpu_blas_mmul(const float *A, const float *B, float *C, const int m, const int k, const int n) {
+        int lda=m,ldb=k,ldc=m;
+        const float alf = 1;
+        const float bet = 0;
+        const float *alpha = &alf;
+        const float *beta = &bet;
+        cublasSgemm(handle, CUBLAS_OP_T, CUBLAS_OP_T, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+    }
+
+
+
+
+    void getDCTMatrix(int rows,int cols) {
+        kernel_get_transform_matrix<<<rows, cols>>>(d_T);
+        cudaDeviceSynchronize();
+        printMatrix(d_T, rows,cols);
+         // setup execution parameters
+        dim3 grid(cols / BLOCK_DIM, rows / BLOCK_DIM, 1);
+        dim3 threads(BLOCK_DIM, BLOCK_DIM, 1);
+        kernel_transpose<<<grid, threads>>>(d_Ttr,d_T, cols,rows);
+        printMatrix(d_Ttr, cols,rows);
+    }
+
+    void calcDCT(float *DCT, float *A ,const int n) {
+
+        float *tmp;
+        cudaMalloc(&tmp, n*n*sizeof(float));
+        const float alf = 1;
+        const float bet = 0;
+        const float *alpha = &alf;
+        const float *beta = &bet;
+
+        // T * A * T'
+        cublasSgemm(handle, CUBLAS_OP_T, CUBLAS_OP_N, n, n, n, alpha, d_T, n, A, n, beta, tmp, n);
+        cudaDeviceSynchronize(); // N T, tmp,dt,dct
+        cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, alpha, tmp, n, d_T, n, beta, DCT, n);
+
+
+        cudaDeviceSynchronize();
+        cudaFree(tmp);
+
+    }
+
+
+    float *getDCTpointer() {
+        return d_T;
     }
 
     template<typename T>
@@ -365,7 +442,7 @@ class GPUHasher
         std::cout << "-------------Matrix start------------" << std::endl;
         for (int i = 0; i < cols; i++) {
             for (int j = 0; j < rows; j++) {
-                std::cout << " ["<< tmp[i*rows+j] << "] ";
+                std::cout << "["<< tmp[i*rows+j] << "]";
             }
             std::cout << std::endl;
         }
@@ -489,6 +566,7 @@ class GPUHasher
         cudaFree(d_cost_matrix);
         cudaFree(d_tmp_seq);
         cudaFree(d_ordered_cost_mat);
+        cublasDestroy(handle);
     }
 
     private:
@@ -507,10 +585,12 @@ class GPUHasher
     int *d_index_matrix_ord;
     int *d_accumulated_cost_mat;        // accumulated cost matrix
     int *d_accumulated_cost_mat_ord;    // accumulated cost matrix
-    int *d_T;
+    float *d_T;
+    float *d_Ttr;
     unsigned long long int *l_best_row;
     uchar* d_rolled_images;  // all rotations of an image
     std::vector<uchar*> image_data_vector;
+    cublasHandle_t handle;
 
     unsigned int d_sequence_size;       // size of the sequence
     int N;                              // total size of a hash matrix with rotations

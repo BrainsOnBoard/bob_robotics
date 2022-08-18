@@ -108,9 +108,50 @@ int main(int argc, char **argv) {
     std::cout << " create GPU matrix" << std::endl;
     GPUHasher g_hasher;
     g_hasher.initGPU(l_hash_mat, hash_mat_size, d_sequence_size, roll_step, RESIZED_WIDTH, RESIZED_HEIGHT);
-    float *T_test;
-    g_hasher.getDCTMatrix(T_test, 8);
-    g_hasher.printMatrix(T_test, 8, 8);
+
+    // test dct
+    int dct_s = 16;
+    g_hasher.getDCTMatrix(dct_s,dct_s);
+    float *DCT;
+    float *d_test_img;
+    cv::Mat test_img = route.nodes[0].image;
+    cv::cvtColor(test_img, test_img, cv::COLOR_BGR2GRAY);
+    cv::resize(test_img, test_img, {dct_s,dct_s});
+    cv::Mat test_img2 = test_img;
+
+
+    // for octave
+    //std::cout << "[";
+    //for (int i = 0; i < dct_s; i++) {
+    //    for (int j = 0; j < dct_s; j++) {
+    //        std::cout << (float)test_img2.data[i*dct_s + j] << ",";
+    //    }
+    //    std::cout << ";" << std::endl;
+    //}
+    //std::cout << "]" << std::endl;
+
+    // print dct
+    test_img.convertTo(test_img, CV_32FC1, (1.0 / 255));
+    cv::Mat dct_test;
+    cv::dct(test_img,dct_test);
+    for (int i = 0; i < dct_s; i++) {
+        for (int j = 0; j < dct_s; j++) {
+            std::cout << (float)dct_test.data[i*dct_s + j] << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    cudaMalloc(&d_test_img, dct_s*dct_s*sizeof(float));
+    cudaMemcpy(d_test_img, (float*)test_img.data, 16*16*sizeof(float), cudaMemcpyHostToDevice);
+    g_hasher.printMatrix(d_test_img,dct_s,dct_s);
+
+
+    cudaMalloc(&DCT, dct_s*dct_s*sizeof(float));
+    std::cout << "DCT" << std::endl;
+    g_hasher.calcDCT(DCT, d_test_img, dct_s);
+    g_hasher.printMatrix(DCT,dct_s,dct_s);
+
+
     g_hasher.uploadSequence(l_sequence);
 
     for (int s = d_sequence_size; s < hash_mat_size/roll_step; s++) {
@@ -125,7 +166,7 @@ int main(int argc, char **argv) {
 
 
         g_hasher.calculate_accumulated_cost_matrix();
-        g_hasher.getMinIndex(hm[s*roll_step],hm);
+        std::pair<int,int> min_idx = g_hasher.getMinIndex(hm[s*roll_step],hm);
         cv::Mat host_mat2 = g_hasher.downloadAccumulatedCostMatrix();
         cv::normalize(host_mat2, host_mat2, 0, 255, cv::NORM_MINMAX);
         cv::applyColorMap(host_mat2, host_mat2, cv::COLORMAP_JET);
@@ -133,7 +174,7 @@ int main(int argc, char **argv) {
         cv::Mat combined;
         cv::vconcat(host_mat1, host_mat2, combined);
         cv::imshow("gpu_mat2", combined);
-        cv::waitKey(1);
+        cv::waitKey(0);
 
 
     }
