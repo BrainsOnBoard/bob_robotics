@@ -33,21 +33,6 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
    }
 }
 
-// source : nvidia.docs
-__global__ void kernel_matrix_multiply(float *a, float* b, float *c, int N) {
-    __shared__ float aTile[BLOCK_DIM][BLOCK_DIM], bTile[BLOCK_DIM][BLOCK_DIM];
-    int row = blockIdx.y * blockDim.y + threadIdx.y;
-    int col = blockIdx.x * blockDim.x + threadIdx.x;
-    float sum = 0.0f;
-    aTile[threadIdx.y][threadIdx.x] = a[row*BLOCK_DIM+threadIdx.x];
-    bTile[threadIdx.y][threadIdx.x] = b[threadIdx.y*N+col];
-    __syncthreads();
-    for (int i = 0; i < BLOCK_DIM; i++) {
-        sum += aTile[threadIdx.y][i]* bTile[i][threadIdx.x];
-    }
-    c[row*N+col] = sum;
-}
-
 //source:
 //github.com/JonathanWatkins/CUDA/blob/master/NvidiaCourse/Exercises/transpose/transpose.cu
 __global__ void kernel_transpose(float *odata, float *idata, int width, int height)
@@ -77,7 +62,6 @@ __global__ void kernel_transpose(float *odata, float *idata, int width, int heig
 		odata[index_out] = block[threadIdx.x][threadIdx.y];
 	}
 }
-
 
 // number of blocks = number of rows * 2 - 1, number of threads/block = number of rows (<= blockSize)
 __global__ void kernel_order_dist_matrix(int *d_dist_mat, int *d_ordered_dist_mat, int row_n, int col_n) {
@@ -218,15 +202,16 @@ __device__ void warp_reduce(volatile int *s_data, int tid) {
 }
 
 template <typename T>
-__device__ void warp_reduce_add(volatile T *s_data, int tid) {
-    if (tid < 32) {
-        s_data[tid] += s_data[tid + 32];
-        s_data[tid] += s_data[tid + 16];
-        s_data[tid] += s_data[tid +  8];
-        s_data[tid] += s_data[tid +  4];
-        s_data[tid] += s_data[tid +  2];
-        s_data[tid] += s_data[tid +  1];
-    }
+__device__ void warp_reduce_add(volatile T *s_data, int tid, int cols) {
+
+    if (cols >= 64) s_data[tid] += s_data[tid + 32];
+    if (cols >= 32) s_data[tid] += s_data[tid + 16];
+    if (cols >= 16) s_data[tid] += s_data[tid +  8];
+    if (cols >= 8) s_data[tid] += s_data[tid +  4];
+    if (cols >= 4) s_data[tid] += s_data[tid +  2];
+    if (cols >= 2) s_data[tid] += s_data[tid +  1];
+
+
 }
 
 __global__ void kernel_fill_index_matrix(int *index_matrix) {
@@ -324,10 +309,69 @@ __global__ void kernel_get_transform_matrix(float *T) {
     // different normalisation for first column
 
     if (bid == 0) {
-        T[uid] = sqrt(1.0/N);
+        T[uid] = sqrt(1.0/N) *cos( ((2*j+1))/(2.0*N)*PI*i);
     } else {
         T[uid] = sqrt(2.0/N) *cos( ((2*j+1))/(2.0*N)*PI*i);
+
     }
+}
+
+__global__ void kernel_SSD(float *M1, float *M2, float *difference_matrix, int N) {
+    int uid = blockIdx.x*blockDim.x + threadIdx.x;
+    if (uid < N) {
+        difference_matrix[uid] = pow(M1[uid] - M2[uid], 2);
+    }
+}
+
+__global__ void kernel_reduce(float *D, float *reduced, int N) {
+    __shared__ float s_dist_mat_row[BLOCKSIZE];
+    int uid = blockIdx.x*blockDim.x + threadIdx.x;
+    int bid = blockIdx.x;
+    int tid = threadIdx.x;
+
+    if (uid < N) {
+        s_dist_mat_row[tid] = D[uid];
+        __syncthreads();
+
+        for(unsigned int stride = (blockDim.x/2); stride > 32 ; stride /=2){
+            __syncthreads();
+
+            if(tid < stride)
+            {
+                s_dist_mat_row[tid]  += s_dist_mat_row[tid + stride];
+            }
+        }
+        warp_reduce_add(s_dist_mat_row, tid, blockDim.x);
+        __syncthreads();
+
+        if (tid == 0) {
+            // reduced will have a vector of values (reduced on CPU)
+            reduced[bid] = s_dist_mat_row[0];
+        }
+    }
+}
+
+
+__global__ void kernel_SSD_rotations(float *M1, float *Rotations, float *temp, int num_rotations, int cols, int rows) {
+    __shared__ float img_block[BLOCKSIZE];
+    __shared__ float img_row[BLOCKSIZE];
+    int tid = threadIdx.x;
+    int bid = blockIdx.x;
+    int uid = blockIdx.x * blockDim.x + threadIdx.x;
+
+    // rotations
+    img_block[tid] = M1[uid];
+    __syncthreads();
+
+    for (int i = 0; i < num_rotations; i++) {
+        // mean abs diff
+        temp[uid+i*rows*cols] = abs(img_block[tid] - Rotations[uid+i*rows*cols])/rows*cols;
+        __syncthreads();
+
+    }
+
+
+
 }
 
 
@@ -336,6 +380,29 @@ class GPUHasher
 {
     public:
     GPUHasher() {}
+
+    // calculates the sum of squared differences between 2 images
+    float SSD(float *M1, float *M2, int N) {
+        float *temp;
+        float *reduced;
+        int num_blocks = ceil((N+BLOCKSIZE) / BLOCKSIZE);
+        float l_reduced[num_blocks];
+        cudaMalloc(&reduced, num_blocks*sizeof(float));
+        cudaMalloc(&temp, N*sizeof(float));
+        kernel_SSD<<<num_blocks,BLOCKSIZE>>>(M1, M2, temp,N);
+        cudaDeviceSynchronize();
+        kernel_reduce<<<num_blocks,BLOCKSIZE>>>(temp, reduced, N);
+        cudaMemcpy(&l_reduced, reduced, num_blocks*sizeof(float), cudaMemcpyDeviceToHost);
+        float distance = 0.0;
+        for (int i =0; i < num_blocks; i++) {
+            distance+= l_reduced[i];
+        }
+        cudaFree(temp);
+        cudaFree(reduced);
+        return distance;
+    }
+
+
 
     // allocate memory using the training matrix [num_elements x num_rotations]
     void initGPU(unsigned long long int *l_hash_mat, int hash_mat_size, int sequence_size, int num_rotations, int img_width, int img_height) {
@@ -352,9 +419,7 @@ class GPUHasher
         m_image_height = img_height;
         // Create a handle for CUBLAS
         cublasCreate(&handle);
-
-        gpuErrchk( cudaMalloc(&d_Ttr, 128*128*sizeof(float)));
-        gpuErrchk( cudaMalloc(&d_T, 128*128*sizeof(float)));
+        gpuErrchk( cudaMalloc(&d_T, 32*32*sizeof(float)));
         gpuErrchk( cudaMalloc(&d_image, img_height*img_width*sizeof(uchar)));
         gpuErrchk( cudaMalloc(&d_rolled_image, img_height*img_width*sizeof(uchar)));
         gpuErrchk( cudaMalloc(&d_ordered_cost_mat, d_sequence_size*num_rows*sizeof(int)));
@@ -367,7 +432,6 @@ class GPUHasher
         gpuErrchk( cudaMalloc(&d_sequence, d_sequence_size*sizeof(unsigned long long int)));
         gpuErrchk( cudaMalloc(&d_hash_mat, N*sizeof(unsigned long long int)));
         gpuErrchk( cudaMemcpy(d_hash_mat, l_hash_mat, N*sizeof(unsigned long long int), cudaMemcpyHostToDevice));
-
         gpuErrchk( cudaMalloc(&d_rolled_images, num_rotations*img_height*img_width*sizeof(uchar)));
 
         kernel_fill_index_matrix<<<num_rows, d_sequence_size>>>(d_index_matrix_ord);
@@ -376,39 +440,16 @@ class GPUHasher
         cudaDeviceSynchronize();
 
         //getDCTMatrix(img_height, img_width);
-
-
         std::cout << " GPU initialized" << std::endl;
-
     }
 
-    // Multiply the arrays A and B on GPU and save the result in C
-    // C(m,n) = A(m,k) * B(k,n)
-    void gpu_blas_mmul(const float *A, const float *B, float *C, const int m, const int k, const int n) {
-        int lda=m,ldb=k,ldc=m;
-        const float alf = 1;
-        const float bet = 0;
-        const float *alpha = &alf;
-        const float *beta = &bet;
-        cublasSgemm(handle, CUBLAS_OP_T, CUBLAS_OP_T, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
-    }
-
-
-
-
+    // gets the DCT transformation matrix (same as matlab's dctmtx(n) )
     void getDCTMatrix(int rows,int cols) {
         kernel_get_transform_matrix<<<rows, cols>>>(d_T);
-        cudaDeviceSynchronize();
-        printMatrix(d_T, rows,cols);
-         // setup execution parameters
-        dim3 grid(cols / BLOCK_DIM, rows / BLOCK_DIM, 1);
-        dim3 threads(BLOCK_DIM, BLOCK_DIM, 1);
-        kernel_transpose<<<grid, threads>>>(d_Ttr,d_T, cols,rows);
-        printMatrix(d_Ttr, cols,rows);
     }
 
-    void calcDCT(float *DCT, float *A ,const int n) {
-
+    // calculates the DCT of an image (needs to be fixed)
+    std::bitset<64> calcDCT(float *DCT, const float *A ,const int n) {
         float *tmp;
         cudaMalloc(&tmp, n*n*sizeof(float));
         const float alf = 1;
@@ -420,11 +461,13 @@ class GPUHasher
         cublasSgemm(handle, CUBLAS_OP_T, CUBLAS_OP_N, n, n, n, alpha, d_T, n, A, n, beta, tmp, n);
         cudaDeviceSynchronize(); // N T, tmp,dt,dct
         cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, alpha, tmp, n, d_T, n, beta, DCT, n);
-
-
         cudaDeviceSynchronize();
         cudaFree(tmp);
-
+        cv::Mat c_roi;
+        cv::cuda::GpuMat g_mat(cv::Size(n, n), CV_32FC1, DCT);
+        cv::cuda::GpuMat g_roi(g_mat, cv::Rect(0, 0, 8, 8));
+        g_roi.download(c_roi);
+        return DCTHash::getHashBits(c_roi);
     }
 
 
@@ -432,17 +475,23 @@ class GPUHasher
         return d_T;
     }
 
+    // print a matrix on the GPU
     template<typename T>
-    void printMatrix(T *d_matrix,int rows, int cols) {
+    void printMatrix(T *d_matrix,int rows, int cols, int rowLim, int colLim) {
         T tmp[rows*cols];
         cudaMemcpy(tmp, d_matrix, rows*cols*sizeof(T), cudaMemcpyDeviceToHost);
         std::cout << std::fixed;
-        std::cout << std::setprecision(2);
+        std::cout << std::setprecision(4);
         std::cout << "-------------------------------------" << std::endl;
         std::cout << "-------------Matrix start------------" << std::endl;
-        for (int i = 0; i < cols; i++) {
-            for (int j = 0; j < rows; j++) {
-                std::cout << "["<< tmp[i*rows+j] << "]";
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                if (i < rowLim && j < colLim) {
+                    std::cout << "["<< tmp[i*cols+j] << "]";
+                } else {
+                    break;
+                }
+
             }
             std::cout << std::endl;
         }
@@ -451,34 +500,81 @@ class GPUHasher
         std::cout << "-------------------------------------" << std::endl;
     }
 
-    // rolls images to get all the rotations
-    void get_rotations(const cv::Mat &image, std::vector<cv::Mat> &rotated_images, const int num_rotations) {
+    // rolls images to get all the rotations - return rolled images on host
+    void get_rotations(const cv::Mat &image, const int num_rotations) {
         auto img_data = image.data;
         int cols = image.cols;
         int rows = image.rows;
         auto type = image.type();
-
-
-
-        rotated_images.reserve(num_rotations);
-        cv::cuda::GpuMat gpu_mats[num_rotations];
-        gpuErrchk( cudaMemcpy(d_image, image.data, rows*cols*sizeof(uchar), cudaMemcpyHostToDevice) );
+        float *d_img;
+        gpuErrchk( cudaMalloc(&d_img, rows*cols*sizeof(float)) );
+        gpuErrchk( cudaMemcpy(d_img, (float*)image.data, rows*cols*sizeof(float), cudaMemcpyHostToDevice) );
         for (int i = 0; i < num_rotations; i++) {
             int offset = i*cols*rows;
-            kernel_roll_image<<<rows, cols, cols*sizeof(uchar) >>>(d_rolled_images+offset, d_image, cols,i);
+            kernel_roll_image<<<rows, cols, cols*sizeof(float) >>>(d_rolled_images+offset, d_img, cols,i);
         }
         cudaDeviceSynchronize();
+    }
 
 
-        for (int i = 0; i < num_rotations; i++) {
-            int offset = i*cols*rows;
-            //gpuErrchk( cudaMemcpy(l_rot_img_data, d_rolled_images+offset, rows*cols*sizeof(uchar), cudaMemcpyDeviceToHost) );
-            //cv::Mat tmp = cv::Mat(cv::Size(cols,rows), type, &l_rot_img_data);
-            cv::cuda::GpuMat gpu_mat({rows,cols, type, d_rolled_images+offset});
-            cv::Mat tmp;
-            gpu_mat.download(tmp);
-            rotated_images.push_back(tmp.clone());
+
+    cv::Mat get_best_PM(cv::Mat &img, float *images, int num_rotations, int N_images) {
+        get_rotations(img,num_rotations);
+
+        cudaDeviceSynchronize();
+        int rows = img.rows;
+        int cols = img.cols;
+        float *d_temp; cudaMalloc(&d_temp, rows*cols*num_rotations*sizeof(float));
+        int num_blocks = (rows*cols+BLOCKSIZE-1)/BLOCKSIZE;
+        float *d_reduced_blocks, *d_SSD_rotations, *d_dist_mat_PM;
+        cudaMalloc(&d_reduced_blocks, num_rotations*num_blocks*sizeof(float));
+        cudaMalloc(&d_dist_mat_PM, N_images*num_rotations*sizeof(float));
+        cudaMalloc(&d_SSD_rotations, num_rotations*sizeof(float));
+
+        //printMatrix(images, rows,cols*num_rotations,rows,cols);
+
+        for (int i = 0; i < N_images;i++) {
+
+            kernel_SSD_rotations<<<num_blocks,BLOCKSIZE>>>
+                                         (images+i*rows*cols,
+                                         d_rolled_images,
+                                         d_temp,
+                                         num_rotations,
+                                         cols,
+                                         rows);
+            cudaDeviceSynchronize();
+
+
+
+            for (int j = 0; j < num_rotations; j++) {
+                kernel_reduce<<<num_blocks,BLOCKSIZE>>>(d_temp+j*rows*cols, d_reduced_blocks+j*num_blocks, rows*cols);
+            }
+
+            cudaDeviceSynchronize();
+           // printMatrix(d_reduced_blocks, num_rotations, num_blocks, num_rotations, num_blocks);
+
+            kernel_reduce<<<num_rotations,num_blocks>>>(d_reduced_blocks, d_SSD_rotations, num_blocks*num_rotations);
+            cudaDeviceSynchronize();
+            cudaMemcpy(d_dist_mat_PM+i*num_rotations, d_SSD_rotations, num_rotations*sizeof(float), cudaMemcpyDeviceToDevice);
+            //d_dist_mat_PM+i*num_rotations
+
+           // printMatrix(d_SSD_rotations, 1, num_rotations, 1, num_rotations);
+
         }
+        cudaDeviceSynchronize();
+        //cv::cuda::GpuMat g_dist_mat(cv::Size(images.size(),num_rotations), CV_32FC1, d_dist_mat_PM);
+        float temp_array[N_images*num_rotations];
+
+        //printMatrix(d_dist_mat_PM, images.size(), num_rotations, images.size(), num_rotations);
+        cudaMemcpy(temp_array, d_dist_mat_PM, N_images*num_rotations*sizeof(float), cudaMemcpyDeviceToHost);
+
+        cv::Mat temp_mat(cv::Size(num_rotations, N_images), CV_32FC1, temp_array);
+        temp_mat.convertTo(temp_mat, CV_8UC1);
+        cv::normalize(temp_mat, temp_mat, 0, 255, cv::NORM_MINMAX);
+        cv::applyColorMap(temp_mat, temp_mat, cv::COLORMAP_JET);
+        return temp_mat;
+
+
     }
 
     // upload a hash sequence to the gpu*
@@ -516,7 +612,7 @@ class GPUHasher
 
     }
 
-
+    // calculates the place and the rotation of a hash from a hash matrix
     std::pair<int,int> getMinIndex(std::bitset<64> current_hash, std::vector<std::bitset<64>> hashmat) {
         thrust::device_ptr<int> g_ptr =  thrust::device_pointer_cast(&d_accumulated_cost_mat_ord[(d_sequence_size-1)*num_rows]);
         int result_offset = thrust::min_element( g_ptr, g_ptr + (num_rows-1) ) -g_ptr;
@@ -538,6 +634,7 @@ class GPUHasher
         return {result_offset, best_rot};
     }
 
+    // downloads the accumulated cost matrix in a cv::Mat object
     cv::Mat downloadAccumulatedCostMatrix() {
 
         gpuErrchk( cudaMemcpy(l_accumulated_cost_matrix, d_accumulated_cost_mat_ord, num_rows*d_sequence_size*sizeof(int), cudaMemcpyDeviceToHost) );
@@ -545,7 +642,6 @@ class GPUHasher
         cv::Mat host_mat;
         gpu_mat.download(host_mat);
         host_mat.convertTo(host_mat,CV_8UC1);
-
 
         return host_mat;
     }
@@ -571,7 +667,6 @@ class GPUHasher
 
     private:
 
-    const int BLOCKSIZE = 256;
     unsigned long long int *l_hash_mat; // host hash mat
     unsigned long long int *d_hash_mat; // device hash mat
     unsigned long long int *l_sequence; // sequence on host
@@ -586,9 +681,8 @@ class GPUHasher
     int *d_accumulated_cost_mat;        // accumulated cost matrix
     int *d_accumulated_cost_mat_ord;    // accumulated cost matrix
     float *d_T;
-    float *d_Ttr;
     unsigned long long int *l_best_row;
-    uchar* d_rolled_images;  // all rotations of an image
+    float* d_rolled_images;  // all rotations of an image
     std::vector<uchar*> image_data_vector;
     cublasHandle_t handle;
 

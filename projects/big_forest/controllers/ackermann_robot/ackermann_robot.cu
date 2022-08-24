@@ -110,49 +110,80 @@ int main(int argc, char **argv) {
     g_hasher.initGPU(l_hash_mat, hash_mat_size, d_sequence_size, roll_step, RESIZED_WIDTH, RESIZED_HEIGHT);
 
     // test dct
-    int dct_s = 16;
+    int dct_s = 64; // changing to 8 solved the problem
     g_hasher.getDCTMatrix(dct_s,dct_s);
     float *DCT;
-    float *d_test_img;
+    float *d_test_img, *d_test_img2, *d_test_img_2;
     cv::Mat test_img = route.nodes[0].image;
+    cv::Mat test_img_2 = route.nodes[100].image;
+    cv::cvtColor(test_img_2, test_img_2, cv::COLOR_BGR2GRAY);
+    cv::resize(test_img_2, test_img_2, {dct_s,dct_s},2);
+    test_img_2.convertTo(test_img_2, CV_32FC1,(1.0)/255.0);
     cv::cvtColor(test_img, test_img, cv::COLOR_BGR2GRAY);
-    cv::resize(test_img, test_img, {dct_s,dct_s});
     cv::Mat test_img2 = test_img;
+    cv::resize(test_img2, test_img2, {dct_s,dct_s},2);
+    test_img2.convertTo(test_img2, CV_32FC1,(1.0)/255.0);
+    cv::resize(test_img, test_img, {dct_s,dct_s}, 2);
 
-
-    // for octave
-    //std::cout << "[";
-    //for (int i = 0; i < dct_s; i++) {
-    //    for (int j = 0; j < dct_s; j++) {
-    //        std::cout << (float)test_img2.data[i*dct_s + j] << ",";
-    //    }
-    //    std::cout << ";" << std::endl;
-    //}
-    //std::cout << "]" << std::endl;
 
     // print dct
-    test_img.convertTo(test_img, CV_32FC1, (1.0 / 255));
+    test_img.convertTo(test_img, CV_32FC1,(1.0)/255.0);
     cv::Mat dct_test;
     cv::dct(test_img,dct_test);
     for (int i = 0; i < dct_s; i++) {
         for (int j = 0; j < dct_s; j++) {
-            std::cout << (float)dct_test.data[i*dct_s + j] << " ";
+            if (i < 8 && j < 8) {
+                std::cout << reinterpret_cast<float*>(dct_test.data)[i*dct_s + j] << " ";
+            }
         }
-        std::cout << std::endl;
+        //std::cout << std::endl;
     }
+    cv::Mat rect(dct_test, { 0, 0, 8, 8 });
+    std::bitset<64> bs = DCTHash::getHashBits(rect);
+
 
     cudaMalloc(&d_test_img, dct_s*dct_s*sizeof(float));
-    cudaMemcpy(d_test_img, (float*)test_img.data, 16*16*sizeof(float), cudaMemcpyHostToDevice);
-    g_hasher.printMatrix(d_test_img,dct_s,dct_s);
-
-
+    cudaMalloc(&d_test_img2, dct_s*dct_s*sizeof(float));
     cudaMalloc(&DCT, dct_s*dct_s*sizeof(float));
-    std::cout << "DCT" << std::endl;
-    g_hasher.calcDCT(DCT, d_test_img, dct_s);
-    g_hasher.printMatrix(DCT,dct_s,dct_s);
+    cudaMemcpy(d_test_img, (float*)test_img.data, dct_s*dct_s*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_test_img2, (float*)test_img.data, dct_s*dct_s*sizeof(float), cudaMemcpyHostToDevice);
 
+    cudaMalloc(&d_test_img_2, dct_s*dct_s*sizeof(float));
+    cudaMemcpy(d_test_img_2, (float*)test_img_2.data, dct_s*dct_s*sizeof(float), cudaMemcpyHostToDevice);
+
+
+
+    std::cout << "DCT" << std::endl;
+    std::bitset<64> gs = g_hasher.calcDCT(DCT, d_test_img, dct_s);
+    g_hasher.printMatrix(DCT, dct_s,dct_s, 8,8);
+
+    //std::bitset<64> bs = DCTHash::computeHash(test_img2);
+    std::cout << "gs " << gs.to_string() << std::endl;
+    std::cout << "bs " << bs.to_string() << std::endl;
 
     g_hasher.uploadSequence(l_sequence);
+
+
+    std::cout << " uploading images " << std::endl;
+    float* g_images;
+    cudaMalloc(&g_images, dct_s*dct_s*route.nodes.size()*sizeof(float));
+    for (int i = 0; i < route.nodes.size(); i++) {
+        cv::Mat curr_img = route.nodes[i].image;
+        cv::cvtColor(curr_img, curr_img, cv::COLOR_BGR2GRAY);
+        cv::resize(curr_img, curr_img, {dct_s,dct_s},2);
+        curr_img.convertTo(curr_img, CV_32FC1,(1.0)/255.0);
+        cudaMemcpy(g_images+i*dct_s*dct_s, reinterpret_cast<float*>(curr_img.data), dct_s*dct_s*sizeof(float), cudaMemcpyHostToDevice);
+
+    }
+
+
+    std::cout << " get best PM " << std::endl;
+
+    cv::Mat temp_mat = g_hasher.get_best_PM(test_img_2, g_images, dct_s, route.nodes.size());
+    cv::imshow("dist mat pm", temp_mat);
+    std::cout << " size " << temp_mat.rows << " " << temp_mat.cols << std::endl;
+    cv::waitKey(0);
+    //g_hasher.SSD_matrix(test_img_2, g_images, dct_s);
 
     for (int s = d_sequence_size; s < hash_mat_size/roll_step; s++) {
 
