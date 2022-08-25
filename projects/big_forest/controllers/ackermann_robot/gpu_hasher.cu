@@ -365,15 +365,9 @@ __global__ void kernel_SSD_rotations(float *M1, float *Rotations, float *temp, i
     for (int i = 0; i < num_rotations; i++) {
         // mean abs diff
         if (uid < rows*cols) {
-            temp[uid+i*rows*cols] = abs(img_block[tid] - Rotations[uid+i*rows*cols]);
-            __syncthreads();
+            temp[uid+i*rows*cols] = abs(img_block[tid] - Rotations[uid+i*rows*cols])/rows*cols;
         }
-
-
     }
-
-
-
 }
 
 
@@ -407,7 +401,7 @@ class GPUHasher
 
 
     // allocate memory using the training matrix [num_elements x num_rotations]
-    void initGPU(unsigned long long int *l_hash_mat, int hash_mat_size, int sequence_size, int num_rotations, int img_width, int img_height) {
+    void initGPU(unsigned long long int *l_hash_mat, int hash_mat_size, int sequence_size, int num_rotations, int img_width, int img_height, int PM_resize_factor) {
         N = hash_mat_size;
         num_rows = N/num_rotations;
         num_cols = num_rotations;
@@ -437,11 +431,11 @@ class GPUHasher
         gpuErrchk( cudaMalloc(&d_rolled_images, num_rotations*img_height*img_width*sizeof(float)));
 
         // perfect memory allocations
-        cudaMalloc(&d_temp, img_height*img_width*num_rotations*sizeof(float));
-        num_blocks = (img_height*img_width+BLOCKSIZE-1)/BLOCKSIZE;
-        cudaMalloc(&d_reduced_blocks, num_rotations*num_blocks*sizeof(float));
-        cudaMalloc(&d_SSD_rotations, num_rotations*sizeof(float));
-        cudaMalloc(&d_dist_mat_PM, num_rows*num_rotations*sizeof(float));
+        cudaMalloc(&d_temp, (img_height/PM_resize_factor)*(img_width/PM_resize_factor)*(num_rotations/PM_resize_factor)*sizeof(float));
+        num_blocks = ((img_height/PM_resize_factor)*(img_width/PM_resize_factor)+BLOCKSIZE-1)/BLOCKSIZE;
+        cudaMalloc(&d_reduced_blocks, (num_rotations/PM_resize_factor)*num_blocks*sizeof(float));
+        cudaMalloc(&d_SSD_rotations, (num_rotations/PM_resize_factor)*sizeof(float));
+        cudaMalloc(&d_dist_mat_PM, num_rows*(num_rotations/PM_resize_factor)*sizeof(float));
 
         kernel_fill_index_matrix<<<num_rows, d_sequence_size>>>(d_index_matrix_ord);
         cudaDeviceSynchronize();
@@ -529,12 +523,8 @@ class GPUHasher
 
     cv::Mat get_best_PM(cv::Mat &img, float *images, int num_rotations, int N_images) {
         get_rotations(img,num_rotations);
-
-        cudaDeviceSynchronize();
         int rows = img.rows;
         int cols = img.cols;
-
-
         for (int i = 0; i < N_images;i++) {
             kernel_SSD_rotations<<<num_blocks,BLOCKSIZE>>>
                                          (images+i*rows*cols,
@@ -554,6 +544,7 @@ class GPUHasher
 
         }
 
+        kernel_roll_image<<<N_images, num_rotations, num_rotations*sizeof(float) >>>(d_dist_mat_PM, d_dist_mat_PM, num_rotations,num_rotations/2);
         float temp_array[N_images*num_rotations];
         cudaMemcpy(temp_array, d_dist_mat_PM, N_images*num_rotations*sizeof(float), cudaMemcpyDeviceToHost);
         cv::Mat temp_mat(cv::Size(num_rotations, N_images), CV_32FC1, temp_array);

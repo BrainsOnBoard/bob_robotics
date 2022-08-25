@@ -60,6 +60,8 @@ cv::Mat get_cam_image(const unsigned char *image, int width, int height) {
 #define RESIZED_WIDTH 256// 255
 #define RESIZED_HEIGHT 64 // 64
 
+#define PM_RESIZE_FACTOR 2
+
 // All the webots classes are defined in the "webots" namespace
 using namespace webots;
 using namespace std::literals;
@@ -71,13 +73,14 @@ using namespace units::time;
 int main(int argc, char **argv) {
 
     bool show_images = true;    // show visual
-    int seq_length = 128;        // sequence length
+
     int roll_step = RESIZED_WIDTH;         // number of rotations for a view
     cv::Size unwrapRes(RESIZED_WIDTH,RESIZED_HEIGHT); // resolution of the unwrrapped video
     const int IMG_WIDTH = unwrapRes.width;
     bool createVideo = false;    // if true, it saves unwrapped video
     bool unwrap = false;         // if true, videos will be unwrapped
-    int skipstep = 1;           // skip frames in training matrix
+    int skipstep = 4;           // skip frames in training matrix
+    int seq_length = 128/skipstep;        // sequence length
     int num_datasets = 2;
     int testRouteNum = 0;
     int dataset_num = 0; // dataset to test
@@ -107,35 +110,20 @@ int main(int argc, char **argv) {
 
     std::cout << " create GPU matrix" << std::endl;
     GPUHasher g_hasher;
-    g_hasher.initGPU(l_hash_mat, hash_mat_size, d_sequence_size, roll_step, RESIZED_WIDTH, RESIZED_HEIGHT);
-
-
-    float *DCT;
-    float *d_test_img, *d_test_img2, *d_test_img_2;
-    cv::Mat test_img = route.nodes[0].image;
-    cv::Mat test_img_2 = route.nodes[100].image;
-    cv::cvtColor(test_img_2, test_img_2, cv::COLOR_BGR2GRAY);
-    cv::resize(test_img_2, test_img_2, {RESIZED_WIDTH, RESIZED_HEIGHT},2);
-
-    test_img_2.convertTo(test_img_2, CV_32FC1,(1.0)/255.0);
-
-
-    cudaMalloc(&d_test_img_2, RESIZED_HEIGHT*RESIZED_WIDTH*sizeof(float));
-    cudaMemcpy(d_test_img_2, (float*)test_img_2.data, RESIZED_HEIGHT*RESIZED_WIDTH*sizeof(float), cudaMemcpyHostToDevice);
-
-
-
-
+    g_hasher.initGPU(l_hash_mat, hash_mat_size, d_sequence_size, roll_step, RESIZED_WIDTH, RESIZED_HEIGHT, PM_RESIZE_FACTOR);
 
     std::cout << " uploading images " << std::endl;
     float* g_images;
-    cudaMalloc(&g_images, RESIZED_HEIGHT*RESIZED_WIDTH*route.nodes.size()*sizeof(float));
+    cudaMalloc(&g_images, (RESIZED_HEIGHT/PM_RESIZE_FACTOR)*(RESIZED_WIDTH/PM_RESIZE_FACTOR)*route.nodes.size()*sizeof(float));
     for (int i = 0; i < route.nodes.size(); i++) {
         cv::Mat curr_img = route.nodes[i].image;
         cv::cvtColor(curr_img, curr_img, cv::COLOR_BGR2GRAY);
-        cv::resize(curr_img, curr_img, {RESIZED_WIDTH, RESIZED_HEIGHT},2);
+        cv::resize(curr_img, curr_img, {RESIZED_WIDTH/PM_RESIZE_FACTOR, RESIZED_HEIGHT/PM_RESIZE_FACTOR},2);
         curr_img.convertTo(curr_img, CV_32FC1,(1.0)/255.0);
-        cudaMemcpy(g_images+i*RESIZED_HEIGHT*RESIZED_WIDTH, reinterpret_cast<float*>(curr_img.data), RESIZED_HEIGHT*RESIZED_WIDTH*sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(g_images+i*(RESIZED_HEIGHT/PM_RESIZE_FACTOR)*(RESIZED_WIDTH/PM_RESIZE_FACTOR),
+                   reinterpret_cast<float*>(curr_img.data),
+                   (RESIZED_HEIGHT/PM_RESIZE_FACTOR)*(RESIZED_WIDTH/PM_RESIZE_FACTOR)*sizeof(float),
+                   cudaMemcpyHostToDevice);
 
     }
     cudaDeviceSynchronize();
@@ -172,10 +160,10 @@ int main(int argc, char **argv) {
 
         cv::Mat current_image = route.nodes[s].image;
         cv::cvtColor(current_image, current_image, cv::COLOR_BGR2GRAY);
-        cv::resize(current_image, current_image, {RESIZED_WIDTH, RESIZED_HEIGHT},2);
+        cv::resize(current_image, current_image, {RESIZED_WIDTH/PM_RESIZE_FACTOR, RESIZED_HEIGHT/PM_RESIZE_FACTOR},2);
         current_image.convertTo(current_image, CV_32FC1,(1.0)/255.0);
-        cv::Mat temp_mat = g_hasher.get_best_PM(current_image, g_images, roll_step, route.nodes.size());
-        cv::imshow("dist mat pm", temp_mat);
+        cv::Mat temp_mat = g_hasher.get_best_PM(current_image, g_images, roll_step/PM_RESIZE_FACTOR, route.nodes.size());
+        cv::imshow("dist mat pm", temp_mat.t());
         cv::waitKey(1);
 
 
