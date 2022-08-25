@@ -102,89 +102,50 @@ int main(int argc, char **argv) {
     int *l_cost_matrix;
     unsigned int d_sequence_size = seq_length;
     for (int i = 0; i < d_sequence_size; i++) {
-        l_sequence[i] = l_hash_mat[i*BLOCKSIZE];
+        l_sequence[i] = l_hash_mat[i*roll_step];
     }
 
     std::cout << " create GPU matrix" << std::endl;
     GPUHasher g_hasher;
     g_hasher.initGPU(l_hash_mat, hash_mat_size, d_sequence_size, roll_step, RESIZED_WIDTH, RESIZED_HEIGHT);
 
-    // test dct
-    int dct_s = 64; // changing to 8 solved the problem
-    g_hasher.getDCTMatrix(dct_s,dct_s);
+
     float *DCT;
     float *d_test_img, *d_test_img2, *d_test_img_2;
     cv::Mat test_img = route.nodes[0].image;
     cv::Mat test_img_2 = route.nodes[100].image;
     cv::cvtColor(test_img_2, test_img_2, cv::COLOR_BGR2GRAY);
-    cv::resize(test_img_2, test_img_2, {dct_s,dct_s},2);
+    cv::resize(test_img_2, test_img_2, {RESIZED_WIDTH, RESIZED_HEIGHT},2);
+
     test_img_2.convertTo(test_img_2, CV_32FC1,(1.0)/255.0);
-    cv::cvtColor(test_img, test_img, cv::COLOR_BGR2GRAY);
-    cv::Mat test_img2 = test_img;
-    cv::resize(test_img2, test_img2, {dct_s,dct_s},2);
-    test_img2.convertTo(test_img2, CV_32FC1,(1.0)/255.0);
-    cv::resize(test_img, test_img, {dct_s,dct_s}, 2);
 
 
-    // print dct
-    test_img.convertTo(test_img, CV_32FC1,(1.0)/255.0);
-    cv::Mat dct_test;
-    cv::dct(test_img,dct_test);
-    for (int i = 0; i < dct_s; i++) {
-        for (int j = 0; j < dct_s; j++) {
-            if (i < 8 && j < 8) {
-                std::cout << reinterpret_cast<float*>(dct_test.data)[i*dct_s + j] << " ";
-            }
-        }
-        //std::cout << std::endl;
-    }
-    cv::Mat rect(dct_test, { 0, 0, 8, 8 });
-    std::bitset<64> bs = DCTHash::getHashBits(rect);
-
-
-    cudaMalloc(&d_test_img, dct_s*dct_s*sizeof(float));
-    cudaMalloc(&d_test_img2, dct_s*dct_s*sizeof(float));
-    cudaMalloc(&DCT, dct_s*dct_s*sizeof(float));
-    cudaMemcpy(d_test_img, (float*)test_img.data, dct_s*dct_s*sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_test_img2, (float*)test_img.data, dct_s*dct_s*sizeof(float), cudaMemcpyHostToDevice);
-
-    cudaMalloc(&d_test_img_2, dct_s*dct_s*sizeof(float));
-    cudaMemcpy(d_test_img_2, (float*)test_img_2.data, dct_s*dct_s*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMalloc(&d_test_img_2, RESIZED_HEIGHT*RESIZED_WIDTH*sizeof(float));
+    cudaMemcpy(d_test_img_2, (float*)test_img_2.data, RESIZED_HEIGHT*RESIZED_WIDTH*sizeof(float), cudaMemcpyHostToDevice);
 
 
 
-    std::cout << "DCT" << std::endl;
-    std::bitset<64> gs = g_hasher.calcDCT(DCT, d_test_img, dct_s);
-    g_hasher.printMatrix(DCT, dct_s,dct_s, 8,8);
-
-    //std::bitset<64> bs = DCTHash::computeHash(test_img2);
-    std::cout << "gs " << gs.to_string() << std::endl;
-    std::cout << "bs " << bs.to_string() << std::endl;
-
-    g_hasher.uploadSequence(l_sequence);
 
 
     std::cout << " uploading images " << std::endl;
     float* g_images;
-    cudaMalloc(&g_images, dct_s*dct_s*route.nodes.size()*sizeof(float));
+    cudaMalloc(&g_images, RESIZED_HEIGHT*RESIZED_WIDTH*route.nodes.size()*sizeof(float));
     for (int i = 0; i < route.nodes.size(); i++) {
         cv::Mat curr_img = route.nodes[i].image;
         cv::cvtColor(curr_img, curr_img, cv::COLOR_BGR2GRAY);
-        cv::resize(curr_img, curr_img, {dct_s,dct_s},2);
+        cv::resize(curr_img, curr_img, {RESIZED_WIDTH, RESIZED_HEIGHT},2);
         curr_img.convertTo(curr_img, CV_32FC1,(1.0)/255.0);
-        cudaMemcpy(g_images+i*dct_s*dct_s, reinterpret_cast<float*>(curr_img.data), dct_s*dct_s*sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(g_images+i*RESIZED_HEIGHT*RESIZED_WIDTH, reinterpret_cast<float*>(curr_img.data), RESIZED_HEIGHT*RESIZED_WIDTH*sizeof(float), cudaMemcpyHostToDevice);
 
     }
+    cudaDeviceSynchronize();
+
+   // cv::Mat temp_mat = g_hasher.get_best_PM(test_img_2, g_images, roll_step, route.nodes.size());
+  //  cv::imshow("dist mat pm", temp_mat);
+  //  cv::waitKey(0);
 
 
-    std::cout << " get best PM " << std::endl;
-
-    cv::Mat temp_mat = g_hasher.get_best_PM(test_img_2, g_images, dct_s, route.nodes.size());
-    cv::imshow("dist mat pm", temp_mat);
-    std::cout << " size " << temp_mat.rows << " " << temp_mat.cols << std::endl;
-    cv::waitKey(0);
-    //g_hasher.SSD_matrix(test_img_2, g_images, dct_s);
-
+    g_hasher.uploadSequence(l_sequence);
     for (int s = d_sequence_size; s < hash_mat_size/roll_step; s++) {
 
         g_hasher.addToSequence(&l_hash_mat[s*roll_step]);
@@ -193,6 +154,7 @@ int main(int argc, char **argv) {
 
         cv::Mat host_mat1 = g_hasher.downloadDistanceMatrix();
         cv::normalize(host_mat1, host_mat1, 0, 255, cv::NORM_MINMAX);
+        host_mat1.convertTo(host_mat1,CV_8UC1);
         cv::applyColorMap(host_mat1, host_mat1, cv::COLORMAP_JET);
 
 
@@ -200,12 +162,21 @@ int main(int argc, char **argv) {
         std::pair<int,int> min_idx = g_hasher.getMinIndex(hm[s*roll_step],hm);
         cv::Mat host_mat2 = g_hasher.downloadAccumulatedCostMatrix();
         cv::normalize(host_mat2, host_mat2, 0, 255, cv::NORM_MINMAX);
+        host_mat2.convertTo(host_mat2,CV_8UC1);
         cv::applyColorMap(host_mat2, host_mat2, cv::COLORMAP_JET);
 
         cv::Mat combined;
         cv::vconcat(host_mat1, host_mat2, combined);
         cv::imshow("gpu_mat2", combined);
-        cv::waitKey(0);
+
+
+        cv::Mat current_image = route.nodes[s].image;
+        cv::cvtColor(current_image, current_image, cv::COLOR_BGR2GRAY);
+        cv::resize(current_image, current_image, {RESIZED_WIDTH, RESIZED_HEIGHT},2);
+        current_image.convertTo(current_image, CV_32FC1,(1.0)/255.0);
+        cv::Mat temp_mat = g_hasher.get_best_PM(current_image, g_images, roll_step, route.nodes.size());
+        cv::imshow("dist mat pm", temp_mat);
+        cv::waitKey(1);
 
 
     }
