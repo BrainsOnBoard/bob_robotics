@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
     const int IMG_WIDTH = unwrapRes.width;
     bool createVideo = false;    // if true, it saves unwrapped video
     bool unwrap = false;         // if true, videos will be unwrapped
-    int skipstep = 4;           // skip frames in training matrix
+    int skipstep = 1;           // skip frames in training matrix
     int seq_length = 128/skipstep;        // sequence length
     int num_datasets = 2;
     int testRouteNum = 0;
@@ -106,11 +106,12 @@ int main(int argc, char **argv) {
         l_sequence[i] = l_hash_mat[i*roll_step];
     }
 
+
+    // init gpu
     std::vector<cv::Mat> training_images;
     for (int i = 0; i < route.nodes.size(); i++) {
         training_images.push_back(route.nodes[i].image);
     }
-
     GPUHasher g_hasher;
     g_hasher.initGPU(l_hash_mat, hash_mat_size, d_sequence_size, roll_step, RESIZED_WIDTH, RESIZED_HEIGHT);
     g_hasher.upload_database(training_images, RESIZED_WIDTH/4, RESIZED_HEIGHT/4);
