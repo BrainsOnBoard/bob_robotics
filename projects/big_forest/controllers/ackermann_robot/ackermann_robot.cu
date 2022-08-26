@@ -41,8 +41,6 @@
 
 
 
-
-
 //   profile with :  nsys profile -w true -t cuda -s none -o nsight_report -f true -x true ./ackermann_robot
 cv::Mat get_cam_image(const unsigned char *image, int width, int height) {
     /* Matrix which contains the BGRA image from Webots' camera */
@@ -108,29 +106,14 @@ int main(int argc, char **argv) {
         l_sequence[i] = l_hash_mat[i*roll_step];
     }
 
-    std::cout << " create GPU matrix" << std::endl;
-    GPUHasher g_hasher;
-    g_hasher.initGPU(l_hash_mat, hash_mat_size, d_sequence_size, roll_step, RESIZED_WIDTH, RESIZED_HEIGHT, PM_RESIZE_FACTOR);
-
-    std::cout << " uploading images " << std::endl;
-    float* g_images;
-    cudaMalloc(&g_images, (RESIZED_HEIGHT/PM_RESIZE_FACTOR)*(RESIZED_WIDTH/PM_RESIZE_FACTOR)*route.nodes.size()*sizeof(float));
+    std::vector<cv::Mat> training_images;
     for (int i = 0; i < route.nodes.size(); i++) {
-        cv::Mat curr_img = route.nodes[i].image;
-        cv::cvtColor(curr_img, curr_img, cv::COLOR_BGR2GRAY);
-        cv::resize(curr_img, curr_img, {RESIZED_WIDTH/PM_RESIZE_FACTOR, RESIZED_HEIGHT/PM_RESIZE_FACTOR},2);
-        curr_img.convertTo(curr_img, CV_32FC1,(1.0)/255.0);
-        cudaMemcpy(g_images+i*(RESIZED_HEIGHT/PM_RESIZE_FACTOR)*(RESIZED_WIDTH/PM_RESIZE_FACTOR),
-                   reinterpret_cast<float*>(curr_img.data),
-                   (RESIZED_HEIGHT/PM_RESIZE_FACTOR)*(RESIZED_WIDTH/PM_RESIZE_FACTOR)*sizeof(float),
-                   cudaMemcpyHostToDevice);
-
+        training_images.push_back(route.nodes[i].image);
     }
-    cudaDeviceSynchronize();
 
-   // cv::Mat temp_mat = g_hasher.get_best_PM(test_img_2, g_images, roll_step, route.nodes.size());
-  //  cv::imshow("dist mat pm", temp_mat);
-  //  cv::waitKey(0);
+    GPUHasher g_hasher;
+    g_hasher.initGPU(l_hash_mat, hash_mat_size, d_sequence_size, roll_step, RESIZED_WIDTH, RESIZED_HEIGHT);
+    g_hasher.upload_database(training_images, RESIZED_WIDTH/4, RESIZED_HEIGHT/4);
 
 
     g_hasher.uploadSequence(l_sequence);
@@ -159,10 +142,7 @@ int main(int argc, char **argv) {
 
 
         cv::Mat current_image = route.nodes[s].image;
-        cv::cvtColor(current_image, current_image, cv::COLOR_BGR2GRAY);
-        cv::resize(current_image, current_image, {RESIZED_WIDTH/PM_RESIZE_FACTOR, RESIZED_HEIGHT/PM_RESIZE_FACTOR},2);
-        current_image.convertTo(current_image, CV_32FC1,(1.0)/255.0);
-        cv::Mat temp_mat = g_hasher.get_best_PM(current_image, g_images, roll_step/PM_RESIZE_FACTOR, route.nodes.size());
+        cv::Mat temp_mat = g_hasher.get_best_PM(current_image);
         cv::imshow("dist mat pm", temp_mat.t());
         cv::waitKey(1);
 

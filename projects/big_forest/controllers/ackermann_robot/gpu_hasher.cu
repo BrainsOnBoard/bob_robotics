@@ -64,6 +64,26 @@ __global__ void kernel_transpose(float *odata, float *idata, int width, int heig
 }
 
 // number of blocks = number of rows * 2 - 1, number of threads/block = number of rows (<= blockSize)
+/**
+ * @brief ordering the distance matrix in a zig zag style for memory coalescing when calculating the
+ * accumulated distance matrix.
+ * Example:
+ * unordered
+ * [0 ,1 ,2 ,3 ,4 ]
+ * [5 ,6 ,7 ,8 ,9 ]
+ * [10,11,12,13,14]
+ *
+ * ordered:
+ * [0, 5, 1, 10, 6, 2, 11, 7, 3, 12, 8, 4, 13, 9, 14]
+ * using this form the cost matrix can process the diagonals in parallel as they only depend on the previous
+ * 2 diagonal lines.
+ * the number of blocks should be = (size of rows * 2 -1). number of threads/block = number of rows <= BLOCKSIZE
+ * @param d_dist_mat the unordered cost matrix
+ * @param d_ordered_dist_mat ordered cost matrix
+ * @param row_n number of rows
+ * @param col_n number of columns
+ * @return **void
+ */
 __global__ void kernel_order_dist_matrix(int *d_dist_mat, int *d_ordered_dist_mat, int row_n, int col_n) {
     int bid = blockIdx.x;
     int tid = threadIdx.x;
@@ -104,23 +124,35 @@ __global__ void kernel_order_dist_matrix(int *d_dist_mat, int *d_ordered_dist_ma
     }
 }
 
-__global__ void kernel_reorder_matrix(int *D, int *D_ord, int *D_index_matrix) {
-    int bid = blockIdx.x;
-    int tid = threadIdx.x;
+template <typename T> // reordering the Distance matrix for displaying
+/**
+ * @brief reordering the distance matrix for displaying
+ *
+ * @param D reordered accumulated distance matrix
+ * @param D_ord zig zag ordered accumulated distance matrix
+ * @param D_index_matrix index matrix
+ * @return **void
+ */
+__global__ void kernel_reorder_matrix(T *D, T *D_ord, const int *D_index_matrix) {
     int uid = blockIdx.x*blockDim.x + threadIdx.x;
-
     int ind = D_index_matrix[uid];
     D[ind] = D_ord[uid];
-
-
 }
 
+/**
+ * @brief Calculating the accumulated cost matrix
+ * @param D The accumulated cost matrix
+ * @param C The cost matrix between vector1 and vector2 reordered  in zig zag style for memory coalescing
+ * @param rows number of rows in the cost matrix
+ * @param cols number of columns of the cost matrix
+ * @return ** void
+ */
 __global__ void kernel_calculate_accumulated_cost_matrix(int *D, const int *C, const int rows, const int cols) {
-
     int bid = blockIdx.x;
     int tid = threadIdx.x;
     int uid = blockIdx.x*blockDim.x + threadIdx.x;
-    extern __shared__ int s_diag[]; // we store 3 diagonals in the shared memory - current and last 2
+    extern __shared__ int s_diag[];
+    // we store 3 diagonals in the shared memory - current and last 2
     for (int i = 0; i < rows; i++) {
         int c_sum = (i*(i+1))/2;
         int row_offset = c_sum + tid;
@@ -190,7 +222,13 @@ __global__ void kernel_calculate_accumulated_cost_matrix(int *D, const int *C, c
     }
 }
 
-__device__ void warp_reduce(volatile int *s_data, int tid) {
+/**
+ * @brief computes a min reduce in a warp (32 threads)
+ * @param s_data shared memory chunk of size 64
+ * @param tid thread id
+ * @return ** void
+ */
+__device__ void warp_reduce_min(volatile int *s_data, int tid) {
     if (tid < 32) {
         s_data[tid] = min(s_data[tid],s_data[tid + 32]);
         s_data[tid] = min(s_data[tid],s_data[tid + 16]);
@@ -202,18 +240,31 @@ __device__ void warp_reduce(volatile int *s_data, int tid) {
 }
 
 template <typename T>
+/**
+ * @brief adds up all elements in a warp (32 threads)
+ * @param s_data shared memory chunk of size 64
+ * @param tid thread id
+ * @param cols number of elements (in case it is less than 64)
+ * @return **void
+ */
 __device__ void warp_reduce_add(volatile T *s_data, int tid, int cols) {
 
     if (cols >= 64) s_data[tid] += s_data[tid + 32];
     if (cols >= 32) s_data[tid] += s_data[tid + 16];
     if (cols >= 16) s_data[tid] += s_data[tid +  8];
-    if (cols >= 8) s_data[tid] += s_data[tid +  4];
-    if (cols >= 4) s_data[tid] += s_data[tid +  2];
-    if (cols >= 2) s_data[tid] += s_data[tid +  1];
+    if (cols >= 8)  s_data[tid] += s_data[tid +  4];
+    if (cols >= 4)  s_data[tid] += s_data[tid +  2];
+    if (cols >= 2)  s_data[tid] += s_data[tid +  1];
 
 
 }
 
+/**
+ * @brief fills up a matrix with numbers [0-N]
+ *
+ * @param index_matrix pointer to the matrix on device
+ * @return **void
+ */
 __global__ void kernel_fill_index_matrix(int *index_matrix) {
     int uid = blockIdx.x*blockDim.x + threadIdx.x;
     index_matrix[uid] = uid;
@@ -247,7 +298,7 @@ __global__ void kernel_calculateMatrixBlock_row(
         }
     }
 
-    warp_reduce(s_dist_mat_row, tid);
+    warp_reduce_min(s_dist_mat_row, tid);
     __syncthreads();
     // save the best rotation in the column
     if (tid == 0) {
@@ -316,12 +367,6 @@ __global__ void kernel_get_transform_matrix(float *T) {
     }
 }
 
-__global__ void kernel_SSD(float *M1, float *M2, float *difference_matrix, int N) {
-    int uid = blockIdx.x*blockDim.x + threadIdx.x;
-    if (uid < N) {
-        difference_matrix[uid] = pow(M1[uid] - M2[uid], 2);
-    }
-}
 
 __global__ void kernel_reduce(float *D, float *reduced, int N) {
     __shared__ float s_dist_mat_row[BLOCKSIZE];
@@ -351,14 +396,13 @@ __global__ void kernel_reduce(float *D, float *reduced, int N) {
     }
 }
 
-
-__global__ void kernel_SSD_rotations(float *M1, float *Rotations, float *temp, int num_rotations, int cols, int rows) {
+__global__ void kernel_SAD_rotations(float *M1, float *Rotations, float *temp, int num_rotations, int cols, int rows) {
     __shared__ float img_block[BLOCKSIZE];
     int tid = threadIdx.x;
     int bid = blockIdx.x;
     int uid = blockIdx.x * blockDim.x + threadIdx.x;
 
-    // rotations
+    // image to shared mem
     img_block[tid] = M1[uid];
     __syncthreads();
 
@@ -370,38 +414,20 @@ __global__ void kernel_SSD_rotations(float *M1, float *Rotations, float *temp, i
     }
 }
 
-
-
 class GPUHasher
 {
     public:
     GPUHasher() {}
 
-    // calculates the sum of squared differences between 2 images
-    float SSD(float *M1, float *M2, int N) {
-        float *temp;
-        float *reduced;
-        int num_blocks = ceil((N+BLOCKSIZE) / BLOCKSIZE);
-        float l_reduced[num_blocks];
-        cudaMalloc(&reduced, num_blocks*sizeof(float));
-        cudaMalloc(&temp, N*sizeof(float));
-        kernel_SSD<<<num_blocks,BLOCKSIZE>>>(M1, M2, temp,N);
-        cudaDeviceSynchronize();
-        kernel_reduce<<<num_blocks,BLOCKSIZE>>>(temp, reduced, N);
-        cudaMemcpy(&l_reduced, reduced, num_blocks*sizeof(float), cudaMemcpyDeviceToHost);
-        float distance = 0.0;
-        for (int i =0; i < num_blocks; i++) {
-            distance+= l_reduced[i];
-        }
-        cudaFree(temp);
-        cudaFree(reduced);
-        return distance;
-    }
-
-
-
     // allocate memory using the training matrix [num_elements x num_rotations]
-    void initGPU(unsigned long long int *l_hash_mat, int hash_mat_size, int sequence_size, int num_rotations, int img_width, int img_height, int PM_resize_factor) {
+    void initGPU(unsigned long long int *l_hash_mat,
+                int hash_mat_size,
+                int sequence_size,
+                int num_rotations,
+                int img_width,
+                int img_height
+                ) {
+
         N = hash_mat_size;
         num_rows = N/num_rotations;
         num_cols = num_rotations;
@@ -430,13 +456,7 @@ class GPUHasher
         gpuErrchk( cudaMemcpy(d_hash_mat, l_hash_mat, N*sizeof(unsigned long long int), cudaMemcpyHostToDevice));
         gpuErrchk( cudaMalloc(&d_rolled_images, num_rotations*img_height*img_width*sizeof(float)));
 
-        // perfect memory allocations
-        cudaMalloc(&d_temp, (img_height/PM_resize_factor)*(img_width/PM_resize_factor)*(num_rotations/PM_resize_factor)*sizeof(float));
-        num_blocks = ((img_height/PM_resize_factor)*(img_width/PM_resize_factor)+BLOCKSIZE-1)/BLOCKSIZE;
-        cudaMalloc(&d_reduced_blocks, (num_rotations/PM_resize_factor)*num_blocks*sizeof(float));
-        cudaMalloc(&d_SSD_rotations, (num_rotations/PM_resize_factor)*sizeof(float));
-        cudaMalloc(&d_dist_mat_PM, num_rows*(num_rotations/PM_resize_factor)*sizeof(float));
-
+        // initialize GPU sequence matcher
         kernel_fill_index_matrix<<<num_rows, d_sequence_size>>>(d_index_matrix_ord);
         cudaDeviceSynchronize();
         kernel_order_dist_matrix<<<num_rows, d_sequence_size, BLOCKSIZE*2>>>(d_index_matrix_ord, d_index_matrix, d_sequence_size, num_rows);
@@ -446,6 +466,30 @@ class GPUHasher
         std::cout << " GPU initialized" << std::endl;
     }
 
+    void upload_database(std::vector<cv::Mat> images, int w, int h) {
+
+        pm_width = w;
+        pm_height = h;
+        N_images = images.size();
+        int num_rotations = w; // rotations in the image = width of image
+        num_blocks = (h*w+BLOCKSIZE-1)/BLOCKSIZE;
+        cudaMalloc(&d_temp, h*w*num_rotations*sizeof(float));
+        cudaMalloc(&d_reduced_blocks, num_rotations*num_blocks*sizeof(float));
+        cudaMalloc(&d_SSD_rotations, num_rotations*sizeof(float));
+        cudaMalloc(&d_dist_mat_PM, N_images*num_rotations*sizeof(float));
+        cudaMalloc(&d_images, (h*w)*N_images*sizeof(float));
+
+        for (int i = 0; i < images.size(); i++) {
+            cv::Mat curr_img = images[i];
+            cv::cvtColor(curr_img, curr_img, cv::COLOR_BGR2GRAY);
+            cv::resize(curr_img, curr_img, {w, h},2);
+            curr_img.convertTo(curr_img, CV_32FC1,(1.0)/255.0);
+            cudaMemcpy(d_images+i*h*w,
+                       reinterpret_cast<float*>(curr_img.data),
+                       (h*w)*sizeof(float),
+                       cudaMemcpyHostToDevice);
+        }
+    }
     // gets the DCT transformation matrix (same as matlab's dctmtx(n) )
     void getDCTMatrix(int rows,int cols) {
         kernel_get_transform_matrix<<<rows, cols>>>(d_T);
@@ -519,15 +563,19 @@ class GPUHasher
         cudaDeviceSynchronize();
     }
 
-
-
-    cv::Mat get_best_PM(cv::Mat &img, float *images, int num_rotations, int N_images) {
-        get_rotations(img,num_rotations);
-        int rows = img.rows;
-        int cols = img.cols;
+    // gets perfect memory distance matrix
+    cv::Mat get_best_PM(cv::Mat &image) {
+        cv::Mat img,current_image;
+        cv::cvtColor(image, current_image, cv::COLOR_BGR2GRAY);
+        cv::resize(current_image, current_image, {pm_width, pm_height},2);
+        current_image.convertTo(img, CV_32FC1,(1.0)/255.0);
+        int rows = pm_height;//img.rows;
+        int cols = pm_width;//img.cols;
+        int num_rotations = pm_width;
+        get_rotations(img,num_rotations); // get all rotations of current image
         for (int i = 0; i < N_images;i++) {
-            kernel_SSD_rotations<<<num_blocks,BLOCKSIZE>>>
-                                         (images+i*rows*cols,
+            kernel_SAD_rotations<<<num_blocks,BLOCKSIZE>>>
+                                         (d_images+i*rows*cols,
                                          d_rolled_images,
                                          d_temp,
                                          num_rotations,
@@ -667,6 +715,10 @@ class GPUHasher
     float *d_reduced_blocks;
     float *d_SSD_rotations;
     float *d_dist_mat_PM;
+    float *d_images; // image database
+    int pm_width;
+    int pm_height;
+    int N_images;
     //----------------------
 
     unsigned int d_sequence_size;       // size of the sequence
