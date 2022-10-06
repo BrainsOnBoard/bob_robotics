@@ -91,9 +91,13 @@ int main(int argc, char **argv) {
 
     std::unique_ptr<BoBRobotics::Navigation::ImageDatabase::RouteRecorder> recorder;
     std::unique_ptr<BoBRobotics::Navigation::ImageDatabase> database;
+
+    //Route route;
+    
     Route route = Route(dataset_num,roll_step, skipstep, unwrap, createVideo, unwrapRes);
     std::cout << " creating Hash matrix" << std::endl;
     HashMatrix hashMat(route.nodes, roll_step);
+    
 
     int hash_mat_size = hashMat.getMatrix().size();
     auto hm = hashMat.getMatrix();
@@ -160,8 +164,8 @@ int main(int argc, char **argv) {
     route_vector = route;
     sequence_matcher = DTHW(route_vector.getHashMatrix(), roll_step, 1000); // init sequence matcher with training matrices
     std::cout << " route is initialized" << std::endl;
-
-
+*/
+/*
     BoBRobotics::BackgroundExceptionCatcher catcher;
     catcher.trapSignals();
     Supervisor *robot = new Driver();
@@ -414,8 +418,9 @@ int main(int argc, char **argv) {
 
         current_step++;
     }
-    std::cout << "done" << std::endl;
     */
+    std::cout << "done" << std::endl;
+    
     return 0; //EXIT_SUCCESS
 }
 

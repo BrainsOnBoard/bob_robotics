@@ -42,12 +42,14 @@ struct dataset_paths {
     std::vector<std::string> dataset_path_array;
     std::string root_path = "../../../../../simulation_databases/";
     dataset_paths() {
-        std::string dataset0 = "20220715_000000_2";
-        std::string dataset1 = "20220715_000000_4";
-        std::string dataset2 = "20220722_17901390081418180";
+        std::string dataset0 = "route1_red";
+        std::string dataset1 = "route2_cloudy";
+        std::string dataset2 = "route3_partly_cloudy";
+        std::string dataset3 = "route4_partly_cloudy2";
         dataset_path_array.push_back(dataset0);
         dataset_path_array.push_back(dataset1);
         dataset_path_array.push_back(dataset2);
+        dataset_path_array.push_back(dataset3);
     }
 };
 
@@ -356,6 +358,14 @@ class HashMatrix
         std::pair<int,int> mat_position({min_col, min_row});
         return mat_position;
     }
+
+    // converts hashmat to C pointer style (for CUDA)
+    void getHashMatUL(unsigned long long int *hashMat) {
+       
+        for (int i = 0; i < m_matrix.size(); i++) {
+            hashMat[i] = m_matrix[i].to_ullong();
+        }
+    }
 };
 
 
@@ -462,6 +472,8 @@ class Route {
     }
 
     HashMatrix getHashMatrix() { return m_hash_matrix; }
+
+    
 
     void set_hash_matrix(HashMatrix matrix) {
         m_hash_matrix = matrix;
