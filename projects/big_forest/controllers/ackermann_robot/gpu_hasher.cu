@@ -4,6 +4,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
+#include "imgproc/roll.h"
 
 // Standard C includes
 #include <ctime>
@@ -270,6 +271,22 @@ __global__ void kernel_fill_index_matrix(int *index_matrix) {
     index_matrix[uid] = uid;
 }
 
+
+
+__global__ void kernel_get_distmat_column(unsigned long long int* d_training_matrix, unsigned long long int *column) {
+    int uid = blockIdx.x*blockDim.x + threadIdx.x;
+    column[uid] = d_training_matrix[uid*BLOCKSIZE];
+}
+
+__global__ void kernel_get_distmat_from_rotations(unsigned long long int *rotations, unsigned long long int *d_training_matrix_column, int *rot_dist_mat) {
+    // for all rotations
+    int uid = blockIdx.x*blockDim.x + threadIdx.x;
+    for (int i = 0; i < BLOCKSIZE; i++) {
+        rot_dist_mat[uid+ i*BLOCKSIZE] = __popc(rotations[i] ^ d_training_matrix_column[uid]);
+    }
+    
+}
+
 // number of blocks = number of unique elements, number of threads/block = number of rotations (<= blockSize)
 __global__ void kernel_calculateMatrixBlock_row(
                                     unsigned long long int hash,          // sequence of hash [should be the block size]
@@ -446,6 +463,13 @@ class GPUHasher
         gpuErrchk( cudaMalloc(&d_rolled_image, img_height*img_width*sizeof(uchar)));
         gpuErrchk( cudaMalloc(&d_ordered_cost_mat, d_sequence_size*num_rows*sizeof(int)));
         gpuErrchk( cudaMalloc(&d_tmp_seq, d_sequence_size*sizeof(unsigned long long int)) );
+
+        // for rot dist mat
+        gpuErrchk( cudaMalloc(&training_route, N/num_rotations*sizeof(unsigned long long int)) );
+        gpuErrchk( cudaMalloc(&current_rotations, num_rotations*sizeof(unsigned long long int)) );
+        gpuErrchk( cudaMalloc(&rot_dist_mat, num_rotations*(N/num_rotations)*sizeof(int)) );
+        
+
         gpuErrchk( cudaMalloc(&d_cost_matrix, d_sequence_size*num_rows*sizeof(int)));
         gpuErrchk( cudaMalloc(&d_index_matrix, d_sequence_size*num_rows*sizeof(int)));
         gpuErrchk( cudaMalloc(&d_index_matrix_ord, d_sequence_size*num_rows*sizeof(int)));
@@ -462,9 +486,42 @@ class GPUHasher
         kernel_order_dist_matrix<<<num_rows, d_sequence_size, BLOCKSIZE*2>>>(d_index_matrix_ord, d_index_matrix, d_sequence_size, num_rows);
         cudaDeviceSynchronize();
 
+
+        kernel_get_distmat_column<<<((N/num_rotations)+255)/256,256>>>(d_hash_mat, training_route);
+
         //getDCTMatrix(img_height, img_width);
         std::cout << " GPU initialized" << std::endl;
     }
+
+
+    void upload_hash_rotations_gpu(std::vector<std::bitset<64>> rots, int totalRotations, unsigned long long int *d_rotations) {
+       
+        unsigned long long int rotations[totalRotations];
+        for (int i = 0; i < rots.size(); i++) {
+            rotations[i] = rots[i].to_ullong();
+        }
+
+        gpuErrchk( cudaMemcpy(d_rotations, rotations, totalRotations*sizeof(unsigned long long int), cudaMemcpyHostToDevice));
+
+    }
+
+    cv::Mat calculate_rotation_dist_matrix(std::vector<std::bitset<64>> hash_rots, int totalRotations) {
+
+        int N_sample = N/totalRotations;
+        upload_hash_rotations_gpu(hash_rots, totalRotations, current_rotations); // get rotation hashes
+        
+        kernel_get_distmat_from_rotations<<<(N_sample+255)/256,256>>>(current_rotations, training_route, rot_dist_mat);
+        
+        //int l_rot_dist_mat[N_sample*totalRotations];
+        //gpuErrchk( cudaMemcpy(l_rot_dist_mat, rot_dist_mat, N_sample*totalRotations*sizeof(int), cudaMemcpyDeviceToHost) );
+        cv::cuda::GpuMat gpu_mat({ N_sample, totalRotations,CV_32SC1, rot_dist_mat});
+        cv::Mat host_mat;
+        gpu_mat.download(host_mat);
+        return host_mat;
+    }
+
+
+
 
     void upload_database(std::vector<cv::Mat> images, int w, int h) {
 
@@ -546,6 +603,8 @@ class GPUHasher
         std::cout << "-------------Matrix end--------------" << std::endl;
         std::cout << "-------------------------------------" << std::endl;
     }
+
+   
 
     // rolls images to get all the rotations - return rolled images on host
     void get_rotations(const cv::Mat &image, const int num_rotations) {
@@ -703,6 +762,11 @@ class GPUHasher
     int *d_index_matrix_ord;
     int *d_accumulated_cost_mat;        // accumulated cost matrix
     int *d_accumulated_cost_mat_ord;    // accumulated cost matrix
+
+    unsigned long long int *current_rotations;
+    unsigned long long int *training_route;
+    int *rot_dist_mat;
+
     float *d_T;
     unsigned long long int *l_best_row;
     float* d_rolled_images;  // all rotations of an image

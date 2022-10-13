@@ -50,7 +50,7 @@ cv::Mat get_cam_image(const unsigned char *image, int width, int height) {
 }
 
 // time in [ms] of a simulation step
-#define TIME_STEP 32 // frame rate 30 fps
+#define TIME_STEP 16 // frame rate 30 fps
 
 
 #define MAX_SPEED 6.28
@@ -77,11 +77,11 @@ int main(int argc, char **argv) {
     const int IMG_WIDTH = unwrapRes.width;
     bool createVideo = false;    // if true, it saves unwrapped video
     bool unwrap = false;         // if true, videos will be unwrapped
-    int skipstep = 1;           // skip frames in training matrix
-    int seq_length = 128/skipstep;        // sequence length
+    int skipstep = 4;           // skip frames in training matrix
+    int seq_length = 256/skipstep;        // sequence length
     int num_datasets = 2;
-    int testRouteNum = 0;
-    int dataset_num = 0; // dataset to test
+    int testRouteNum = 1; // 0 1 2 3
+    int dataset_num = 1; // dataset to test
     double const PI = 3.14159265358979323;
 
     Route route_vector;
@@ -106,6 +106,8 @@ int main(int argc, char **argv) {
     unsigned long long int l_sequence[seq_length];
     int *l_cost_matrix;
     unsigned int d_sequence_size = seq_length;
+
+    /*
     for (int i = 0; i < d_sequence_size; i++) {
         l_sequence[i] = l_hash_mat[i*roll_step];
     }
@@ -146,16 +148,16 @@ int main(int argc, char **argv) {
         cv::imshow("gpu_mat2", combined);
 
 
-        cv::Mat current_image = route.nodes[s].image;
-        cv::Mat temp_mat = g_hasher.get_best_PM(current_image);
-        cv::imshow("dist mat pm", temp_mat.t());
+        //cv::Mat current_image = route.nodes[s].image;
+        //cv::Mat temp_mat = g_hasher.get_best_PM(current_image);
+        //cv::imshow("dist mat pm", temp_mat.t());
         cv::waitKey(1);
 
 
     }
     cudaDeviceSynchronize();
     cv::waitKey(0);
-
+*/
     // <<<<< GPU >>>>>>
 
 /*
@@ -165,13 +167,31 @@ int main(int argc, char **argv) {
     sequence_matcher = DTHW(route_vector.getHashMatrix(), roll_step, 1000); // init sequence matcher with training matrices
     std::cout << " route is initialized" << std::endl;
 */
-/*
+
+    // init gpu
+    std::vector<cv::Mat> training_images;
+    for (int i = 0; i < route.nodes.size(); i++) {
+        training_images.push_back(route.nodes[i].image);
+    }
+    GPUHasher g_hasher;
+    g_hasher.initGPU(l_hash_mat, hash_mat_size, d_sequence_size, roll_step, RESIZED_WIDTH, RESIZED_HEIGHT);
+    g_hasher.upload_database(training_images, RESIZED_WIDTH/4, RESIZED_HEIGHT/4);
+    for (int i = 0; i < d_sequence_size; i++) {
+        l_sequence[i] = l_hash_mat[0];
+    }
+    g_hasher.uploadSequence(l_sequence);
+    ///------gpu init------
+
+
     BoBRobotics::BackgroundExceptionCatcher catcher;
     catcher.trapSignals();
     Supervisor *robot = new Driver();
     Driver *driver = driver->getDriverInstance();
     webots::GPS *gps = driver->getGPS("GPS");
     webots::InertialUnit *imu = driver->getInertialUnit("IMU");
+
+    Node *rc_car_node = robot->getFromDef("RC_CAR");
+    Field *translationField = rc_car_node->getField("translation");
 
     Camera *cm;
     Display *disp = driver->getDisplay("display");
@@ -231,6 +251,7 @@ int main(int argc, char **argv) {
 
         if (!current_image.empty()) {
             cv::cvtColor(current_image, gray_image,cv::COLOR_BGRA2GRAY);
+           // cv::equalizeHist(gray_image,gray_image);
             cv::resize(gray_image, resized, cv::Size(RESIZED_WIDTH ,RESIZED_HEIGHT));
         }
 
@@ -374,8 +395,32 @@ int main(int argc, char **argv) {
             int rot_size = hash_rots.size();
             int half_rot = rot_size/ 2;
 
-            sequence_matcher.addToShortSequence(hash,seq_length);
-            auto seq_index = sequence_matcher.getBestMatch();
+       //     sequence_matcher.addToShortSequence(hash,seq_length);
+       //     auto seq_index = sequence_matcher.getBestMatch();
+            // ---- gpu sequence ----
+            auto curr_hash_ptr = hash.to_ullong();
+            g_hasher.addToSequence(&curr_hash_ptr);
+            g_hasher.getDistanceMatrix();
+            cv::Mat host_mat1 = g_hasher.downloadDistanceMatrix();
+            cv::normalize(host_mat1, host_mat1, 0, 255, cv::NORM_MINMAX);
+            host_mat1.convertTo(host_mat1,CV_8UC1);
+            cv::applyColorMap(host_mat1, host_mat1, cv::COLORMAP_JET);
+            g_hasher.calculate_accumulated_cost_matrix();
+            std::pair<int,int> seq_index = g_hasher.getMinIndex(hash,hm);
+            cv::Mat host_mat2 = g_hasher.downloadAccumulatedCostMatrix();
+            cv::normalize(host_mat2, host_mat2, 0, 255, cv::NORM_MINMAX);
+            host_mat2.convertTo(host_mat2,CV_8UC1);
+            cv::applyColorMap(host_mat2, host_mat2, cv::COLORMAP_JET);
+            cv::Mat combined;
+            cv::vconcat(host_mat1, host_mat2, combined);
+            cv::imshow("gpu_mat2", combined);
+
+            //cv::Mat host_mat3 = g_hasher.calculate_rotation_dist_matrix( hash_rots, roll_step);
+            //cv::normalize(host_mat3, host_mat3, 0, 255, cv::NORM_MINMAX);
+           // host_mat3.convertTo(host_mat3,CV_8UC1);
+            //cv::applyColorMap(host_mat3, host_mat3, cv::COLORMAP_JET);
+            //cv::imshow("rot_cost_mat", host_mat3);
+            //////--------------------------------------------------------
 
             int pixel_step = int(IMG_WIDTH / (float)roll_step);
             int seq_match_angle = seq_index.second * pixel_step;
@@ -387,16 +432,26 @@ int main(int argc, char **argv) {
                 seq_angle = seq_match_angle -360;
             }
 
+            if (seq_angle > 30) {
+                seq_angle = 30;
+            }
+
+            if (seq_angle < -30) {
+                seq_angle = -30;
+            }
+
+
+
             int min_value;
-            auto single_match = HashMatrix::getSingleMatch(hash, route_vector.getHashMatrix(),min_value,roll_step );
-            cv::Mat img_match = route_vector.nodes[seq_index.first].image;
+          //  auto single_match = HashMatrix::getSingleMatch(hash, route_vector.getHashMatrix(),min_value,roll_step );
+          //  cv::Mat img_match = route_vector.nodes[seq_index.first].image;
             driver->setCruisingSpeed(speed);
 
             auto rad_angle= radian_t(degree_t(seq_angle));
             driver->setSteeringAngle(-rad_angle.value());
 
-            std::cout << " single = " << single_match.second  << " sequence = " <<seq_index.first <<  "seq_angle= " << seq_match_angle << std::endl;
-            cv::imshow("match", img_match);
+            std::cout << " sequence = " <<seq_index.first <<  "seq_angle= " << seq_angle << std::endl;
+           // cv::imshow("match", img_match);
               // can change ordering here << ang matrix >>
             std::vector<std::vector<int>> ang_distances;
             cv::waitKey(1);
@@ -418,7 +473,7 @@ int main(int argc, char **argv) {
 
         current_step++;
     }
-    */
+    
     std::cout << "done" << std::endl;
     
     return 0; //EXIT_SUCCESS

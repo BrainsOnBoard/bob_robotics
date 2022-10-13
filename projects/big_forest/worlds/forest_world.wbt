@@ -1,15 +1,27 @@
-#VRML_SIM R2022a utf8
+#VRML_SIM R2022b utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/projects/objects/trees/protos/BigSassafras.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/projects/vehicles/protos/bmw/BmwX5.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/projects/objects/trees/protos/Cypress.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/projects/objects/trees/protos/Forest.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/projects/objects/trees/protos/Pine.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/projects/objects/rocks/protos/Rock10cm.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/projects/objects/rocks/protos/Rock17cm.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/projects/appearances/protos/SandyGround.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/projects/objects/floors/protos/UnevenTerrain.proto"
+
 WorldInfo {
   basicTimeStep 16
 }
 Viewpoint {
-  orientation 0.47355453122478225 0.6789438676105395 -0.5610537680031378 1.7867587824236586
-  position -206.2663068039182 194.7169237411574 327.6112187441299
+  orientation -0.14598304846834004 -0.1637570173057901 0.9756395793749869 4.80251733477681
+  position -209.94803215319212 264.3057858666034 42.84207876132207
   follow "RC_CAR"
-  followType "Mounted Shot"
 }
 TexturedBackground {
-  texture "noon_cloudy_countryside"
+  texture "noon_cloudy_empty"
 }
 TexturedBackgroundLight {
 }
@@ -918,11 +930,12 @@ DEF TREES Group {
     }
   ]
 }
-BmwX5 {
+DEF RC_CAR BmwX5 {
   translation -200.84 199.815 7.3
-  rotation 0 0 1 -1.047195307179586
+  rotation 0 0 1 -1.5707953071795862
   name "RC_CAR"
   controller "<extern>"
+  supervisor TRUE
   sensorsSlotFront [
     DEF GPS GPS {
       translation -3.41 0 0

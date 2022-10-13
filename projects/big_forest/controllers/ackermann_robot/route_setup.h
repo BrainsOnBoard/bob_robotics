@@ -40,7 +40,7 @@ using namespace ImgProc;
 // setup a navigation route with these classes
 struct dataset_paths {
     std::vector<std::string> dataset_path_array;
-    std::string root_path = "../../../../../simulation_databases/";
+    std::string root_path = "simulation_databases/";
     dataset_paths() {
         std::string dataset0 = "route1_red";
         std::string dataset1 = "route2_cloudy";
@@ -435,7 +435,7 @@ class Route {
 
             cv::Mat img1,img2;
             cv::cvtColor(node.image, img1, cv::COLOR_BGR2GRAY);
-            //cv::equalizeHist(img1,img1);
+           // cv::equalizeHist(img1,img1);
 
             img1.convertTo(img2, CV_32F, 1.0 / 255);
 
