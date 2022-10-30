@@ -8,6 +8,7 @@
 #include <bitset>
 
 
+
 namespace BoBRobotics {
 namespace ImgProc {
 namespace DCTHash {
@@ -34,6 +35,7 @@ getHashBits(const cv::Mat &rect)
     return binary;
 }
 
+
 //! computes the DCT hash
 inline std::bitset<64>
 computeHash(const cv::Mat &in)
@@ -53,6 +55,7 @@ distance(const std::bitset<64> &hash1, const std::bitset<64> &hash2)
     const int distance = delta.count();
     return distance;
 }
+
 
 } // DCTHash
 } // ImgProc

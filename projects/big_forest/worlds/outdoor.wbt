@@ -1,0 +1,419 @@
+#VRML_SIM R2022b utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/projects/vehicles/protos/bmw/BmwX5.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/projects/appearances/protos/SandyGround.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/projects/objects/floors/protos/UnevenTerrain.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/projects/objects/trees/protos/Oak.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/projects/objects/trees/protos/Forest.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/projects/objects/buildings/protos/Windmill.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/projects/objects/buildings/protos/Warehouse.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/projects/objects/buildings/protos/OldResidentialBuilding.proto"
+
+WorldInfo {
+}
+Viewpoint {
+  orientation -0.4501315228095376 -0.45622051207511227 0.7676226003285008 4.463873341692096
+  position -204.39061074816408 371.0441877961837 446.48815722210867
+  follow "RC_CAR"
+}
+TexturedBackground {
+  texture "noon_cloudy_empty"
+}
+TexturedBackgroundLight {
+}
+UnevenTerrain {
+  translation 1.95 0 -6.68
+  size 500 500 25
+  appearance SandyGround {
+    colorOverride 0.368627 0.388235 0.243137
+    textureTransform TextureTransform {
+      scale 2 2
+    }
+  }
+}
+OldResidentialBuilding {
+  translation 213.138 -71.1419 11.552
+  rotation 3.74075e-07 2.33067e-07 -1 -1.8325953071795862
+}
+Warehouse {
+  translation 204.19 7.74861e-05 10.62
+  rotation -1 0 0 -5.307179586466759e-06
+}
+Windmill {
+  translation 141.96 -3.61348e-06 10.72
+  rotation 1 0 0 4.692820414042842e-06
+}
+Forest {
+  translation -229.21 174.65 3.54
+  shape [
+    -20 -10
+    25 -105
+    0 25
+  ]
+  density 0.9
+  maxHeight 22
+  maxRadius 9
+}
+Forest {
+  translation -253.602 155.6 6.18
+  rotation 0 0 1 -2.094395307179586
+  shape [
+    -20 -10
+    25 -105
+    0 25
+  ]
+  density 0.9
+  maxHeight 22
+  maxRadius 9
+}
+Forest {
+  translation -239.413 133.876 6.18
+  rotation 0 0 1 -2.094395307179586
+  shape [
+    -20 -10
+    25 -105
+    0 25
+  ]
+  density 0.9
+  maxHeight 22
+  maxRadius 9
+}
+Forest {
+  translation -136.003 262.064 0.68
+  rotation 0 0 1 -2.094395307179586
+  shape [
+    -20 -10
+    25 -105
+    0 25
+  ]
+  density 0.9
+  maxHeight 22
+  maxRadius 9
+}
+Forest {
+  translation -203.362 242.144 0.68
+  rotation 0 0 1 -1.3089953071795861
+  shape [
+    -20 -10
+    25 -105
+    0 25
+  ]
+  density 0.9
+  maxHeight 22
+  maxRadius 9
+}
+Forest {
+  translation -54.7144 180.282 4.18
+  rotation 0 0 1 -2.094395307179586
+  shape [
+    -79 -10
+    25 -105
+    0 25
+  ]
+  density 0.03
+  maxHeight 22
+  minHeight 78
+  maxRadius 9
+  minRadius 2
+}
+Forest {
+  translation -13.1586 178.076 4.18
+  rotation 0 0 1 -2.094395307179586
+  shape [
+    -79 -10
+    25 -105
+    0 25
+  ]
+  density 0.03
+  maxHeight 22
+  minHeight 78
+  maxRadius 9
+  minRadius 2
+}
+Forest {
+  translation 39.2187 147.836 4.18
+  rotation 0 0 1 -2.094395307179586
+  shape [
+    -79 -10
+    25 -105
+    0 25
+  ]
+  density 0.03
+  maxHeight 22
+  minHeight 78
+  maxRadius 9
+  minRadius 2
+}
+Forest {
+  translation 99.4853 113.041 4.18
+  rotation 0 0 1 -2.094395307179586
+  shape [
+    -79 -10
+    25 -105
+    0 25
+  ]
+  density 0.03
+  maxHeight 22
+  minHeight 78
+  maxRadius 9
+  minRadius 2
+}
+Forest {
+  translation 155.008 80.986 4.18
+  rotation 0 0 1 -2.094395307179586
+  shape [
+    -79 -10
+    25 -105
+    0 25
+  ]
+  density 0.03
+  maxHeight 22
+  minHeight 78
+  maxRadius 9
+  minRadius 2
+}
+Forest {
+  translation -187.479 -49.6745 4.18
+  rotation 0 0 1 -2.094395307179586
+  shape [
+    -79 -10
+    25 -105
+    0 25
+  ]
+  density 0.03
+  maxHeight 22
+  minHeight 78
+  maxRadius 9
+  minRadius 2
+}
+Forest {
+  translation -109.639 85.1488 4.18
+  rotation 0 0 1 -2.094395307179586
+  shape [
+    -79 -10
+    25 -105
+    0 25
+  ]
+  density 0.03
+  maxHeight 22
+  minHeight 78
+  maxRadius 9
+  minRadius 2
+}
+Forest {
+  translation 10.7125 15.6638 4.18
+  rotation 0 0 1 -2.094395307179586
+  shape [
+    -79 -10
+    25 -105
+    0 25
+  ]
+  density 0.03
+  maxHeight 22
+  minHeight 78
+  maxRadius 9
+  minRadius 2
+}
+Forest {
+  translation -34.5094 65.0176 4.18
+  rotation 0 0 1 2.87979
+  shape [
+    -79 -10
+    25 -105
+    0 25
+  ]
+  density 0.03
+  maxHeight 22
+  minHeight 78
+  maxRadius 9
+  minRadius 2
+}
+Forest {
+  translation -80.7274 -107.467 -2.52
+  rotation 0 0 1 2.87979
+  shape [
+    -79 -10
+    25 -105
+    0 25
+  ]
+  density 0.03
+  maxHeight 22
+  minHeight 78
+  maxRadius 9
+  minRadius 2
+}
+Forest {
+  translation -130.638 -94.0931 -2.52
+  rotation 0 0 1 2.87979
+  shape [
+    -79 -10
+    25 -105
+    0 25
+  ]
+  density 0.03
+  maxHeight 22
+  minHeight 78
+  maxRadius 9
+  minRadius 2
+}
+Forest {
+  translation -34.1603 -119.946 -5.02
+  rotation 0 0 1 2.87979
+  shape [
+    -79 -10
+    25 -105
+    0 25
+  ]
+  density 0.03
+  maxHeight 22
+  minHeight 78
+  maxRadius 9
+  minRadius 2
+}
+Forest {
+  translation 80.9974 -150.803 -3.01
+  rotation 0 0 -1 -1.5707953071795862
+  shape [
+    -79 -10
+    25 -105
+    0 25
+  ]
+  density 0.03
+  maxHeight 22
+  minHeight 78
+  maxRadius 9
+  minRadius 2
+}
+Forest {
+  translation 72.517 -61.833 -3.01
+  rotation 0 0 -1 -1.5707953071795862
+  shape [
+    100 -100
+    25 -105
+    0 25
+  ]
+  density 0.03
+  maxHeight 22
+  minHeight 78
+  maxRadius 9
+  minRadius 2
+}
+Forest {
+  translation 142.637 -150.803 -3.01
+  rotation 0 0 -1 -1.5707953071795862
+  shape [
+    -79 -10
+    25 -105
+    0 25
+  ]
+  density 0.03
+  maxHeight 22
+  minHeight 78
+  maxRadius 9
+  minRadius 2
+}
+Forest {
+  translation 208.467 -150.803 -3.01
+  rotation 0 0 -1 -1.5707953071795862
+  shape [
+    -79 -10
+    25 -105
+    0 25
+  ]
+  density 0.03
+  maxHeight 22
+  minHeight 78
+  maxRadius 9
+  minRadius 2
+}
+Forest {
+  translation 208.467 -150.803 -3.01
+  rotation 0 0 -1 -1.5707953071795862
+  shape [
+    -79 -10
+    25 -105
+    0 25
+  ]
+  density 0.03
+  maxHeight 22
+  minHeight 78
+  maxRadius 9
+  minRadius 2
+}
+Oak {
+  translation 0 3.49 8.61
+  name "oak tree(4)"
+}
+Oak {
+  translation 2.1 0.78 8.61
+  name "oak tree(5)"
+}
+Oak {
+  translation 2.555 7.09526 8.61
+  rotation 0 0 1 2.3562
+  name "oak tree(6)"
+}
+Oak {
+  translation 5.35 0.78 8.61
+  rotation 0 0 1 1.8326
+  name "oak tree(7)"
+}
+Oak {
+  translation 3.72 0.78 8.61
+  name "oak tree(8)"
+}
+Oak {
+  translation 0 0.78 8.61
+}
+Oak {
+  translation 0 0.78 8.61
+  name "oak tree(3)"
+}
+Oak {
+  translation 1.51 3.36 8.61
+  name "oak tree(1)"
+}
+Oak {
+  translation 0.7 -0.84 8.61
+  name "oak tree(2)"
+}
+DEF RC_CAR BmwX5 {
+  translation -200.84 199.815 7.3
+  rotation 0 0 1 -1.5707953071795862
+  name "RC_CAR"
+  controller "<extern>"
+  supervisor TRUE
+  sensorsSlotFront [
+    DEF GPS GPS {
+      translation -3.41 0 0
+      name "GPS"
+    }
+  ]
+  sensorsSlotRear [
+    Display {
+      translation -2.95 0 0.24
+      width 600
+      height 600
+    }
+  ]
+  sensorsSlotTop [
+    Camera {
+      translation 0 0 0.16
+      name "CAM"
+      rotationStep 6.28
+      fieldOfView 6.28319
+      width 720
+      height 180
+      spherical TRUE
+    }
+  ]
+  sensorsSlotCenter [
+    DEF IMU InertialUnit {
+      translation 0 0 0.42
+      name "IMU"
+    }
+  ]
+  window "generic_window"
+}

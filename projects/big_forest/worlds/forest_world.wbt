@@ -13,7 +13,6 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/projects/objects/floors/protos/UnevenTerrain.proto"
 
 WorldInfo {
-  basicTimeStep 16
 }
 Viewpoint {
   orientation -0.14598304846834004 -0.1637570173057901 0.9756395793749869 4.80251733477681

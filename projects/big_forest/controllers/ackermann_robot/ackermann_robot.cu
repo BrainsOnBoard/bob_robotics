@@ -35,11 +35,13 @@
 #include <thrust/device_ptr.h>
 #include <thrust/extrema.h>
 
+#include "route_setup.cuh"
 #include "hash_matcher.cuh"
 #include "gpu_hasher.cu"
 
+//#include "hash_matcher.cuh"
 
-
+//#include "dataset_evaluator.cpp"
 
 //   profile with :  nsys profile -w true -t cuda -s none -o nsight_report -f true -x true ./ackermann_robot
 cv::Mat get_cam_image(const unsigned char *image, int width, int height) {
@@ -50,7 +52,7 @@ cv::Mat get_cam_image(const unsigned char *image, int width, int height) {
 }
 
 // time in [ms] of a simulation step
-#define TIME_STEP 16 // frame rate 30 fps
+#define TIME_STEP 32 // frame rate 30 fps
 
 
 #define MAX_SPEED 6.28
@@ -58,7 +60,7 @@ cv::Mat get_cam_image(const unsigned char *image, int width, int height) {
 #define RESIZED_WIDTH 256// 255
 #define RESIZED_HEIGHT 64 // 64
 
-#define PM_RESIZE_FACTOR 2
+#define PM_RESIZE_FACTOR 1
 
 // All the webots classes are defined in the "webots" namespace
 using namespace webots;
@@ -70,6 +72,8 @@ using namespace units::time;
 // entry point of the controller
 int main(int argc, char **argv) {
 
+
+
     bool show_images = true;    // show visual
 
     int roll_step = RESIZED_WIDTH;         // number of rotations for a view
@@ -77,15 +81,39 @@ int main(int argc, char **argv) {
     const int IMG_WIDTH = unwrapRes.width;
     bool createVideo = false;    // if true, it saves unwrapped video
     bool unwrap = false;         // if true, videos will be unwrapped
-    int skipstep = 4;           // skip frames in training matrix
-    int seq_length = 256/skipstep;        // sequence length
+   // int skipstep = 11;           // skip frames in training matrix
+    int skipstep = 1;
+    int seq_length = 128;///2;///skipstep;        // sequence length
     int num_datasets = 2;
     int testRouteNum = 1; // 0 1 2 3
-    int dataset_num = 1; // dataset to test
+    int dataset_num = 9; // dataset to test
     double const PI = 3.14159265358979323;
+    std::string dataset_name= "";
 
     Route route_vector;
     DTHW sequence_matcher;
+
+    if (argc >= 2)
+    {
+        std::istringstream iss( argv[1] );
+        int val;
+
+        if (iss >> val)
+        {
+            // Conversion successful
+            skipstep = val;
+        }
+    }
+    if (argc >= 3) {
+        std::istringstream iss( argv[2] );
+        std::string val;
+
+        if (iss >> val)
+        {
+            // Conversion successful
+            dataset_name = val;
+        }
+    }
 
 
 
@@ -93,21 +121,22 @@ int main(int argc, char **argv) {
     std::unique_ptr<BoBRobotics::Navigation::ImageDatabase> database;
 
     //Route route;
-    
+
     Route route = Route(dataset_num,roll_step, skipstep, unwrap, createVideo, unwrapRes);
+   // Route route = Route(dataset_name,roll_step, skipstep, unwrap, createVideo, unwrapRes);
     std::cout << " creating Hash matrix" << std::endl;
     HashMatrix hashMat(route.nodes, roll_step);
-    
+
 
     int hash_mat_size = hashMat.getMatrix().size();
     auto hm = hashMat.getMatrix();
     unsigned long long int* l_hash_mat = (unsigned long long int*) malloc(hash_mat_size*sizeof(unsigned long long int));
     hashMat.getHashMatUL(l_hash_mat);
-    unsigned long long int l_sequence[seq_length];
     int *l_cost_matrix;
-    unsigned int d_sequence_size = seq_length;
+    int d_sequence_size = seq_length;
+    unsigned long long int *l_sequence = (unsigned long long int *) malloc(d_sequence_size * sizeof(unsigned long long int));
 
-    /*
+   /*
     for (int i = 0; i < d_sequence_size; i++) {
         l_sequence[i] = l_hash_mat[i*roll_step];
     }
@@ -175,8 +204,8 @@ int main(int argc, char **argv) {
     }
     GPUHasher g_hasher;
     g_hasher.initGPU(l_hash_mat, hash_mat_size, d_sequence_size, roll_step, RESIZED_WIDTH, RESIZED_HEIGHT);
-    g_hasher.upload_database(training_images, RESIZED_WIDTH/4, RESIZED_HEIGHT/4);
-    for (int i = 0; i < d_sequence_size; i++) {
+    //g_hasher.upload_database(training_images, RESIZED_WIDTH/4, RESIZED_HEIGHT/4);
+    for (unsigned int i = 0; i < d_sequence_size; i++) {
         l_sequence[i] = l_hash_mat[0];
     }
     g_hasher.uploadSequence(l_sequence);
@@ -195,7 +224,7 @@ int main(int argc, char **argv) {
 
     Camera *cm;
     Display *disp = driver->getDisplay("display");
-    disp->setColor(0xFFFFFF);
+    disp->setColor(0x000000);
     Keyboard *kb = new Keyboard();
 
     cm=driver->getCamera("CAM");
@@ -232,9 +261,15 @@ int main(int argc, char **argv) {
     BoBRobotics::Stopwatch sw;
     // feedback loop: step simulation until an exit event is received
     int current_step = 0;
-    while (robot->step(TIME_STEP) != -1) {
+   // while (robot->step(TIME_STEP) != -1) {
+    do {
+      // begin simulation step computation: send command values to Webots for update
+      // leave the loop when the simulation is over
+      if (robot->stepBegin(TIME_STEP) == -1)
+        break;
 
         cv::Mat current_image = get_cam_image(cm->getImage(),width, height);
+       // cv::GaussianBlur(current_image, current_image, cv::Size(5, 5), 0);
         cv::Mat gray_image, resized;
         cv::Mat processed_image;
         const double speed_value = gps->getSpeed();
@@ -323,7 +358,7 @@ int main(int argc, char **argv) {
                 test_mode = true;
                 isTestRunning = true;
 
-                disp->setColor(0xFF00FF);
+                disp->setColor(0x00FF00);
                 for (auto n : route.nodes) {
                     int xx = meter_t(millimeter_t(n.x)).value();
                     int yy = meter_t(millimeter_t(n.y)).value();
@@ -383,78 +418,87 @@ int main(int argc, char **argv) {
             cv::Mat img_gray;
             cv::cvtColor(current_image, img_gray, cv::COLOR_BGRA2GRAY);
             cv::Mat resized_gray;
-            cv::resize(img_gray, resized_gray, unwrapRes);
+           // cv::GaussianBlur(img_gray, img_gray, cv::Size(3, 3), 0);
+            cv::resize(img_gray, resized_gray, unwrapRes,cv::INTER_CUBIC);
 
             cv::Mat conv;
             resized.convertTo(conv, CV_32F, 1.0 / 255);
             auto hash = DCTHash::computeHash(conv.clone()); // current hash of test set
 
-            std::vector<cv::Mat> img_rots(roll_step); // need to make it with fix size
-            std::vector<std::bitset<64>> hash_rots = HashMatrix::getHashRotations(resized ,roll_step, img_rots);
+            //std::vector<cv::Mat> img_rots(roll_step); // need to make it with fix size
+            //std::vector<std::bitset<64>> hash_rots = HashMatrix::getHashRotations(resized ,roll_step, img_rots);
 
-            int rot_size = hash_rots.size();
-            int half_rot = rot_size/ 2;
+           // int rot_size = hash_rots.size();
+         //   int half_rot = rot_size/ 2;
 
        //     sequence_matcher.addToShortSequence(hash,seq_length);
        //     auto seq_index = sequence_matcher.getBestMatch();
             // ---- gpu sequence ----
-            auto curr_hash_ptr = hash.to_ullong();
-            g_hasher.addToSequence(&curr_hash_ptr);
-            g_hasher.getDistanceMatrix();
-            cv::Mat host_mat1 = g_hasher.downloadDistanceMatrix();
-            cv::normalize(host_mat1, host_mat1, 0, 255, cv::NORM_MINMAX);
-            host_mat1.convertTo(host_mat1,CV_8UC1);
-            cv::applyColorMap(host_mat1, host_mat1, cv::COLORMAP_JET);
-            g_hasher.calculate_accumulated_cost_matrix();
-            std::pair<int,int> seq_index = g_hasher.getMinIndex(hash,hm);
-            cv::Mat host_mat2 = g_hasher.downloadAccumulatedCostMatrix();
-            cv::normalize(host_mat2, host_mat2, 0, 255, cv::NORM_MINMAX);
-            host_mat2.convertTo(host_mat2,CV_8UC1);
-            cv::applyColorMap(host_mat2, host_mat2, cv::COLORMAP_JET);
-            cv::Mat combined;
-            cv::vconcat(host_mat1, host_mat2, combined);
-            cv::imshow("gpu_mat2", combined);
+          //  if (current_step % skipstep == 0) {
+                auto curr_hash_ptr = hash.to_ullong();
+                g_hasher.addToSequence(&curr_hash_ptr);
+                g_hasher.getDistanceMatrix();
+                cv::Mat host_mat1 = g_hasher.downloadDistanceMatrix();
+                cv::normalize(host_mat1, host_mat1, 0, 255, cv::NORM_MINMAX);
+                host_mat1.convertTo(host_mat1,CV_8UC1);
+                cv::applyColorMap(host_mat1, host_mat1, cv::COLORMAP_JET);
+                g_hasher.calculate_accumulated_cost_matrix();
+                std::pair<int,int> seq_index = g_hasher.getMinIndex(hash,hm);
+                cv::Mat host_mat2 = g_hasher.downloadAccumulatedCostMatrix();
+                cv::normalize(host_mat2, host_mat2, 0, 255, cv::NORM_MINMAX);
+                host_mat2.convertTo(host_mat2,CV_8UC1);
+                cv::applyColorMap(host_mat2, host_mat2, cv::COLORMAP_JET);
+                cv::Mat combined;
+                cv::vconcat(host_mat1, host_mat2, combined);
+                cv::imshow("gpu_mat2", combined);
 
-            //cv::Mat host_mat3 = g_hasher.calculate_rotation_dist_matrix( hash_rots, roll_step);
-            //cv::normalize(host_mat3, host_mat3, 0, 255, cv::NORM_MINMAX);
-           // host_mat3.convertTo(host_mat3,CV_8UC1);
-            //cv::applyColorMap(host_mat3, host_mat3, cv::COLORMAP_JET);
-            //cv::imshow("rot_cost_mat", host_mat3);
-            //////--------------------------------------------------------
+                //cv::Mat host_mat3 = g_hasher.calculate_rotation_dist_matrix( hash_rots, roll_step);
+                //cv::normalize(host_mat3, host_mat3, 0, 255, cv::NORM_MINMAX);
+            // host_mat3.convertTo(host_mat3,CV_8UC1);
+                //cv::applyColorMap(host_mat3, host_mat3, cv::COLORMAP_JET);
+                //cv::imshow("rot_cost_mat", host_mat3);
+                //////--------------------------------------------------------
 
-            int pixel_step = int(IMG_WIDTH / (float)roll_step);
-            int seq_match_angle = seq_index.second * pixel_step;
+                int pixel_step = int(IMG_WIDTH / (float)roll_step);
+                int seq_match_angle = seq_index.second * pixel_step;
 
-            int seq_angle;
-            if (seq_match_angle < 180) {
-                seq_angle = seq_match_angle;
-            } else {
-                seq_angle = seq_match_angle -360;
-            }
+                int seq_angle;
+                if (seq_match_angle <= 180) {
+                    seq_angle = seq_match_angle;
+                } else {
+                    seq_angle = seq_match_angle -360;
+                }
 
-            if (seq_angle > 30) {
-                seq_angle = 30;
-            }
+                if (seq_angle > 30) {
+                    seq_angle = 30;
+                }
 
-            if (seq_angle < -30) {
-                seq_angle = -30;
-            }
+                if (seq_angle <= -30) {
+                    seq_angle = -30;
+                }
 
 
 
-            int min_value;
-          //  auto single_match = HashMatrix::getSingleMatch(hash, route_vector.getHashMatrix(),min_value,roll_step );
-          //  cv::Mat img_match = route_vector.nodes[seq_index.first].image;
-            driver->setCruisingSpeed(speed);
+                int min_value;
+            //  auto single_match = HashMatrix::getSingleMatch(hash, route_vector.getHashMatrix(),min_value,roll_step );
+            //  cv::Mat img_match = route_vector.nodes[seq_index.first].image;
+                if (seq_angle <= 0) {
+                    speed = 45+seq_angle;
+                }
+                else {
+                    speed = 45-seq_angle;
+                }
+                driver->setCruisingSpeed(speed);
 
-            auto rad_angle= radian_t(degree_t(seq_angle));
-            driver->setSteeringAngle(-rad_angle.value());
+                auto rad_angle= radian_t(degree_t(seq_angle));
+                driver->setSteeringAngle(-rad_angle.value());
 
-            std::cout << " sequence = " <<seq_index.first <<  "seq_angle= " << seq_angle << std::endl;
-           // cv::imshow("match", img_match);
-              // can change ordering here << ang matrix >>
-            std::vector<std::vector<int>> ang_distances;
-            cv::waitKey(1);
+                std::cout << " sequence = " <<seq_index.first <<  "seq_angle= " << seq_angle << std::endl;
+            // cv::imshow("match", img_match);
+                // can change ordering here << ang matrix >>
+                std::vector<std::vector<int>> ang_distances;
+                cv::waitKey(1);
+           // }
         }
 
         disp->setColor(0xFFFFFF);
@@ -472,10 +516,11 @@ int main(int argc, char **argv) {
 
 
         current_step++;
-    }
-    
+ //   }
+    } while (robot->stepEnd() != -1);
+
     std::cout << "done" << std::endl;
-    
+
     return 0; //EXIT_SUCCESS
 }
 

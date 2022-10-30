@@ -1,6 +1,6 @@
 
 cmake_minimum_required(VERSION 3.20)
-include(../../../../cmake/BoBRobotics.cmake)
+include(../../../../../cmake/BoBRobotics.cmake)
 set(CMAKE_BUILD_TYPE DEBUG)
 set(CMAKE_CUDA_ARCHITECTURES 86)
 set(CMAKE_CUDA_COMPILER /usr/local/cuda-11.7/bin/nvcc)
@@ -20,9 +20,9 @@ include_directories($ENV{WEBOTS_HOME}/include/controller/cpp)
 find_package(BoBRobotics REQUIRED COMPONENTS imgproc common navigation video)
 
 
-add_executable(ackermann_robot ackermann_robot.cu)
-target_link_libraries(ackermann_robot PUBLIC ${BoBRobotics_LIBRARIES} ${LIBRARIES} ${PROJECT_LIBRARIES} -lcublas)
+add_executable(dataset_evaluator_main dataset_evaluator_main.cu)
+target_link_libraries(dataset_evaluator_main PUBLIC ${BoBRobotics_LIBRARIES} ${LIBRARIES} ${PROJECT_LIBRARIES} -lcublas)
 set_target_properties(
-        ackermann_robot
+        dataset_evaluator_main
         PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON)
