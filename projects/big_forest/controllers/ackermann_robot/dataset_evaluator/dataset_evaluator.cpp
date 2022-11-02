@@ -38,6 +38,9 @@
 
 class DatasetEvaluator {
     private:
+    int m_section;
+    std::string m_train_season;
+    std::string m_test_season;
 
     // -------------------- variables for NORDLEND and ALDERLEY datasets ----------------//
     std::vector<cv::Mat> m_training_images;
@@ -90,10 +93,10 @@ class DatasetEvaluator {
         return ss.str();
     }
 
-    std::vector<std::bitset<64>> read_NORDLAND(std::string season, std::vector<cv::Mat> &images, int section = 1, cv::Size size = {64,64}) {
+    std::vector<std::bitset<64>> read_NORDLAND(std::string season, std::vector<cv::Mat> &images, int section = 1, cv::Size size = {256,256}) {
 
         std::vector<std::bitset<64>> hashes;
-        
+
         int section1_start = 0;
         int section1_end = 1149;
 
@@ -108,45 +111,34 @@ class DatasetEvaluator {
 
         if     (section == 1) { dataset_start = section1_start; dataset_end = section1_end;}
         else if(section == 2) { dataset_start = section2_start; dataset_end = section2_end;}
-        else if(section == 3) { dataset_start = section3_start; dataset_end = section3_end;} 
+        else if(section == 3) { dataset_start = section3_start; dataset_end = section3_end;}
         else {
             std::cout << " invalid option" << std::endl;
             exit(0);
         }
 
-        //std::string nordland_path = "64x32-grayscale-1fps/";
-        //std::string full_path = m_databases_folder_path + nordland_path + season + "/";
 
         std::string nordland_path = "Partitioned_Nordland_Dataset_lowres/Dataset_images/test/" + season + "_images_test/" + "section" + std::to_string(section) + "/";
         std::string full_path = m_databases_folder_path + nordland_path;
-
         GpuDct gdct(size.width);
         std::vector<cv::Mat> square_images;
 
         for (int i = dataset_start; i < dataset_end; i++) {
-            //std::string image_path = make_string_path_NORDLAND(full_path, i);
-            
+
             std::string image_path = full_path + std::to_string(i) + ".png";
 
             if (i % 100 ==0 ) std::cout << image_path << std::endl;
-            //std::cout << image_path << std::endl;
             cv::Mat img = cv::imread(image_path ,0);
             cv::Mat output;
-            cv::Mat square_img;
-            cv::equalizeHist(img, output);
-            cv::resize(output, output, size);
+            //cv::equalizeHist(img, output);
+            cv::resize(img, output, size,2);
+            output.convertTo(output, CV_32F, 1.0/255);
             images.push_back(output);
-            cv::resize(img, square_img, {size.width, size.width});
-            square_img.convertTo(square_img, CV_32F, 1.0/255);
-            square_images.push_back(square_img);
-            auto hash = gdct.dct(square_img);
-            hashes.push_back(hash);
+
+            //auto hash = gdct.dct(output);
+            //hashes.push_back(hash);
         }
-
-
-        
-
-
+        hashes = gdct.batch_dct(images);
 
         return hashes;
     }
@@ -154,7 +146,8 @@ class DatasetEvaluator {
     std::vector<std::bitset<64>> read_ALDERLEY(std::string ID, std::vector<cv::Mat> &images, int dataset_start, int dataset_end) {
 
         std::vector<std::bitset<64>> hashes;
-        GpuDct gdct(64);
+        int n_col = 256;
+        GpuDct gdct(n_col);
 
         // read FRAMESA or FRAMESB
         std::string frames_a = "ALDERLEY_TEST/alderley/FRAMESA/";
@@ -175,11 +168,11 @@ class DatasetEvaluator {
             std::string image_path = make_string_path(file_path, i);
             cv::Mat img = cv::imread(image_path ,0);
             cv::Mat output;
-            cv::resize(img, output, {64,32});
+            cv::resize(img, img, {n_col,n_col});
             //cv::cvtColor(output, output, cv::COLOR_RGB2GRAY);
-            images.push_back(output);
-            output.convertTo(img, CV_32F, 1.0/255);
-            auto hash = gdct.dct(output);
+            images.push_back(img);
+            img.convertTo(img, CV_32F, 1.0/255);
+            auto hash = gdct.dct(img);
             hashes.push_back(hash);
         }
 
@@ -187,11 +180,8 @@ class DatasetEvaluator {
     }
 
 
-
-
-
     // DATASET TYPES = {WEBOTS, FOREST, NORDLAND, ALDERLEY}
-    DatasetEvaluator(std::string databases_folder_path, std::string training_image_path, std::string test_image_path, cv::Size resolution, int skipstep, std::string difference_method, bool isPanoramic, std::string dataset_type = "A", std::string norland_season_train = "SUMMER", std::string norland_season_test = "FALL", bool isSequence = false, int section = 1) {
+    DatasetEvaluator(std::string databases_folder_path, std::string training_image_path, std::string test_image_path, cv::Size resolution, int skipstep, std::string difference_method, bool isPanoramic, std::string dataset_type = "A", std::string norland_season_train = "SUMMER", std::string norland_season_test = "FALL", bool isSequence = false, int section = 1, bool hash_only = true) {
         m_isPanoramic = isPanoramic;
         m_img_res = resolution;
         m_skipstep = skipstep;
@@ -200,21 +190,18 @@ class DatasetEvaluator {
         m_difference_method = difference_method;
         m_databases_folder_path = databases_folder_path;
 
-        
-
+        m_section = section;
+        m_train_season = norland_season_train;
+        m_test_season = norland_season_test;
 
         read_dataset(training_image_path, resolution, true, dataset_type, norland_season_train, section);// read training dataset
         read_dataset(test_image_path, resolution, false, dataset_type, norland_season_test, section);   // read testing dataset
         int N_training = m_training_images.size();
         int N_testing =  m_test_images.size();
         if (!isPanoramic) {
-            g_hasher.init_GPU_for_single_match(m_training_images, m_test_images, m_training_images.size(), m_test_images.size(), resolution, isSequence);
+            g_hasher.init_GPU_for_single_match(m_training_images, m_test_images, m_training_images.size(), m_test_images.size(), resolution, isSequence,128, hash_only);
         }
     }
-    /**
-     * method = hash - DCT HASH, sequence - sequence hashes, pixel - pixel matching (perfect memory[PM])
-    */
-
 
     void read_dataset(std::string dataset_name, cv::Size image_resolution, bool isTrainingDataset, std::string dataset_type, std::string nordland_season = "summer", int section = 1) {
 
@@ -271,7 +258,7 @@ class DatasetEvaluator {
 
         // ALDERLEY and NORLAND dataset only needs to be read without CSV file for filenames
         } else {
-            
+
             if (dataset_type == "ALDERLEY") {
                 int start = 1;
                 int end_A = 16960;
@@ -302,34 +289,30 @@ class DatasetEvaluator {
         }
     }
 
-    void score_dataset() {
-       
+    void score_dataset(bool isPixel = false) {
+
         std::vector<std::pair<int,int>> scores_PM;
         std::vector<std::pair<int,int>> scores_hash;
         std::vector<int> score_diff_PM;
-        std::vector<int> score_diff_hash; 
+        std::vector<int> score_diff_hash;
         int total_score_PM = 0;
         int total_score_hash = 0;
         // pixel matching
-        cv::Mat dist_mat_all = g_hasher.get_best_PM_single_match(scores_PM);
-        //cv::resize(dist_mat_all, dist_mat_all, {1000,1000});
-        //cv::imshow("dist mat ", dist_mat_all);
-        //cv::waitKey(0);
 
-        // hash matching
-        cv::Mat hash_dist_mat;
-        int *d_hash_dist_mat = g_hasher.get_single_hash_difference_matrix(scores_hash, hash_dist_mat);
-        //cv::resize(hash_dist_mat, hash_dist_mat, {1000,1000});
-        //cv::imshow("hash dist mat ", hash_dist_mat);
-
-        for (int i =0; i < scores_PM.size(); i++) {
-            int diff = abs(scores_PM[i].first - scores_PM[i].second);
-            score_diff_PM.push_back( diff );
-            if (diff < 10) {
-                total_score_PM++;
+        if (isPixel) {
+            cv::Mat dist_mat_all = g_hasher.get_best_PM_single_match(scores_PM);
+            for (int i =0; i < scores_PM.size(); i++) {
+                int diff = abs(scores_PM[i].first - scores_PM[i].second);
+                score_diff_PM.push_back( diff );
+                if (diff < 10) {
+                    total_score_PM++;
+                }
             }
+            std::cout << "score [PM] = " << total_score_PM << " train:" << m_train_season << " test:"<< m_test_season << " section:"<< m_section <<std::endl;
         }
 
+        cv::Mat hash_dist_mat;
+        int *d_hash_dist_mat = g_hasher.get_single_hash_difference_matrix(scores_hash, hash_dist_mat);
 
         for (int i =0; i < scores_hash.size(); i++) {
             int diff = abs(scores_hash[i].first - scores_hash[i].second);
@@ -338,31 +321,25 @@ class DatasetEvaluator {
                 total_score_hash++;
             }
         }
+        std::cout << "score [hash] = " << total_score_hash << " train:" << m_train_season << " test:"<< m_test_season << " section:"<< m_section <<std::endl;
 
-       
-
-        //std::vector<cv::Mat> sequence;
-        //unsigned long long int *d_training_hashes;
-        //GPUHasher::upload_hash_database(m_training_images, d_training_hashes);
-        //for (int i = 0; i < 128; i++) {     
-        //    sequence.push_back(m_test_images[i]);     
-        //}
-        //cv::Mat host_D = GPUHasher::calculate_accumulated_cost_matrix(sequence, d_training_hashes, m_training_hashes.size());
-        //std::cout << "M = " << std::endl << " "  << host_D << std::endl << std::endl;
-        std::cout << "score hash = " << total_score_hash << " score PM = " << total_score_PM << std::endl;
-        //cv::waitKey(0);
-
-         GpuDct gdct(256);
-        std::vector<std::bitset<64>> batched_hashes = gdct.batched_dct(m_training_images);
-        for (int i = 0; i < batched_hashes.size(); i++) {
-            std::cout << batched_hashes[i] << std::endl;
-        }
-        std::cout << " done running batched " << std::endl;
-
-        
+        //GPUHasher ghasher;
+        //std::vector<cv::Mat> rotated_imgs(256);
+        //cv::Mat test_img = m_training_images[200];
 
 
-        
+       // auto img_hashes =  ghasher.get_rotation_hashes(m_training_images[120], rotated_imgs, 256);
+       // g_hasher.get_rotations(test_img,256);
+       // cudaDeviceSynchronize();
+ //       GpuDct dhash(256);
+ //       dhash.batch_dct(m_training_images);
+//        g_hasher.get_hash_rotation_matrix(m_training_images, 256);
+
+
+
+
+        //std::cout << "score hash = " << total_score_hash << " score PM = " << total_score_PM << std::endl;
+
     }
 
     void get_closest_node () {

@@ -22,8 +22,63 @@ __global__ void kernel_get_T(float *T) {
         T[uid] = sqrt(2.0/N) *cos( ((2*j+1))/(2.0*N)*PI*i);
 
     }
-    
+
 }
+
+__device__ void device_bitarray(unsigned long long int *addr, int *bit_array, int tid) {
+    // n |= 1UL << i;
+
+    if (bit_array[tid] > 0) {
+        unsigned long long int n = 1ULL << tid;
+        atomicAdd(addr, n);
+    }
+}
+
+
+// threads per block = 64 x n_images, blocks = n_images
+__global__ void kernel_compute_hash(float *dct_imgs, unsigned long long int *hash, int n_images, int cols) {
+    int bid = blockIdx.x;
+    int tid = threadIdx.x;
+
+    int roi_offset =tid % 8 + ((tid / 8) * cols) ;
+    __shared__ float s_array[64];
+    __shared__ float array[64];
+    s_array[threadIdx.x] = dct_imgs[roi_offset + bid * blockIdx.x];
+    array[threadIdx.x]   = dct_imgs[roi_offset + bid * blockIdx.x];
+    __syncthreads();
+
+
+    // sort arrays
+    for (int i = 0; i < cols/2; i++)
+    {
+        int j = tid;
+        if (j % 2 == 0 && j<cols-1) {
+            if (s_array[j+1] < s_array[j]) {
+                float temp = s_array[j];
+                s_array[j] = s_array[j+1];
+                s_array[j+1] = temp;
+            }
+        }
+        __syncthreads();
+        if (j % 2 == 1 && j<cols-1) {
+            if (s_array[j+1] < s_array[j]) {
+                float temp = s_array[j];
+                s_array[j] = s_array[j+1];
+                s_array[j+1] = temp;
+            }
+        }
+        __syncthreads();
+    }
+    __syncthreads();
+
+    const float median = (s_array[31] + s_array[32]) /2;
+    array[tid] = (array[tid] > median);
+    __syncthreads();
+    // each block computes a hash
+    device_bitarray(hash + bid, (int*)array, tid);
+
+}
+
 
 
 class GpuDct {
@@ -31,26 +86,27 @@ class GpuDct {
     float *d_T;
     int m_size;
     int m_batch_count;
-   
-
-    
-
-
     cublasHandle_t m_handle;
+
+    ~GpuDct() {
+        cudaFree(d_T);
+        cublasDestroy(m_handle);
+    }
 
     GpuDct(int n) {
         cublasCreate(&m_handle);
-        cudaMalloc(&d_T, n*n*sizeof(float));  
-        getDCTMatrix(n,n, d_T);   
+        cudaMalloc(&d_T, n*n*sizeof(float));
+        getDCTMatrix(n,n, d_T);
         m_size = n;
     }
 
-    std::bitset<64> dct(const cv::Mat &img) {
-        
+    std::bitset<64> dct(cv::Mat &img) {
+
         cv::cuda::GpuMat g_mat;
         g_mat.upload(img);
         const float *img_ptr = reinterpret_cast<float*> (g_mat.data);
         auto hash = gpu_dct(img_ptr);
+
         return hash;
     }
 
@@ -59,134 +115,102 @@ class GpuDct {
         return hash;
     }
 
-    // batch version of dct with cublas - input : list of square images
-    std::vector<std::bitset<64>> batched_dct(std::vector<cv::Mat> &images) {
-        m_batch_count = images.size();
+    std::vector<std::bitset<64>> batch_dct(std::vector<cv::Mat> &h_images) {
         int n = m_size;
-        size_t im_size = n * n;
-        std::vector<std::bitset<64>> hash_batch(m_batch_count);
-      
-        float *d_image_array; cudaMalloc(&d_image_array, im_size * m_batch_count *sizeof(float));
-        float *d_transfrom_matrix_array; cudaMalloc(&d_transfrom_matrix_array, im_size * m_batch_count * sizeof(float));
-        float **d_B;   cudaMalloc((void**)&d_B, m_batch_count*sizeof(float *));
-        float **d_C;   cudaMalloc((void**)&d_C, m_batch_count*sizeof(float *));
-        float **d_DCT; cudaMalloc((void**)&d_DCT, m_batch_count*sizeof(float *));
-        float **d_A;  cudaMalloc((void**)&d_A, m_batch_count*sizeof(float *));
-        float *h_DCT = (float *) malloc(im_size*m_batch_count * sizeof(float));
-        
+        int im_size = n*n;
+        int n_images = h_images.size();
 
-        // read images to contigous gpu memory
-        for (int i = 0; i < m_batch_count; i++) {
-            cv::cuda::GpuMat gpu_mat;
-            gpu_mat.upload(images[i]);
-            float *d_img_data = reinterpret_cast<float*>(gpu_mat.data);
-            cudaMemcpy(d_image_array + i * im_size, d_img_data, im_size*sizeof(float), cudaMemcpyDeviceToDevice);
+        float *d_Arr; cudaMalloc(&d_Arr, n_images*im_size*sizeof(float));
+
+        for (int i = 0; i < n_images; i++ ) {
+            cv::Mat image = h_images[i];
+            cudaMemcpy(d_Arr + i * im_size, reinterpret_cast<float*>(image.data), im_size, cudaMemcpyHostToDevice);
         }
-        cudaMemcpy(d_A, d_image_array, m_batch_count*sizeof(float *),cudaMemcpyDeviceToDevice);
 
-        // read transform matrix to device array (device copy the same matrix)
-        for(int i = 0 ; i < m_batch_count; i++ ) {
-            cudaMemcpy(d_transfrom_matrix_array + i * im_size, d_T, im_size * sizeof(float), cudaMemcpyDeviceToDevice);    
-        }
-        cudaMemcpy(d_B, d_transfrom_matrix_array, m_batch_count* sizeof(float *),cudaMemcpyDeviceToDevice);
-
-        std::cout << " matrices setup for batched gemm" << std::endl;
-        auto status = batched_gpu_dct( (const float **)  d_A, (const float **) d_B,  d_C,  d_DCT, m_batch_count);
-        if (status == CUBLAS_STATUS_SUCCESS) {
-            std::cout << " status success" << std::endl;
-
-            for (int i = 0; i < m_batch_count; i++) {
-            
-                cudaMemcpy(h_DCT + i * im_size, d_DCT[i], im_size*sizeof(float), cudaMemcpyDeviceToHost);
-                cv::Mat h_mat(cv::Size(n, n), CV_32FC1, &h_DCT+ i * im_size);
-                cv::Mat c_roi(h_mat, cv::Rect(0, 0, 8, 8));
-                
-
-                std::bitset<64> hash = BoBRobotics::ImgProc::DCTHash::getHashBits(c_roi);
-                hash_batch.push_back(hash);
-                std::cout << hash << std::endl;
-            }
-            
-
-            // clean up
-            cudaFree(d_A);
-            cudaFree(d_B);
-            cudaFree(d_C);
-            cudaFree(d_DCT);
-            cudaFree(d_image_array);
-            cudaFree(d_transfrom_matrix_array);
-
-            return hash_batch;
-        }
+        std::vector<std::bitset<64>> hashes = gpu_stream_dct(d_Arr, n_images , n,0);
+        cudaFree(d_Arr);
+        return hashes;
     }
 
-   
+
+    std::vector<std::bitset<64>> gpu_stream_dct(const float *d_images, float n_images, int n, cudaStream_t s) {
+        int im_size = n*n;
+        const float alf = 1.0;
+        const float bet = 0.0;
+        const float *alpha = &alf;
+        const float *beta = &bet;
+
+        float *d_DCT_mats; cudaMallocAsync(&d_DCT_mats, im_size*n_images*sizeof(float), s);
+        float *h_DCT_mats; cudaMallocHost(&h_DCT_mats ,im_size*n_images*sizeof(float));
+
+        for (int i = 0; i < n_images; i++ ) {
+            float *h_DCT; cudaMallocHost(&h_DCT,im_size*sizeof(float));
+            float *tmp; cudaMallocAsync(&tmp, n*n*sizeof(float),s);
+            float *d_DCT; cudaMallocAsync(&d_DCT, im_size*sizeof(float),s);
+
+            cublasSetStream(m_handle,s);
+            cublasSgemm(m_handle, CUBLAS_OP_T, CUBLAS_OP_N, n, n, n, alpha, d_T, n, d_images + i * n *n, n, beta, tmp, n);
+            cudaStreamSynchronize(s);
+            cublasSetStream(m_handle,s);
+            cublasSgemm(m_handle, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, alpha, tmp, n, d_T, n, beta, d_DCT, n);
+            cudaStreamSynchronize(s);
+            cudaMemcpyAsync(d_DCT_mats + i * im_size, d_DCT, im_size, cudaMemcpyDeviceToDevice,s);
+
+            cudaFreeHost(h_DCT);
+            cudaFree(tmp);
+            cudaFree(d_DCT);
+        }
+
+        cudaStreamSynchronize(s);
+        std::vector<std::bitset<64>> hashes;
+
+        unsigned long long int *dhash; cudaMallocAsync(&dhash, n_images*sizeof(unsigned long long int),s);
+        unsigned long long int *lhash; cudaMallocHost(&lhash, n_images*sizeof(unsigned long long int));
+        kernel_compute_hash<<<n_images, 64, 64, s>>>(d_DCT_mats, dhash, n_images,n);
+        cudaMemcpyAsync(lhash, dhash, n_images*sizeof(unsigned long long int), cudaMemcpyDeviceToHost,s);
+        cudaStreamSynchronize(s);
+        for (int i = 0; i < n_images; i++) { std::bitset<64> hash(lhash[i]); hashes.push_back(hash);}
+
+        cudaFreeHost(h_DCT_mats);
+        cudaFree(d_DCT_mats);
+        cudaFree(dhash);
+        cudaFreeHost(lhash);
+        return hashes;
+
+    }
 
     private:
 
-    cublasStatus_t batched_gpu_dct(const float **d_A,  const float **d_B,  float **d_C,  float **d_DCT, int batch_count) {
-        // leading dimension - width of matrix
-        
-        const float *alpha;//1
-        const float *beta; //0
-        int m = m_size; // rows in d_images matrix
-        int n = m;
 
-        // T * A * T = transform matrix and the image multiplied to get dct results
-        // cublas have column major ordering so have to transpose matrices (can be confusing!)
-        //(BTxAT)T x B = (d_tT x d_aT)T x d_t
-        cublasStatus_t stat1 = cublasSgemmBatched(   m_handle,
-                                            CUBLAS_OP_T,
-                                            CUBLAS_OP_N,
-                                            n,  n,  n,
-                                            alpha,
-                                             d_B, n,
-                                             d_A,  n,
-                                            beta,
-                                            d_C,  n,
-                                            batch_count);
-
-
-        cublasStatus_t stat2 = cublasSgemmBatched(  m_handle,
-                                            CUBLAS_OP_T,
-                                            CUBLAS_OP_N,
-                                            n,  n,  n,
-                                            alpha,
-                                             d_C, n,
-                                             d_B,  n,
-                                            beta,
-                                            d_DCT,  n,
-                                            batch_count);
-
-        if (stat1==CUBLAS_STATUS_SUCCESS && stat2== CUBLAS_STATUS_SUCCESS) {
-            return stat1;
-        } 
-        return CUBLAS_STATUS_EXECUTION_FAILED;
-    }
     // calculates the DCT of an image (needs to be fixed)
     std::bitset<64> gpu_dct(const float *A) {
-        int n = m_size; 
+        int n = m_size;
 
         float *tmp, *DCT;
         cudaMalloc(&tmp, n*n*sizeof(float));
         cudaMalloc(&DCT,  n*n*sizeof(float));
-        const float alf = 1;
-        const float bet = 0;
+        const float alf = 1.0;
+        const float bet = 0.0;
         const float *alpha = &alf;
         const float *beta = &bet;
 
         // T * A * T'
         cublasSgemm(m_handle, CUBLAS_OP_T, CUBLAS_OP_N, n, n, n, alpha, d_T, n, A, n, beta, tmp, n);
-        cudaDeviceSynchronize(); // N T, tmp,dt,dct
+        cudaDeviceSynchronize();
         cublasSgemm(m_handle, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, alpha, tmp, n, d_T, n, beta, DCT, n);
         cudaDeviceSynchronize();
-        cudaFree(tmp);
-        cv::Mat c_roi;
-        cv::cuda::GpuMat g_mat(cv::Size(n, n), CV_32FC1, DCT);
-        cv::cuda::GpuMat g_roi(g_mat, cv::Rect(0, 0, 8, 8));
-        g_roi.download(c_roi);
+
+        unsigned long long int *dhash;
+        unsigned long long int lhash[1];
+        cudaMalloc(&dhash, 1*sizeof(unsigned long long int));
+        kernel_compute_hash<<<1, 64>>>(DCT, dhash, 1,n);
+        cudaMemcpy(lhash, dhash, sizeof(unsigned long long int), cudaMemcpyDeviceToHost);
+        std::bitset<64> barray(lhash[0]);
         cudaFree(DCT);
-        return BoBRobotics::ImgProc::DCTHash::getHashBits(c_roi);
+        cudaFree(tmp);
+        cudaFree(dhash);
+
+        return barray;
     }
 
     void getDCTMatrix(int rows,int cols, float *d_Transfrom) {

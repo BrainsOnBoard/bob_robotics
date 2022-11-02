@@ -73,7 +73,7 @@ using namespace units::time;
 int main(int argc, char **argv) {
 
 
-
+    std::vector<int> csv_columns_webots = {9, 0 , 1 , 2 , 3 , 4, 5, 7, 8, 6}; // simulation dataset ordering
     bool show_images = true;    // show visual
 
     int roll_step = RESIZED_WIDTH;         // number of rotations for a view
@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
     int testRouteNum = 1; // 0 1 2 3
     int dataset_num = 9; // dataset to test
     double const PI = 3.14159265358979323;
-    std::string dataset_name= "";
+    std::string dataset_name= "city_circle";
 
     Route route_vector;
     DTHW sequence_matcher;
@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
     //Route route;
 
     Route route = Route(dataset_num,roll_step, skipstep, unwrap, createVideo, unwrapRes);
-   // Route route = Route(dataset_name,roll_step, skipstep, unwrap, createVideo, unwrapRes);
+   // Route route = Route(dataset_name,roll_step, skipstep, unwrap, createVideo, unwrapRes, true, false, csv_columns_webots);
     std::cout << " creating Hash matrix" << std::endl;
     HashMatrix hashMat(route.nodes, roll_step);
 
@@ -219,6 +219,7 @@ int main(int argc, char **argv) {
     webots::GPS *gps = driver->getGPS("GPS");
     webots::InertialUnit *imu = driver->getInertialUnit("IMU");
 
+
     Node *rc_car_node = robot->getFromDef("RC_CAR");
     Field *translationField = rc_car_node->getField("translation");
 
@@ -259,6 +260,7 @@ int main(int argc, char **argv) {
     currentTime.tm_year = systemTime.tm_year;
 
     BoBRobotics::Stopwatch sw;
+    GpuDct gdct(256);
     // feedback loop: step simulation until an exit event is received
     int current_step = 0;
    // while (robot->step(TIME_STEP) != -1) {
@@ -419,11 +421,9 @@ int main(int argc, char **argv) {
             cv::cvtColor(current_image, img_gray, cv::COLOR_BGRA2GRAY);
             cv::Mat resized_gray;
            // cv::GaussianBlur(img_gray, img_gray, cv::Size(3, 3), 0);
-            cv::resize(img_gray, resized_gray, unwrapRes,cv::INTER_CUBIC);
-
-            cv::Mat conv;
-            resized.convertTo(conv, CV_32F, 1.0 / 255);
-            auto hash = DCTHash::computeHash(conv.clone()); // current hash of test set
+            cv::resize(img_gray, resized_gray, {256,256},cv::INTER_CUBIC);
+            resized_gray.convertTo(resized_gray, CV_32FC1,(1.0)/255.0);
+            auto hash = gdct.dct(resized_gray);
 
             //std::vector<cv::Mat> img_rots(roll_step); // need to make it with fix size
             //std::vector<std::bitset<64>> hash_rots = HashMatrix::getHashRotations(resized ,roll_step, img_rots);
@@ -434,23 +434,23 @@ int main(int argc, char **argv) {
        //     sequence_matcher.addToShortSequence(hash,seq_length);
        //     auto seq_index = sequence_matcher.getBestMatch();
             // ---- gpu sequence ----
-          //  if (current_step % skipstep == 0) {
-                auto curr_hash_ptr = hash.to_ullong();
-                g_hasher.addToSequence(&curr_hash_ptr);
-                g_hasher.getDistanceMatrix();
-                cv::Mat host_mat1 = g_hasher.downloadDistanceMatrix();
-                cv::normalize(host_mat1, host_mat1, 0, 255, cv::NORM_MINMAX);
-                host_mat1.convertTo(host_mat1,CV_8UC1);
-                cv::applyColorMap(host_mat1, host_mat1, cv::COLORMAP_JET);
-                g_hasher.calculate_accumulated_cost_matrix();
-                std::pair<int,int> seq_index = g_hasher.getMinIndex(hash,hm);
-                cv::Mat host_mat2 = g_hasher.downloadAccumulatedCostMatrix();
-                cv::normalize(host_mat2, host_mat2, 0, 255, cv::NORM_MINMAX);
-                host_mat2.convertTo(host_mat2,CV_8UC1);
-                cv::applyColorMap(host_mat2, host_mat2, cv::COLORMAP_JET);
-                cv::Mat combined;
-                cv::vconcat(host_mat1, host_mat2, combined);
-                cv::imshow("gpu_mat2", combined);
+        //  if (current_step % skipstep == 0) {
+            auto curr_hash_ptr = hash.to_ullong();
+            g_hasher.addToSequence(&curr_hash_ptr);
+            g_hasher.getDistanceMatrix();
+            cv::Mat host_mat1 = g_hasher.downloadDistanceMatrix();
+            cv::normalize(host_mat1, host_mat1, 0, 255, cv::NORM_MINMAX);
+            host_mat1.convertTo(host_mat1,CV_8UC1);
+            cv::applyColorMap(host_mat1, host_mat1, cv::COLORMAP_JET);
+            g_hasher.calculate_accumulated_cost_matrix();
+            std::pair<int,int> seq_index = g_hasher.getMinIndex(hash,hm);
+            cv::Mat host_mat2 = g_hasher.downloadAccumulatedCostMatrix();
+            cv::normalize(host_mat2, host_mat2, 0, 255, cv::NORM_MINMAX);
+            host_mat2.convertTo(host_mat2,CV_8UC1);
+            cv::applyColorMap(host_mat2, host_mat2, cv::COLORMAP_JET);
+            cv::Mat combined;
+            cv::vconcat(host_mat1, host_mat2, combined);
+            cv::imshow("gpu_mat2", combined);
 
                 //cv::Mat host_mat3 = g_hasher.calculate_rotation_dist_matrix( hash_rots, roll_step);
                 //cv::normalize(host_mat3, host_mat3, 0, 255, cv::NORM_MINMAX);
