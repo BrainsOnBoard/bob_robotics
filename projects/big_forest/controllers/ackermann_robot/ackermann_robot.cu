@@ -36,7 +36,7 @@
 #include <thrust/extrema.h>
 
 #include "route_setup.cuh"
-#include "hash_matcher.cuh"
+
 #include "gpu_hasher.cu"
 #include "imgproc/gpu_dct.h"
 
@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
     std::string dataset_name= "";
 
     Route route_vector;
-    DTHW sequence_matcher;
+
 
     GpuDct gct(roll_step);
 
