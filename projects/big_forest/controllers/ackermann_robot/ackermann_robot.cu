@@ -38,6 +38,7 @@
 #include "route_setup.cuh"
 #include "hash_matcher.cuh"
 #include "gpu_hasher.cu"
+#include "imgproc/gpu_dct.h"
 
 //#include "hash_matcher.cuh"
 
@@ -58,7 +59,7 @@ cv::Mat get_cam_image(const unsigned char *image, int width, int height) {
 #define MAX_SPEED 6.28
 
 #define RESIZED_WIDTH 256// 255
-#define RESIZED_HEIGHT 64 // 64
+#define RESIZED_HEIGHT 256 // 64
 
 #define PM_RESIZE_FACTOR 1
 
@@ -93,6 +94,8 @@ int main(int argc, char **argv) {
     Route route_vector;
     DTHW sequence_matcher;
 
+    GpuDct gct(roll_step);
+
     if (argc >= 2)
     {
         std::istringstream iss( argv[1] );
@@ -122,8 +125,8 @@ int main(int argc, char **argv) {
 
     //Route route;
 
-    Route route = Route(dataset_num,roll_step, skipstep, unwrap, createVideo, unwrapRes);
-   // Route route = Route(dataset_name,roll_step, skipstep, unwrap, createVideo, unwrapRes);
+   // Route route = Route(dataset_num,roll_step, skipstep, unwrap, createVideo, unwrapRes);
+    Route route = Route(dataset_name,roll_step, skipstep, unwrap, createVideo, unwrapRes, false, false, {});
     std::cout << " creating Hash matrix" << std::endl;
     HashMatrix hashMat(route.nodes, roll_step);
 
@@ -423,7 +426,8 @@ int main(int argc, char **argv) {
 
             cv::Mat conv;
             resized.convertTo(conv, CV_32F, 1.0 / 255);
-            auto hash = DCTHash::computeHash(conv.clone()); // current hash of test set
+            auto hash = gct.dct(conv);
+            //auto hash = DCTHash::computeHash(conv.clone()); // current hash of test set
 
             //std::vector<cv::Mat> img_rots(roll_step); // need to make it with fix size
             //std::vector<std::bitset<64>> hash_rots = HashMatrix::getHashRotations(resized ,roll_step, img_rots);

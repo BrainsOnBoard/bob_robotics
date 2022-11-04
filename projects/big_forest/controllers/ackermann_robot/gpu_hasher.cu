@@ -45,7 +45,7 @@ class GPUHasher
         l_accumulated_cost_matrix = (int *) malloc(d_sequence_size * num_rows * sizeof(int));
         m_image_width = img_width;
         m_image_height = img_height;
-        
+
 
         gpuErrchk( cudaMalloc(&d_image, img_height*img_width*sizeof(uchar)));
         gpuErrchk( cudaMalloc(&d_rolled_image, img_height*img_width*sizeof(uchar)));
@@ -81,12 +81,12 @@ class GPUHasher
         std::cout << " GPU initialized" << std::endl;
     }
 
-    void init_GPU_for_single_match(std::vector<cv::Mat> &training_imgs, 
+    void init_GPU_for_single_match(std::vector<cv::Mat> &training_imgs,
                                   std::vector<cv::Mat> &test_images,
-                                  int N_training, 
-                                  int N_testing, 
-                                  cv::Size size, 
-                                  bool isSequence, 
+                                  int N_training,
+                                  int N_testing,
+                                  cv::Size size,
+                                  bool isSequence,
                                   int sequence_size = 128) {
         d_sequence_size = sequence_size;
         unsigned long long int l_training_hashes[N_training];
@@ -106,10 +106,10 @@ class GPUHasher
         gpuErrchk( cudaMalloc(&d_reduced_blocks, N_training*size.height*sizeof(float)));
         gpuErrchk( cudaMalloc(&d_dist_mat_PM, N_training*N_testing*sizeof(float)));
         gpuErrchk( cudaMalloc(&d_single_distance_matrix, N_testing*N_training*sizeof(int)));
-        
+
         // adding all the cuda allocated pointers, so we can destroy them later
-        ull_pointers.push_back(d_training_hashes);     
-        ull_pointers.push_back(d_testing_hashes); 
+        ull_pointers.push_back(d_training_hashes);
+        ull_pointers.push_back(d_testing_hashes);
         f_pointers.push_back(d_training_images);
         f_pointers.push_back(d_testing_images);
         f_pointers.push_back(d_temp);
@@ -126,12 +126,12 @@ class GPUHasher
                     reinterpret_cast<float*>(curr_img.data),
                     (size.height*size.width)*sizeof(float),
                     cudaMemcpyHostToDevice));
-    
-            auto hash = gdct.dct(curr_img);
+
+            auto hash = gdct.dct(d_training_images+(i*size.width*size.height));
             unsigned long long int hash_ull = hash.to_ullong();
             l_training_hashes[i] = hash_ull;
         }
-        
+
         for (int i = 0; i < test_images.size(); i++) {
             cv::Mat curr_img = test_images[i];
             cv::resize(curr_img, curr_img, size,2);
@@ -140,11 +140,13 @@ class GPUHasher
                     reinterpret_cast<float*>(curr_img.data),
                     (size.height*size.width)*sizeof(float),
                     cudaMemcpyHostToDevice));
-           
-            auto hash = gdct.dct(curr_img);
+
+            auto hash = gdct.dct(d_testing_images+i*size.height*size.width);
             unsigned long long int hash_ull = hash.to_ullong();
             l_testing_hashes[i] = hash_ull;
         }
+
+
         gpuErrchk( cudaMemcpy(d_training_hashes, l_training_hashes, N_training*sizeof(unsigned long long int), cudaMemcpyHostToDevice));
         gpuErrchk( cudaMemcpy(d_testing_hashes, l_testing_hashes, N_testing*sizeof(unsigned long long int), cudaMemcpyHostToDevice));
 
@@ -202,7 +204,7 @@ class GPUHasher
                        cudaMemcpyHostToDevice);
         }
     }
-  
+
 
 
     // print a matrix on the GPU
@@ -238,13 +240,15 @@ class GPUHasher
         auto type = image.type();
         float *d_img;
         gpuErrchk( cudaMalloc(&d_img, rows*cols*sizeof(float)) );
-        gpuErrchk( cudaMemcpy(d_img, (float*)image.data, rows*cols*sizeof(float), cudaMemcpyHostToDevice) );
+        gpuErrchk( cudaMemcpy(d_img, reinterpret_cast<float*>(image.data), rows*cols*sizeof(float), cudaMemcpyHostToDevice) );
         for (int i = 0; i < num_rotations; i++) {
             int offset = i*cols*rows;
             kernel_roll_image<<<rows, cols, cols*sizeof(float) >>>(d_rolled_images+offset, d_img, cols,i);
         }
         cudaDeviceSynchronize();
     }
+
+
 
     static std::vector<std::bitset<64>> get_rotation_hashes(const cv::Mat &image, std::vector<cv::Mat> &rotated_images, const int num_rotations) {
         auto img_data = image.data;
@@ -264,12 +268,11 @@ class GPUHasher
         float *d_rotated_images;
         gpuErrchk( cudaMalloc(&d_img, rows*cols*sizeof(float)) );
         gpuErrchk( cudaMalloc(&d_rotated_images, rows*cols*num_rotations*sizeof(float)));
-        gpuErrchk( cudaMemcpy(d_img, (float*)image.data, rows*cols*sizeof(float), cudaMemcpyHostToDevice) );
-        
+        gpuErrchk( cudaMemcpy(d_img, reinterpret_cast<float*>(image.data), rows*cols*sizeof(float), cudaMemcpyHostToDevice) );
+
         GpuDct gdct(rows);
         std::vector<std::bitset<64>> rotated_hash_vector;
-       
-        
+
         for (int i = 0; i < num_rotations; i++) {
             int offset = i*cols*rows;
             kernel_roll_image<<<rows, cols, cols*sizeof(float) >>>(d_rotated_images+offset, d_img, cols,i);
@@ -280,14 +283,14 @@ class GPUHasher
             cv::Mat temp_mat(cv::Size(cols,rows), CV_32FC1, host_image);
             rotated_images.push_back(temp_mat);
         }
-        
+
         cudaFree(d_rotated_images);
         cudaFree(d_img);
         return rotated_hash_vector;
-        
+
     }
 
-    
+
 
     int * get_single_hash_difference_matrix(std::vector<std::pair<int,int>> &scores, cv::Mat &distance_matrix) {
         int threads = 256;
@@ -302,7 +305,7 @@ class GPUHasher
         cv::normalize(temp_mat, temp_mat, 0, 255, cv::NORM_MINMAX);
         temp_mat.convertTo(temp_mat, CV_8UC1);
         cv::applyColorMap(temp_mat, temp_mat, cv::COLORMAP_JET);
-        
+
         scores = get_closest_matches_from_dist_mat( d_single_distance_matrix);
         distance_matrix = temp_mat;
         return d_single_distance_matrix;
@@ -313,7 +316,7 @@ class GPUHasher
         std::vector<std::pair<int,int>> scores;
         for (int i = 0; i < N_testing; i++) {
             std::pair<int, int> pair;
-            
+
             thrust::device_ptr<T> g_ptr =  thrust::device_pointer_cast(&dist_mat[i*N_training]);
             int result_offset = thrust::min_element( g_ptr, g_ptr + (N_training) ) -g_ptr;
             int min_score = *(g_ptr + result_offset);
@@ -322,11 +325,11 @@ class GPUHasher
             scores.push_back(pair);
         }
         return scores;
-        
+
     }
 
     cv::Mat get_best_PM_single_match(std::vector<std::pair<int,int>> &scores) {
-     
+
         int N_blocks = N_training * img_rows;
         //std::cout << "N train = " << N_training << " img rows = " << img_rows << " N blocks = "<< N_blocks << std::endl;
         for (int i = 0; i < N_testing; i++) {
@@ -440,7 +443,7 @@ class GPUHasher
         upload_hash_database(hashes, hashes_d_ptr);
     }
 
-    // upload hashes to the gpu 
+    // upload hashes to the gpu
     static void upload_hash_database(std::vector<std::bitset<64>> hashes, unsigned long long int *hashes_d_ptr) {
         int num_hash = hashes.size();
         unsigned long long int ull_hashes[num_hash];
@@ -451,7 +454,7 @@ class GPUHasher
         cudaMemcpy(hashes_d_ptr, ull_hashes, num_hash*sizeof(unsigned long long int), cudaMemcpyHostToDevice);
     }
 
-    // calculates accumulated cost matrix from a sequence of images and a pre-uploaded training hashes database 
+    // calculates accumulated cost matrix from a sequence of images and a pre-uploaded training hashes database
     static cv::Mat calculate_accumulated_cost_matrix(std::vector<cv::Mat> image_sequence, unsigned long long int *d_training_h, int num_training ) {
         int num_sequence = image_sequence.size();
         unsigned long long int *d_image_sequence;
@@ -474,7 +477,7 @@ class GPUHasher
         cudaDeviceSynchronize();
         kernel_order_dist_matrix<<<num_training, num_sequence, BLOCKSIZE*2>>>(d_index_ord, d_index, num_sequence, num_training);
         cudaDeviceSynchronize();
-        
+
         // calculate hashes and upload to gpu
         GpuDct gct(image_sequence[0].size().width);
         for (int i = 0; i < image_sequence.size(); i++) {
@@ -491,7 +494,7 @@ class GPUHasher
         cudaDeviceSynchronize();
         // reordering the matrix (so it's human readable)
         kernel_reorder_matrix<<<num_training, num_sequence>>>(d_D_ord,d_D, d_index);
-        
+
         //cv::cuda::GpuMat gpu_mat({num_sequence, num_training, CV_32SC1, d_D_ord});
         //cv::Mat host_mat;
        // gpu_mat.download(host_mat);
@@ -569,7 +572,7 @@ class GPUHasher
     }
 
     ~GPUHasher() {
-        
+
         for (int i = 0; i < ull_pointers.size(); i++) {
             cudaFree(ull_pointers[i]);
         }
@@ -579,7 +582,7 @@ class GPUHasher
         for (int i = 0; i < f_pointers.size(); i++) {
             cudaFree(f_pointers[i]);
         }
-        cublasDestroy(handle);
+
     }
 
     private:
@@ -610,7 +613,7 @@ class GPUHasher
     unsigned long long int *l_best_row;
     float* d_rolled_images;  // all rotations of an image
     std::vector<uchar*> image_data_vector;
-    cublasHandle_t handle;
+
 
     // perfect memory-----
     float *d_temp;

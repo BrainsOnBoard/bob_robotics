@@ -93,7 +93,7 @@ class DatasetEvaluator {
     std::vector<std::bitset<64>> read_NORDLAND(std::string season, std::vector<cv::Mat> &images, int section = 1, cv::Size size = {64,64}) {
 
         std::vector<std::bitset<64>> hashes;
-        
+
         int section1_start = 0;
         int section1_end = 1149;
 
@@ -108,7 +108,7 @@ class DatasetEvaluator {
 
         if     (section == 1) { dataset_start = section1_start; dataset_end = section1_end;}
         else if(section == 2) { dataset_start = section2_start; dataset_end = section2_end;}
-        else if(section == 3) { dataset_start = section3_start; dataset_end = section3_end;} 
+        else if(section == 3) { dataset_start = section3_start; dataset_end = section3_end;}
         else {
             std::cout << " invalid option" << std::endl;
             exit(0);
@@ -125,7 +125,7 @@ class DatasetEvaluator {
 
         for (int i = dataset_start; i < dataset_end; i++) {
             //std::string image_path = make_string_path_NORDLAND(full_path, i);
-            
+
             std::string image_path = full_path + std::to_string(i) + ".png";
 
             if (i % 100 ==0 ) std::cout << image_path << std::endl;
@@ -142,11 +142,6 @@ class DatasetEvaluator {
             auto hash = gdct.dct(square_img);
             hashes.push_back(hash);
         }
-
-
-        
-
-
 
         return hashes;
     }
@@ -200,7 +195,7 @@ class DatasetEvaluator {
         m_difference_method = difference_method;
         m_databases_folder_path = databases_folder_path;
 
-        
+
 
 
         read_dataset(training_image_path, resolution, true, dataset_type, norland_season_train, section);// read training dataset
@@ -271,7 +266,7 @@ class DatasetEvaluator {
 
         // ALDERLEY and NORLAND dataset only needs to be read without CSV file for filenames
         } else {
-            
+
             if (dataset_type == "ALDERLEY") {
                 int start = 1;
                 int end_A = 16960;
@@ -303,18 +298,18 @@ class DatasetEvaluator {
     }
 
     void score_dataset() {
-       
+
         std::vector<std::pair<int,int>> scores_PM;
         std::vector<std::pair<int,int>> scores_hash;
         std::vector<int> score_diff_PM;
-        std::vector<int> score_diff_hash; 
+        std::vector<int> score_diff_hash;
         int total_score_PM = 0;
         int total_score_hash = 0;
         // pixel matching
         cv::Mat dist_mat_all = g_hasher.get_best_PM_single_match(scores_PM);
         //cv::resize(dist_mat_all, dist_mat_all, {1000,1000});
         //cv::imshow("dist mat ", dist_mat_all);
-        //cv::waitKey(0);
+       // cv::waitKey(0);
 
         // hash matching
         cv::Mat hash_dist_mat;
@@ -339,30 +334,33 @@ class DatasetEvaluator {
             }
         }
 
-       
+        auto delta = m_training_hashes[0] ^ m_test_hashes[0];
+        int testH = delta.count();
+        std::cout << " test " << testH << std::endl;
+        std::cout << m_training_hashes[0] << std::endl << m_test_hashes[0] << std::endl;
 
         //std::vector<cv::Mat> sequence;
         //unsigned long long int *d_training_hashes;
         //GPUHasher::upload_hash_database(m_training_images, d_training_hashes);
-        //for (int i = 0; i < 128; i++) {     
-        //    sequence.push_back(m_test_images[i]);     
+        //for (int i = 0; i < 128; i++) {
+        //    sequence.push_back(m_test_images[i]);
         //}
         //cv::Mat host_D = GPUHasher::calculate_accumulated_cost_matrix(sequence, d_training_hashes, m_training_hashes.size());
         //std::cout << "M = " << std::endl << " "  << host_D << std::endl << std::endl;
         std::cout << "score hash = " << total_score_hash << " score PM = " << total_score_PM << std::endl;
         //cv::waitKey(0);
 
-         GpuDct gdct(256);
-        std::vector<std::bitset<64>> batched_hashes = gdct.batched_dct(m_training_images);
-        for (int i = 0; i < batched_hashes.size(); i++) {
-            std::cout << batched_hashes[i] << std::endl;
-        }
-        std::cout << " done running batched " << std::endl;
-
-        
+        //GpuDct gdct(m_training_images[0].size().width);
+        //std::vector<std::bitset<64>> batched_hashes = gdct.batched_dct(m_training_images);
+     //   for (int i = 0; i < batched_hashes.size(); i++) {
+     //       std::cout << batched_hashes[i] << std::endl;
+      //  }
+      //  std::cout << " done running batched " << std::endl;
 
 
-        
+
+
+
     }
 
     void get_closest_node () {

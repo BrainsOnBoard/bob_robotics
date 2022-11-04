@@ -1,4 +1,4 @@
-// gpu image matching functions 
+// gpu image matching functions
 
 const int BLOCKSIZE = 256;
 const int BLOCK_DIM = 16;
@@ -256,7 +256,7 @@ __global__ void kernel_get_distmat_from_rotations(unsigned long long int *rotati
     // for all rotations
     int uid = blockIdx.x*blockDim.x + threadIdx.x;
     for (int i = 0; i < BLOCKSIZE; i++) {
-        rot_dist_mat[uid+ i*BLOCKSIZE] = __popc(rotations[i] ^ d_training_matrix_column[uid]);
+        rot_dist_mat[uid+ i*BLOCKSIZE] = __popcll(rotations[i] ^ d_training_matrix_column[uid]);
     }
 
 }
@@ -265,7 +265,7 @@ __global__ void kernel_simple_dist_mat(unsigned long long int *training_dataset,
     int uid = blockIdx.x*blockDim.x + threadIdx.x;
     for (int i = 0; i < test_size; i++) {
         if (uid < train_size) {
-            distance_matrix[i*train_size + uid] = __popc(test_dataset[i] ^ training_dataset[uid]);
+            distance_matrix[i*train_size + uid] = __popcll(test_dataset[i] ^ training_dataset[uid]);
         }
     }
 }
@@ -286,7 +286,7 @@ __global__ void kernel_calculateMatrixBlock_row(
 
     s_rotations[tid] = d_training_matrix[uid]; // load each rotation row to each block of share memory
     __syncthreads();
-    s_dist_mat_row[tid] = __popc(hash ^ s_rotations[tid]);
+    s_dist_mat_row[tid] = __popcll(hash ^ s_rotations[tid]);
     __syncthreads();
 
     for(unsigned int stride = (blockDim.x/2); stride > 32 ; stride /=2){

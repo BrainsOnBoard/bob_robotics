@@ -22,6 +22,7 @@
 #include "common/stopwatch.h"
 #include "third_party/units.h"
 #include "gpu_hasher.cu"
+#include "imgproc/gpu_dct.h"
 
 
 using namespace units;
@@ -291,16 +292,16 @@ struct CSVReader {
             };
 
             Database_entry entry;
-            entry.s_timestamp = float(getDouble(fields[csv_columns.at(0)]));
-            entry.s_x = millimeter_t(getDouble(fields[csv_columns.at(1)]));
-            entry.s_y = millimeter_t(getDouble(fields[csv_columns.at(2)]));
-            entry.s_z = millimeter_t(getDouble(fields[csv_columns.at(3)]));
-            entry.s_heading = degree_t(getDouble(fields[csv_columns.at(4)]));
-            entry.s_pitch = degree_t(getDouble(fields[csv_columns.at(5)]));
-            entry.s_roll = degree_t(getDouble(fields[csv_columns.at(6)]));
-            entry.s_speed = float(getDouble(fields[csv_columns.at(7)]));
-            entry.s_steering = (getDouble(fields[csv_columns.at(8)]));
-            entry.s_filename = fields[csv_columns.at(9)];
+            entry.s_timestamp = float(getDouble(fields[9]));
+            entry.s_x = millimeter_t(getDouble(fields[0]));
+            entry.s_y = millimeter_t(getDouble(fields[1]));
+            entry.s_z = millimeter_t(getDouble(fields[2]));
+            entry.s_heading = degree_t(getDouble(fields[3]));
+            entry.s_pitch = degree_t(getDouble(fields[4]));
+            entry.s_roll = degree_t(getDouble(fields[5]));
+            entry.s_speed = float(getDouble(fields[7]));
+            entry.s_steering = (getDouble(fields[8]));
+            entry.s_filename = fields[6];
             entries.push_back(entry);
         }
         std::cout << "csv file successfully read" << std::endl;
@@ -428,41 +429,35 @@ class HashMatrix
     }
 
     static void rotation_thread(cv::Mat image, int rotate_by, cv::Mat &rolledImage, std::bitset<64> &rotation) {
-        
+
 
         cv::Mat rolledImageFormatted;
         ImgProc::rollLeft(image, rolledImage, rotate_by);
         rolledImage.convertTo(rolledImageFormatted, CV_32F, 1.0 / 255);
-       
+
         rotation = DCTHash::computeHash(rolledImageFormatted);
     }
 
     //! gets rotations
     static std::vector<std::bitset<64>> getHashRotations(cv::Mat image, int totalRotations, std::vector<cv::Mat> &img_rotations, bool gpu=true)  {
         std::vector<std::bitset<64>> rotations(totalRotations);
-        if (!gpu) {
-            // rotate member variable matrix
-            auto image_width = image.size().width;
-            auto pixel_to_rot = (float)image_width / (float)totalRotations;
-            
-            std::vector<std::thread> threads;
-            for (int i = 0; i < totalRotations; i++) {
-                int rotate_by = int(i * (int)pixel_to_rot);
-                std::thread thr(rotation_thread, std::ref(image), rotate_by, std::ref(img_rotations[i]), std::ref(rotations[i]));
-                threads.push_back(std::move(thr));
-            }
-            // synch threads
-            for (auto&& t : threads) {
-                t.join();
-            }
-           
-        } else {
-            // gpu rotation and hash
-            // causes seg fault
-            rotations = GPUHasher::get_rotation_hashes(image, img_rotations, totalRotations );
+
+        // rotate member variable matrix
+        auto image_width = image.size().width;
+        auto pixel_to_rot = (float)image_width / (float)totalRotations;
+        GpuDct gct(image_width);
+
+
+        for (int i = 0; i < totalRotations; i++) {
+            int rotate_by = int(i * (int)pixel_to_rot);
+
+            cv::Mat rolledImage;
+            ImgProc::rollLeft(image, rolledImage, rotate_by);
+            rolledImage.convertTo(rolledImage, CV_32F, 1.0 / 255);
+            img_rotations.push_back(rolledImage);
+            auto rotation = gct.dct(rolledImage);
+            rotations.push_back(rotation);
         }
-
-
 
         return rotations;
     }
@@ -503,7 +498,7 @@ class HashMatrix
 
     // converts hashmat to C pointer style (for CUDA)
     void getHashMatUL(unsigned long long int *hashMat) {
-       
+
         for (int i = 0; i < m_matrix.size(); i++) {
             hashMat[i] = m_matrix[i].to_ullong();
         }
@@ -666,7 +661,7 @@ class Route {
 
     HashMatrix getHashMatrix() { return m_hash_matrix; }
 
-    
+
 
     void set_hash_matrix(HashMatrix matrix) {
         m_hash_matrix = matrix;
