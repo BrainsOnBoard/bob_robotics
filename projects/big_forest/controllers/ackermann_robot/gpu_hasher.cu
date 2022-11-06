@@ -68,6 +68,8 @@ class GPUHasher
         gpuErrchk( cudaMemcpy(d_hash_mat, l_hash_mat, N*sizeof(unsigned long long int), cudaMemcpyHostToDevice));
         gpuErrchk( cudaMalloc(&d_rolled_images, num_rotations*img_height*img_width*sizeof(float)));
 
+
+
         // initialize GPU sequence matcher
         kernel_fill_index_matrix<<<num_rows, d_sequence_size>>>(d_index_matrix_ord);
         cudaDeviceSynchronize();
@@ -120,6 +122,7 @@ class GPUHasher
 
         for (int i = 0; i < training_imgs.size(); i++) {
             cv::Mat curr_img = training_imgs[i];
+            cv::equalizeHist(curr_img, curr_img);
             cv::resize(curr_img, curr_img, size,2);
             curr_img.convertTo(curr_img, CV_32FC1,(1.0)/255.0);
             gpuErrchk(cudaMemcpy(d_training_images+(i*size.width*size.height),
@@ -134,6 +137,7 @@ class GPUHasher
 
         for (int i = 0; i < test_images.size(); i++) {
             cv::Mat curr_img = test_images[i];
+            cv::equalizeHist(curr_img, curr_img);
             cv::resize(curr_img, curr_img, size,2);
             curr_img.convertTo(curr_img, CV_32FC1,(1.0)/255.0);
             gpuErrchk(cudaMemcpy(d_testing_images+i*size.height*size.width,
@@ -573,15 +577,32 @@ class GPUHasher
 
     ~GPUHasher() {
 
-        for (int i = 0; i < ull_pointers.size(); i++) {
-            cudaFree(ull_pointers[i]);
-        }
-        for (int i = 0; i < i_pointers.size(); i++) {
-            cudaFree(i_pointers[i]);
-        }
-        for (int i = 0; i < f_pointers.size(); i++) {
-            cudaFree(f_pointers[i]);
-        }
+        if (d_ordered_cost_mat) cudaFree(d_ordered_cost_mat);
+       // if (l_cost_matrix) free(l_cost_matrix);
+      //  if (l_accumulated_cost_matrix) free(l_accumulated_cost_matrix);
+        if (d_cost_matrix) cudaFree(d_cost_matrix);
+        if (d_index_matrix) cudaFree(d_index_matrix);
+        if (d_index_matrix_ord) cudaFree(d_index_matrix_ord);
+        if (d_accumulated_cost_mat) cudaFree(d_accumulated_cost_mat);
+        if (d_accumulated_cost_mat_ord) cudaFree(d_accumulated_cost_mat_ord);
+        if (d_image) cudaFree(d_image);
+        if (d_temp) cudaFree(d_temp);
+        if (d_reduced_blocks) cudaFree(d_reduced_blocks);
+        if (d_rolled_images) cudaFree(d_rolled_images);
+        if (d_SSD_rotations) cudaFree(d_SSD_rotations);
+        if (d_dist_mat_PM) cudaFree(d_dist_mat_PM);
+        if (d_images) cudaFree(d_images);
+        if (d_hash_mat) cudaFree(d_hash_mat);
+        if (d_sequence) cudaFree(d_sequence);
+        if (d_tmp_seq) cudaFree(d_tmp_seq);
+     //   if (l_hash_mat) free(l_hash_mat);
+     //   if (l_sequence) free(l_sequence);
+        if (d_training_images) cudaFree(d_training_images);
+        if (d_testing_images) cudaFree(d_testing_images);
+        if (d_training_hashes) cudaFree(d_training_hashes);
+        if (d_testing_hashes) cudaFree(d_testing_hashes);
+        if (d_single_distance_matrix) cudaFree(d_single_distance_matrix);
+
 
     }
 
@@ -609,7 +630,6 @@ class GPUHasher
     unsigned long long int *training_route;
     int *rot_dist_mat;
 
-    float *d_T;
     unsigned long long int *l_best_row;
     float* d_rolled_images;  // all rotations of an image
     std::vector<uchar*> image_data_vector;

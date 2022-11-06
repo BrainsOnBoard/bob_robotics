@@ -18,6 +18,10 @@
 #include <ctime>
 #include <chrono>
 #include <string.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
 
 #include <plog/Log.h>
 #include <plog/Init.h>
@@ -58,6 +62,11 @@ class DatasetEvaluator {
     bool m_isPanoramic; // if not panoramic, turning angle will not be scored
     cv::Size m_img_res; // resolution of the dataset images
     std::string m_difference_method; // hash, pixel, sequence
+
+    std::string dataset_name; // name of the dataset
+    std::string nordland_training_season;
+    std::string nordland_testing_season;
+    int norland_section;
 
     std::vector<std::bitset<64>> m_training_hashes;
     std::vector<std::bitset<64>> m_test_hashes;
@@ -128,7 +137,7 @@ class DatasetEvaluator {
 
             std::string image_path = full_path + std::to_string(i) + ".png";
 
-            if (i % 100 ==0 ) std::cout << image_path << std::endl;
+            //if (i % 100 ==0 ) std::cout << image_path << std::endl;
             //std::cout << image_path << std::endl;
             cv::Mat img = cv::imread(image_path ,0);
             cv::Mat output;
@@ -195,6 +204,11 @@ class DatasetEvaluator {
         m_difference_method = difference_method;
         m_databases_folder_path = databases_folder_path;
 
+        dataset_name = dataset_type;
+        nordland_training_season = norland_season_train;
+        nordland_testing_season = norland_season_test;
+        norland_section = section;
+
 
 
 
@@ -219,12 +233,14 @@ class DatasetEvaluator {
         std::vector<cv::Mat> train_imgs;
         std::vector<cv::Mat> test_imgs;
 
+
         if (m_isPanoramic) {
             // do the rotation - rotation hash matrix version
 
             if (isTrainingDataset) {
                 if (dataset_type == "WEBOTS") {
                     Route route = Route(dataset_name,256, m_skipstep, false, false, m_img_res, false, false, csv_columns_webots);
+                    std::cout << "creating hash matrix: " << std::endl;
                     HashMatrix hashMat(route.nodes, 256);
                     m_hashMat = hashMat;
                     m_training_route = route;
@@ -298,66 +314,60 @@ class DatasetEvaluator {
     }
 
     void score_dataset() {
+        if (dataset_name == "NORDLAND") {
+            std::vector<std::pair<int,int>> scores_PM;
+            std::vector<std::pair<int,int>> scores_hash;
+            std::vector<int> score_diff_PM;
+            std::vector<int> score_diff_hash;
+            int total_score_PM = 0;
+            int total_score_hash = 0;
+            // pixel matching
+            cv::Mat dist_mat_all = g_hasher.get_best_PM_single_match(scores_PM);
+        // cv::resize(dist_mat_all, dist_mat_all, {1000,1000});
+        // cv::imshow("dist mat ", dist_mat_all);
+        
 
-        std::vector<std::pair<int,int>> scores_PM;
-        std::vector<std::pair<int,int>> scores_hash;
-        std::vector<int> score_diff_PM;
-        std::vector<int> score_diff_hash;
-        int total_score_PM = 0;
-        int total_score_hash = 0;
-        // pixel matching
-        cv::Mat dist_mat_all = g_hasher.get_best_PM_single_match(scores_PM);
-        //cv::resize(dist_mat_all, dist_mat_all, {1000,1000});
-        //cv::imshow("dist mat ", dist_mat_all);
-       // cv::waitKey(0);
+            // hash matching
+            cv::Mat hash_dist_mat;
+            int *d_hash_dist_mat = g_hasher.get_single_hash_difference_matrix(scores_hash, hash_dist_mat);
+        // cv::resize(hash_dist_mat, hash_dist_mat, {1000,1000});
+        // cv::imshow("hash dist mat ", hash_dist_mat);
 
-        // hash matching
-        cv::Mat hash_dist_mat;
-        int *d_hash_dist_mat = g_hasher.get_single_hash_difference_matrix(scores_hash, hash_dist_mat);
-        //cv::resize(hash_dist_mat, hash_dist_mat, {1000,1000});
-        //cv::imshow("hash dist mat ", hash_dist_mat);
-
-        for (int i =0; i < scores_PM.size(); i++) {
-            int diff = abs(scores_PM[i].first - scores_PM[i].second);
-            score_diff_PM.push_back( diff );
-            if (diff < 10) {
-                total_score_PM++;
+            for (int i =0; i < scores_PM.size(); i++) {
+                int diff = abs(scores_PM[i].first - scores_PM[i].second);
+                score_diff_PM.push_back( diff );
+                if (diff < 10) {
+                    total_score_PM++;
+                }
             }
-        }
 
 
-        for (int i =0; i < scores_hash.size(); i++) {
-            int diff = abs(scores_hash[i].first - scores_hash[i].second);
-            score_diff_hash.push_back( diff );
-            if (diff < 10) {
-                total_score_hash++;
+            for (int i =0; i < scores_hash.size(); i++) {
+                int diff = abs(scores_hash[i].first - scores_hash[i].second);
+                score_diff_hash.push_back( diff );
+                if (diff < 10) {
+                    total_score_hash++;
+                }
             }
+
+
+
+
+            std::string d_name = dataset_name + nordland_training_season + nordland_testing_season + std::string("section") + std::to_string(norland_section);
+            std::cout << d_name <<  " score [hash] = " << total_score_hash << " score [PM] = " << total_score_PM << std::endl;
+
+            std::ofstream myFile(d_name);
+
+                // Send the column name to the stream
+            myFile << "hash" <<"," << "pixel" << "\n";
+            // Send data to the stream
+            for(int i = 0; i < score_diff_hash.size(); ++i)
+            {
+                myFile << score_diff_hash.at(i) << "," << score_diff_PM.at(i) << "\n";
+            }
+            // Close the file
+            myFile.close();
         }
-
-        auto delta = m_training_hashes[0] ^ m_test_hashes[0];
-        int testH = delta.count();
-        std::cout << " test " << testH << std::endl;
-        std::cout << m_training_hashes[0] << std::endl << m_test_hashes[0] << std::endl;
-
-        //std::vector<cv::Mat> sequence;
-        //unsigned long long int *d_training_hashes;
-        //GPUHasher::upload_hash_database(m_training_images, d_training_hashes);
-        //for (int i = 0; i < 128; i++) {
-        //    sequence.push_back(m_test_images[i]);
-        //}
-        //cv::Mat host_D = GPUHasher::calculate_accumulated_cost_matrix(sequence, d_training_hashes, m_training_hashes.size());
-        //std::cout << "M = " << std::endl << " "  << host_D << std::endl << std::endl;
-        std::cout << "score hash = " << total_score_hash << " score PM = " << total_score_PM << std::endl;
-        //cv::waitKey(0);
-
-        //GpuDct gdct(m_training_images[0].size().width);
-        //std::vector<std::bitset<64>> batched_hashes = gdct.batched_dct(m_training_images);
-     //   for (int i = 0; i < batched_hashes.size(); i++) {
-     //       std::cout << batched_hashes[i] << std::endl;
-      //  }
-      //  std::cout << " done running batched " << std::endl;
-
-
 
 
 

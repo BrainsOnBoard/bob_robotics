@@ -41,7 +41,7 @@ using namespace ImgProc;
 // setup a navigation route with these classes
 struct dataset_paths {
     std::vector<std::string> dataset_path_array;
-    std::string root_path = "simulation_databases/";
+    std::string root_path = "../../../../../../../../media/tenxlenx/3d_assets/simulation_databases/";
     dataset_paths() {
         std::string dataset0 = "route1_red";
         std::string dataset1 = "route2_cloudy";
@@ -550,6 +550,7 @@ class Route {
         //std::vector<cv::Mat> images = reader.readImages(dataset_num, unwrapRes);
         std::vector<cv::Mat> images;
         dataset_paths paths;
+        GpuDct gct(unwrapRes.width);
 
 
         // create route
@@ -581,7 +582,7 @@ class Route {
             img1.convertTo(img2, CV_32F, 1.0 / 255);
 
 
-            node.image_hash = BoBRobotics::ImgProc::DCTHash::computeHash(img2);
+            node.image_hash = gct.dct(img2);
             nodes.push_back(node);
 
 
@@ -597,6 +598,7 @@ class Route {
         //std::vector<cv::Mat> images = reader.readImages(dataset_num, unwrapRes);
         std::vector<cv::Mat> images;
         dataset_paths paths;
+        GpuDct gct(unwrapRes.width);
 
 
         // create route
@@ -627,8 +629,7 @@ class Route {
 
             img1.convertTo(img2, CV_32F, 1.0 / 255);
 
-
-            node.image_hash = BoBRobotics::ImgProc::DCTHash::computeHash(img2);
+            node.image_hash = gct.dct(img2);
             nodes.push_back(node);
 
 
