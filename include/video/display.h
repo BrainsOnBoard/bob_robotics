@@ -65,7 +65,7 @@ public:
      *
      * \return Whether a new frame was successfully read
      */
-    bool update();
+    bool update(cv::Mat &frame);
 
     //! Close the display and stop the background thread if needed
     virtual void close();

@@ -48,9 +48,9 @@ bool Display::isOpen()
     return m_IsOpen;
 }
 
-bool Display::update()
+bool Display::update(cv::Mat &frame)
 {
-    cv::Mat frame;
+    //cv::Mat frame;
     bool newFrame = readFrame(frame);
     if (newFrame) {
         // display the frame on screen
@@ -98,7 +98,8 @@ void Display::runInternal()
 {
     while (isRunning()) {
         // check for a new frame
-        if (!update()) {
+        cv::Mat frame;
+        if (!update(frame)) {
             std::this_thread::sleep_for(25ms);
         }
     }
