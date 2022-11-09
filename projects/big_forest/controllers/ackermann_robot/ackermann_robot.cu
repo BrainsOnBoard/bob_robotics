@@ -83,13 +83,13 @@ int main(int argc, char **argv) {
     bool createVideo = false;    // if true, it saves unwrapped video
     bool unwrap = false;         // if true, videos will be unwrapped
    // int skipstep = 11;           // skip frames in training matrix
-    int skipstep = 1;
+    int skipstep = 5;
     int seq_length = 128;///2;///skipstep;        // sequence length
     int num_datasets = 2;
     int testRouteNum = 1; // 0 1 2 3
     int dataset_num = 9; // dataset to test
     double const PI = 3.14159265358979323;
-    std::string dataset_name= "";
+    std::string dataset_name= "big_forest/route_zigzag1";
 
     Route route_vector;
 
@@ -208,10 +208,10 @@ int main(int argc, char **argv) {
     GPUHasher g_hasher;
     g_hasher.initGPU(l_hash_mat, hash_mat_size, d_sequence_size, roll_step, RESIZED_WIDTH, RESIZED_HEIGHT);
     //g_hasher.upload_database(training_images, RESIZED_WIDTH/4, RESIZED_HEIGHT/4);
-    for (unsigned int i = 0; i < d_sequence_size; i++) {
-        l_sequence[i] = l_hash_mat[0];
-    }
-    g_hasher.uploadSequence(l_sequence);
+    //for (unsigned int i = 0; i < d_sequence_size; i++) {
+    //    l_sequence[i] = l_hash_mat[0];
+    //}
+    //g_hasher.uploadSequence(l_sequence);
     ///------gpu init------
 
 

@@ -1,6 +1,6 @@
 // scoring the datasets
 // Dataset_evaluator.cpp
-#pragma once
+
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -38,7 +38,7 @@
 #include "imgproc/gpu_dct.h"
 
 #define RESIZED_WIDTH 256
-#define RESIZED_HEIGHT 64
+#define RESIZED_HEIGHT 256
 
 class DatasetEvaluator {
     private:
@@ -210,8 +210,6 @@ class DatasetEvaluator {
         norland_section = section;
 
 
-
-
         read_dataset(training_image_path, resolution, true, dataset_type, norland_season_train, section);// read training dataset
         read_dataset(test_image_path, resolution, false, dataset_type, norland_season_test, section);   // read testing dataset
         int N_training = m_training_images.size();
@@ -254,29 +252,25 @@ class DatasetEvaluator {
                     std::cout << "unknown dataset type ... exiting" << std::endl;
                     exit(0);
                 }
-                // init gpu -------------
-                int d_sequence_size = 128;
-                int hash_mat_size = m_hashMat.getMatrix().size();
-                auto hm = m_hashMat.getMatrix();
-                unsigned long long int *l_hash_mat = (unsigned long long int*) malloc(hash_mat_size * sizeof(unsigned long long int));
-                unsigned long long int *l_sequence = (unsigned long long int*) malloc(d_sequence_size * sizeof(unsigned long long int));
-                m_hashMat.getHashMatUL(l_hash_mat);
-                std::vector<cv::Mat> training_images;
-                for (int i = 0; i < m_training_route.nodes.size(); i++) { training_images.push_back(m_training_route.nodes[i].image);}
 
-                g_hasher.initGPU(l_hash_mat, hash_mat_size, d_sequence_size, 256, RESIZED_WIDTH, RESIZED_HEIGHT);
-                g_hasher.upload_database(training_images, RESIZED_WIDTH, RESIZED_HEIGHT);
-                for (unsigned int i = 0; i < d_sequence_size; i++) { l_sequence[i] = l_hash_mat[0]; }
-                g_hasher.uploadSequence(l_sequence);
                 ///------gpu init------
             } else {
                 if (dataset_type == "WEBOTS") {
                     Route route = Route(dataset_name,256, m_skipstep, false, false, m_img_res,false,false, csv_columns_webots);
                     m_testing_route = route;
+                    for (int i = 0; i < route.nodes.size(); i++) {
+                        cv::Mat curr_img = route.nodes[i].image;
+                        cv::resize(curr_img, curr_img, {256,256});
+                        curr_img.convertTo(curr_img, CV_32F, 1.0 / 255);
+                        m_test_images.push_back(curr_img);
+                    }
                 }
                 else if (dataset_type == "FOREST") {
                     Route route = Route(dataset_name,256, m_skipstep, false, false, m_img_res, false,false,csv_columns_forest);
                     m_testing_route = route;
+                    for (int i = 0; i < route.nodes.size(); i++) {
+                    //    m_test_images.push_back(curr_img);
+                    }
                 }
             }
 
@@ -323,15 +317,11 @@ class DatasetEvaluator {
             int total_score_hash = 0;
             // pixel matching
             cv::Mat dist_mat_all = g_hasher.get_best_PM_single_match(scores_PM);
-        // cv::resize(dist_mat_all, dist_mat_all, {1000,1000});
-        // cv::imshow("dist mat ", dist_mat_all);
-        
 
             // hash matching
             cv::Mat hash_dist_mat;
             int *d_hash_dist_mat = g_hasher.get_single_hash_difference_matrix(scores_hash, hash_dist_mat);
-        // cv::resize(hash_dist_mat, hash_dist_mat, {1000,1000});
-        // cv::imshow("hash dist mat ", hash_dist_mat);
+
 
             for (int i =0; i < scores_PM.size(); i++) {
                 int diff = abs(scores_PM[i].first - scores_PM[i].second);
@@ -341,7 +331,6 @@ class DatasetEvaluator {
                 }
             }
 
-
             for (int i =0; i < scores_hash.size(); i++) {
                 int diff = abs(scores_hash[i].first - scores_hash[i].second);
                 score_diff_hash.push_back( diff );
@@ -350,15 +339,11 @@ class DatasetEvaluator {
                 }
             }
 
-
-
-
             std::string d_name = dataset_name + nordland_training_season + nordland_testing_season + std::string("section") + std::to_string(norland_section);
             std::cout << d_name <<  " score [hash] = " << total_score_hash << " score [PM] = " << total_score_PM << std::endl;
-
             std::ofstream myFile(d_name);
 
-                // Send the column name to the stream
+            // Send the column name to the stream
             myFile << "hash" <<"," << "pixel" << "\n";
             // Send data to the stream
             for(int i = 0; i < score_diff_hash.size(); ++i)
@@ -367,7 +352,50 @@ class DatasetEvaluator {
             }
             // Close the file
             myFile.close();
+        } else {
+            // init gpu -------------
+            int d_sequence_size = 128;
+            int roll_step = 256;
+            int hash_mat_size = m_hashMat.getMatrix().size();
+            auto hm = m_hashMat.getMatrix();
+            unsigned long long int *l_hash_mat = (unsigned long long int*) malloc(hash_mat_size * sizeof(unsigned long long int));
+            unsigned long long int *l_sequence = (unsigned long long int*) malloc(d_sequence_size * sizeof(unsigned long long int));
+            m_hashMat.getHashMatUL(l_hash_mat);
+            std::vector<cv::Mat> training_images;
+            for (int i = 0; i < m_training_route.nodes.size(); i++) { training_images.push_back(m_training_route.nodes[i].image);}
+
+            g_hasher.initGPU(l_hash_mat, hash_mat_size, d_sequence_size, 256, 256, 256);
+            //g_hasher.upload_database(training_images, 256, 256);
+
+
+            //for (int s = d_sequence_size; s < hash_mat_size/256; s++) {
+            for (int s = 0; s < m_test_images.size(); s++) {
+
+                g_hasher.addToSequence(m_test_images[s]);
+                g_hasher.getDistanceMatrix();
+                std::cout << " seq :" << s <<  std::endl;
+
+                cv::Mat host_mat1 = g_hasher.downloadDistanceMatrix();
+                cv::normalize(host_mat1, host_mat1, 0, 255, cv::NORM_MINMAX);
+                host_mat1.convertTo(host_mat1,CV_8UC1);
+                cv::applyColorMap(host_mat1, host_mat1, cv::COLORMAP_JET);
+
+
+                g_hasher.calculate_accumulated_cost_matrix();
+                std::pair<int,int> min_idx = g_hasher.getMinIndex(hm[s*roll_step],hm);
+                cv::Mat host_mat2 = g_hasher.downloadAccumulatedCostMatrix();
+                cv::normalize(host_mat2, host_mat2, 0, 255, cv::NORM_MINMAX);
+                host_mat2.convertTo(host_mat2,CV_8UC1);
+                cv::applyColorMap(host_mat2, host_mat2, cv::COLORMAP_JET);
+
+                cv::Mat combined;
+                cv::vconcat(host_mat1, host_mat2, combined);
+                cv::imshow("gpu_mat2", combined);
+                cv::waitKey(100);
+            }
         }
+
+
 
 
 

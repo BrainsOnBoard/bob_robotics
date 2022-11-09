@@ -1,5 +1,4 @@
 // gpu image matching functions
-
 const int BLOCKSIZE = 256;
 const int BLOCK_DIM = 16;
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
