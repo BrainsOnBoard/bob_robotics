@@ -5,20 +5,13 @@
             "includePath": [
                 "${workspaceFolder}/**"
             ],
+            "compilerPath": "/usr/local/cuda/bin/nvcc",
             "defines": [],
-            "compilerPath": "/usr/bin/gcc",
             "cStandard": "gnu17",
-            "mergeConfigurations": true,
-            "browse": {
-                "path": [
-                    "/usr/include",
-                    "/home/tenxlenx/bob_robotics",
-                    "/usr/local/include"
-                ],
-                "limitSymbolsToIncludedHeaders": false
-            },
-            "cppStandard": "c++14",
-            "configurationProvider": "ms-vscode.cmake-tools"
+            "cppStandard": "gnu++14",
+            "intelliSenseMode": "linux-gcc-x64",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+            "configurationProvider": "go2sh.cmake-integration"
         }
     ],
     "version": 4

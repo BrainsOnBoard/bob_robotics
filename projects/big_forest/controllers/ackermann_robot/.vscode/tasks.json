@@ -3,14 +3,19 @@
 	"tasks": [
 		{
 			"type": "cmake",
-			"label": "CMake: build",
+			"label": "CMake: buildcuda",
 			"command": "build",
 			"targets": [
 				"Release"
 			],
 			"group": "build",
-			"problemMatcher": [],
+			"problemMatcher": ["$nvcc"],
 			"detail": "CMake template build task"
-		}
+		},
+        {
+            "type": "shell",
+            "label": "make",
+            "command": "make -j16",
+        }
 	]
 }
