@@ -38,10 +38,10 @@ int main(int argc, char **argv) {
     bool isPanoramic = false;
     cv::Size resolution = {256,256};
     std::string db_path = "../../../../../../../../media/tenxlenx/3d_assets/simulation_databases/";
-    DatasetEvaluator dse(db_path, "big_forest/route1_red", "big_forest/route1_cloudy", resolution,  10, difference_method, true, "WEBOTS", "fall",  "summer", true, 1);
-    dse.score_dataset();
+    //DatasetEvaluator dse(db_path, "big_forest/route1_red", "big_forest/route1_cloudy", resolution,  10, difference_method, true, "WEBOTS", "fall",  "summer", true, 1);
+    //dse.score_dataset();
 
-/*
+
 {
     DatasetEvaluator dse1(db_path, "training_image_path", "test_image_path", resolution,  skipstep, difference_method, isPanoramic, "NORDLAND", "fall",  "summer", true, 1);
     DatasetEvaluator dse2(db_path, "training_image_path", "test_image_path", resolution,  skipstep, difference_method, isPanoramic, "NORDLAND", "fall",  "summer", true, 2);
@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
     dse7.score_dataset();
     dse8.score_dataset();
     dse9.score_dataset();
-}*/
+}
 /*
 {
     DatasetEvaluator dse10(db_path, "", "", resolution,  skipstep, difference_method, isPanoramic, "NORDLAND", "summer",  "fall", true, 1);
@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
     dse25.score_dataset();
     dse26.score_dataset();
     dse27.score_dataset();
-    
+
 }
 
 {
@@ -134,7 +134,7 @@ int main(int argc, char **argv) {
 }
 /*
 {
-    
+
     DatasetEvaluator dse34(db_path, "", "", resolution,  skipstep, difference_method, isPanoramic, "NORDLAND", "winter",  "fall", true, 1);
     DatasetEvaluator dse35(db_path, "", "", resolution,  skipstep, difference_method, isPanoramic, "NORDLAND", "winter",  "fall", true, 2);
     DatasetEvaluator dse36(db_path, "", "", resolution,  skipstep, difference_method, isPanoramic, "NORDLAND", "winter",  "fall", true, 3);

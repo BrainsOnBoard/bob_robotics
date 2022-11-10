@@ -394,7 +394,7 @@ class HashMatrix
         cv::Mat img = images[ node_num ];
         std::vector<cv::Mat> img_rotations;
         cv::cvtColor(img, img, cv::COLOR_BGR2GRAY);
-        img_rotations = HashMatrix::getHashRotations(img, m_width );
+        HashMatrix::getImageRotations(img,img_rotations, m_width );
         return img_rotations[rotation];
     }
 
@@ -406,7 +406,7 @@ class HashMatrix
         this->m_width = numRotations;
         this->m_height = nodes.size();
 
-        GpuDct g_dct(numRotations);
+
         std::vector<cv::Mat> h_images;
 
         for (size_t i = 0; i < nodes.size(); i++) {
@@ -414,18 +414,18 @@ class HashMatrix
             cv::Mat img_gray;
             images.push_back(img1);
             cv::cvtColor(img1, img_gray, cv::COLOR_BGRA2GRAY);
-            cv::resize(img_gray, img_gray, {numRotations, numRotations});
+            cv::resize(img_gray, img_gray, {numRotations, numRotations},cv::INTER_CUBIC);
+            img_gray.convertTo(img_gray, CV_32F,1.0 / 255);
             h_images.push_back(img_gray);
 
         }
 
-
-        for (size_t i = 0; i < nodes.size(); i++) {
-            if (i % 10 == 0) std::cout << " hashmat processing " << i << "/" << nodes.size() << std::endl;
-            std::vector<cv::Mat> rot_mats = HashMatrix::getHashRotations(h_images[i], numRotations); // gets all the rotations (and hashes)
-
-
-            std::vector<std::bitset<64>> hash_rotations = g_dct.stream_dct(rot_mats);
+        std::vector<cv::Mat> rots;
+        for (size_t i = 0; i < h_images.size(); i++) {
+            if (i % 10 == 0) std::cout << " hashmat processing " << i << "/" << h_images.size() << std::endl;
+            float *d_rotations = GPUHasher::stream_rotations(h_images[i],rots, numRotations);// HashMatrix::getImageRotations(h_images[i], numRotations); // gets all the rotations (and hashes)
+            std::vector<std::bitset<64>> hash_rotations = GpuDct::stream_dct(d_rotations, numRotations, numRotations );
+            cudaFree(d_rotations);
 
             for (size_t j = 0; j < hash_rotations.size(); j++) {
                 m_matrix.push_back(hash_rotations[j] );
@@ -434,14 +434,10 @@ class HashMatrix
         }
     }
 
-    static void rotation_thread(cv::Mat &image, int rotate_by, cv::Mat &rolledImage) {
-        cv::Mat rolledImageFormatted;
-        ImgProc::rollLeft(image, rolledImage, rotate_by);
-    }
 
     //! gets rotations
-    static std::vector<cv::Mat> getHashRotations(cv::Mat image, int totalRotations)  {
-        return GPUHasher::stream_rotations(image, totalRotations);
+    static void getImageRotations(cv::Mat &image, std::vector<cv::Mat> &rotations, const int totalRotations)  {
+        GPUHasher::stream_rotations(image,rotations, totalRotations);
     }
 
     //! hash all values in matrix with given hash
@@ -530,7 +526,6 @@ class Route {
         std::cout << "Loading images..." << std::endl;
         std::vector<cv::Mat> images;
         dataset_paths paths;
-        GpuDct gct(unwrapRes.width);
 
         // create route
         num_rotated_views = num_rotations; // rotations
@@ -559,9 +554,6 @@ class Route {
            // cv::equalizeHist(img1,img1);
 
             img1.convertTo(img2, CV_32F, 1.0 / 255);
-
-
-            node.image_hash = gct.dct(img2);
             nodes.push_back(node);
 
 
@@ -577,7 +569,6 @@ class Route {
         //std::vector<cv::Mat> images = reader.readImages(dataset_num, unwrapRes);
         std::vector<cv::Mat> images;
         dataset_paths paths;
-        GpuDct gct(unwrapRes.width);
 
 
         // create route
@@ -597,18 +588,17 @@ class Route {
 
             //node.image
             auto image = cv::imread(img_path);
+
             //cv::GaussianBlur(image, image, cv::Size(5, 5), 0);
-            cv::resize(image, image, unwrapRes);
+            cv::resize(image, image, unwrapRes,cv::INTER_CUBIC);
             node.image = image;
 
 
             cv::Mat img1,img2;
             cv::cvtColor(node.image, img1, cv::COLOR_BGR2GRAY);
-           // cv::equalizeHist(img1,img1);
+            //cv::equalizeHist(img1,img1);
 
             img1.convertTo(img2, CV_32F, 1.0 / 255);
-
-            node.image_hash = gct.dct(img2);
             nodes.push_back(node);
 
 
@@ -619,8 +609,7 @@ class Route {
 
     static std::pair<int,int> pixel_distance_matrix(cv::Mat current_image, Route training_route, int num_rotations) {
         std::vector<cv::Mat> rotated_images(num_rotations);
-        GpuDct gct(num_rotations);
-        rotated_images = HashMatrix::getHashRotations(current_image, num_rotations);
+        HashMatrix::getImageRotations(current_image,rotated_images, num_rotations);
 
         std::vector<double> dist_mat;
         for (int j = 0; j < training_route.nodes.size(); j++) {

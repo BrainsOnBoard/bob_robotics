@@ -88,6 +88,7 @@ class GpuDct {
 
     ~GpuDct() {
         if (d_T) cudaFree(d_T);
+        cublasDestroy(m_handle);
     }
 
     std::bitset<64> dct(float *d_img, cudaStream_t s = 0) {
@@ -121,11 +122,12 @@ class GpuDct {
 
     static std::vector<std::bitset<64>> stream_dct(std::vector<cv::Mat> &images) {
         std::vector<std::bitset<64>> hashes;
+        const int b_s = 64;
         int n = images[0].size().width;
         int n_imgs = images.size();
         float *g_mat; cudaMalloc(&g_mat, n_imgs*n*n*sizeof(float));
-        int *h_bit_arrays; cudaMallocHost(&h_bit_arrays, n_imgs * 64 * sizeof(int));
-        int *d_bit_arrays; cudaMalloc(&d_bit_arrays, n_imgs * 64 * sizeof(int));
+        int *h_bit_arrays; cudaMallocHost(&h_bit_arrays, n_imgs * b_s * sizeof(int));
+        int *d_bit_arrays; cudaMalloc(&d_bit_arrays, n_imgs * b_s * sizeof(int));
         float *tmp; cudaMalloc(&tmp, n_imgs*n*n*sizeof(float));
         float *DCT; cudaMalloc(&DCT,  n_imgs*n*n*sizeof(float));
         float *d_Transform; cudaMalloc(&d_Transform, n*n*sizeof(float));
@@ -138,15 +140,15 @@ class GpuDct {
         cudaStream_t *streams = (cudaStream_t *) malloc(n_imgs * sizeof(cudaStream_t));
         for (int i =0; i < n_imgs; i++) {
             cudaStreamCreate(&(streams[i]));
-            // copy the images in contigous array
-            cudaMemcpy(g_mat + i * n * n, reinterpret_cast<float*>(images[i].data), n*n * sizeof(float), cudaMemcpyHostToDevice);
         }
         for (int i =0; i < n_imgs; i++) {
             // do the hash matrix multiplication with streams
-            gpu_dct(g_mat +i*n*n, d_bit_arrays +i*64, tmp +i*n*n, DCT +i*n*n, d_Transform, n, c_handle, streams[i]);
+            cudaMemcpyAsync(g_mat + i * n * n, reinterpret_cast<float*>(images[i].data), n*n*sizeof(float), cudaMemcpyHostToDevice,streams[i]);
+            gpu_dct(g_mat +i*n*n, d_bit_arrays +i*b_s, tmp +i*n*n, DCT +i*n*n, d_Transform, n, c_handle, streams[i]);
+            cudaMemcpyAsync(h_bit_arrays+i*b_s, d_bit_arrays+i*b_s, b_s*sizeof(int), cudaMemcpyDeviceToHost, streams[i] );
         }
         for (int i =0; i < n_imgs; i++) { cudaStreamDestroy(streams[i]); }
-        cudaMemcpy(h_bit_arrays, d_bit_arrays, n_imgs*64*sizeof(int), cudaMemcpyDeviceToHost);
+
         for (int j = 0; j < n_imgs; j ++ ) {
             std::bitset<64> binary;
             for (size_t i = 0; i < 64; i++) binary.set(i, h_bit_arrays[j * 64 + i]);
@@ -168,6 +170,52 @@ class GpuDct {
     }
 
 
+    static std::vector<std::bitset<64>> stream_dct(float *d_image_arr, int width, int n_imgs) {
+        std::vector<std::bitset<64>> hashes;
+        const int b_s = 64;
+        int n = width;
+        int *h_bit_arrays; cudaMallocHost(&h_bit_arrays, n_imgs * b_s * sizeof(int));
+        int *d_bit_arrays; cudaMalloc(&d_bit_arrays, n_imgs * b_s * sizeof(int));
+        float *tmp; cudaMalloc(&tmp, n_imgs*n*n*sizeof(float));
+        float *DCT; cudaMalloc(&DCT,  n_imgs*n*n*sizeof(float));
+        float *d_Transform; cudaMalloc(&d_Transform, n*n*sizeof(float));
+        kernel_get_T<<<n, n>>>(d_Transform);
+        cudaDeviceSynchronize();
+        cublasHandle_t c_handle;
+        cublasCreate(&c_handle);
+
+         // allocate and initialize an array of stream handles
+        cudaStream_t *streams = (cudaStream_t *) malloc(n_imgs * sizeof(cudaStream_t));
+        for (int i =0; i < n_imgs; i++) {
+            cudaStreamCreate(&(streams[i]));
+        }
+        for (int i =0; i < n_imgs; i++) {
+            // do the hash matrix multiplication with streams
+            gpu_dct(d_image_arr +i*n*n, d_bit_arrays +i*b_s, tmp +i*n*n, DCT +i*n*n, d_Transform, n, c_handle, streams[i]);
+            cudaMemcpyAsync(h_bit_arrays+i*b_s, d_bit_arrays+i*b_s, b_s*sizeof(int), cudaMemcpyDeviceToHost, streams[i] );
+        }
+        for (int i =0; i < n_imgs; i++) { cudaStreamDestroy(streams[i]); }
+
+        for (int j = 0; j < n_imgs; j ++ ) {
+            std::bitset<64> binary;
+            for (size_t i = 0; i < 64; i++) binary.set(i, h_bit_arrays[j * 64 + i]);
+            hashes.push_back(binary);
+        }
+
+        // clean up
+        cublasDestroy(c_handle);
+        free(streams);
+        cudaFreeHost(h_bit_arrays);
+        cudaFree(d_bit_arrays);
+        cudaFree(DCT);
+        cudaFree(tmp);
+        cudaFree(d_Transform);
+
+        return hashes;
+
+    }
+
+
 
     private:
 
@@ -179,12 +227,10 @@ class GpuDct {
         const float *beta = &bet;
         // T * A * T'
         cublasSetStream(handle,s);
-        auto err = cublasSgemm(handle, CUBLAS_OP_T, CUBLAS_OP_N, n, n, n, alpha, d_Transform, n, A, n, beta, tmp, n);
-        cudaStreamSynchronize(s);
+        cublasSgemm(handle, CUBLAS_OP_T, CUBLAS_OP_N, n, n, n, alpha, d_Transform, n, A, n, beta, tmp, n);
+        cublasSetStream(handle,s);
         cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, alpha, tmp, n, d_Transform, n, beta, DCT, n);
-        cudaStreamSynchronize(s);
-        kernel_compute_hash<<<1, 64, 128, s>>>(DCT, dbit_array,n);
-        cudaStreamSynchronize(s);
+        kernel_compute_hash<<<1, 64, 0, s>>>(DCT, dbit_array,n);
 
     }
 
@@ -209,7 +255,7 @@ class GpuDct {
 
         int *dbit_array; cudaMallocAsync(&dbit_array, 64*sizeof(int),s);
         int *hasharr; cudaMallocHost(&hasharr, 64*sizeof(int));
-        kernel_compute_hash<<<1, 64, 0, s>>>(DCT, dbit_array,n);
+        kernel_compute_hash<<<1, 64, 128, s>>>(DCT, dbit_array,n);
         cudaMemcpyAsync(hasharr, dbit_array, 64*sizeof(int), cudaMemcpyDeviceToHost,s);
         cudaStreamSynchronize(s);
 

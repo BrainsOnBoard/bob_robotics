@@ -21,8 +21,8 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/project
 WorldInfo {
 }
 Viewpoint {
-  orientation 0.46727488684470303 0.3990703754586754 -0.7889214254636148 1.9558732543162225
-  position -217.04795858665224 416.444661581173 423.95007633068406
+  orientation 0.3582961989033072 0.4561240406033496 -0.8146009412191442 1.5344564802389669
+  position -313.5202137873027 402.40426204915747 356.55933244934243
   follow "RC_CAR"
 }
 TexturedBackground {
@@ -471,6 +471,16 @@ DEF RC_CAR BmwX5 {
     }
   ]
   sensorsSlotCenter [
+    DEF DIST_MAT Display {
+      name "DIST_MAT"
+      width 512
+      height 128
+    }
+    DEF ACCUM_MAT Display {
+      name "ACCUM_MAT"
+      width 512
+      height 128
+    }
     DEF IMU InertialUnit {
       translation 0 0 0.42
       name "IMU"

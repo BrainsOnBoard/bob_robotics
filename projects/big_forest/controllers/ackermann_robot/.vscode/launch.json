@@ -8,8 +8,9 @@
             "name": "CUDA C++: Launch",
             "type": "cuda-gdb",
             "request": "launch",
-            "program": "${workspaceFolder}/ackermann_robot",
-            "args" : ["5", "big_forest/route_zigzag1"]
+            "program": "${workspaceFolder}/build/ackermann_robot",
+            "args" : ["5", "big_forest/route_zigzag1"],
+            "initCommands": ["set cuda single_stepping_optimizations","set cuda memcheck on"]
         },
         {
             "name": "CUDA C++: Attach",
