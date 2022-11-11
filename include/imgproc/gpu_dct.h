@@ -219,8 +219,17 @@ class GpuDct {
 
     private:
 
-     // calculates the DCT of an image (needs to be fixed)
-    static void gpu_dct(const float *A, int *dbit_array, float *tmp, float *DCT, float *d_Transform, const int n, cublasHandle_t handle,  cudaStream_t s = 0) {
+
+    static void gpu_dct(const float *A,
+                        int *dbit_array,
+                        float *tmp,
+                        float *DCT,
+                        float *d_Transform,
+                        const int n,
+                        cublasHandle_t handle,
+                        cudaStream_t s = 0
+                        ) {
+
         const float alf = 1;
         const float bet = 0;
         const float *alpha = &alf;
@@ -267,7 +276,7 @@ class GpuDct {
         return binary;
     }
 
-    void getDCTMatrix(int rows,int cols, float *d_Transfrom) {
+    void getDCTMatrix(const int rows,const int cols, float *d_Transfrom) {
         kernel_get_T<<<rows, cols>>>(d_Transfrom);
     }
 };

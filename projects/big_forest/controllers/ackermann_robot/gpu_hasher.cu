@@ -165,8 +165,6 @@ class GPUHasher
         std::cout << " gpu for singles matches initialized " << N_testing << std::endl;
     }
 
-
-
     void upload_database(std::vector<cv::Mat> images, int w, int h) {
 
         pm_width = w;
