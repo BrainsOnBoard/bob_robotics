@@ -40,7 +40,7 @@
 
 #include "gpu_hasher.h"
 #include "gpu_dct.h"
-#include "hash_matrix.h"
+
 
 //#include "hash_matcher.cuh"
 
@@ -136,20 +136,13 @@ int main(int argc, char **argv) {
         cv::cvtColor(im_col, img_gray, cv::COLOR_BGRA2GRAY);
         training_images.push_back(img_gray);
     }
-    unsigned long long int *d_hash_matrix;
-    HashMatrix::createGpuHashMatrix(training_images, roll_step, d_hash_matrix );
-    int hash_mat_size = roll_step * training_images.size();
-
-
-    int *l_cost_matrix;
+    //unsigned long long int *d_hash_matrix;
+    int hash_mat_size =  training_images.size() * roll_step;
     int d_sequence_size = seq_length;
-    unsigned long long int *l_sequence = (unsigned long long int *) malloc(d_sequence_size * sizeof(unsigned long long int));
-    unsigned long long int* l_hash_mat = (unsigned long long int*) malloc(hash_mat_size*sizeof(unsigned long long int));
-    cudaMemcpy(l_hash_mat, d_hash_matrix, hash_mat_size*sizeof(unsigned long long int), cudaMemcpyDeviceToHost);
 
     // init gpu
     GPUHasher g_hasher;
-    g_hasher.initGPU(l_hash_mat, hash_mat_size, d_sequence_size, roll_step, RESIZED_WIDTH, RESIZED_HEIGHT);
+    g_hasher.initGPU(training_images, d_sequence_size, roll_step, RESIZED_WIDTH, RESIZED_HEIGHT);
 
 
     BoBRobotics::BackgroundExceptionCatcher catcher;
@@ -373,17 +366,14 @@ int main(int argc, char **argv) {
             cv::Mat host_mat1 = g_hasher.downloadDistanceMatrix();
             cv::normalize(host_mat1, host_mat1, 0, 255, cv::NORM_MINMAX);
             host_mat1.convertTo(host_mat1,CV_8UC1);
-            //cv::applyColorMap(host_mat1, host_mat1, cv::COLORMAP_JET);
+
+            // calculate accumulated cost matrix and get best match
             g_hasher.calculate_accumulated_cost_matrix();
-            std::pair<int,int> seq_index = g_hasher.getMinIndex(curr_hash_ptr,l_hash_mat);
+            std::pair<int,int> seq_index = g_hasher.getMinIndex(curr_hash_ptr);
             cv::Mat host_mat2 = g_hasher.downloadAccumulatedCostMatrix();
             cv::normalize(host_mat2, host_mat2, 0, 255, cv::NORM_MINMAX);
             host_mat2.convertTo(host_mat2,CV_8UC1);
-            //cv::applyColorMap(host_mat2, host_mat2, cv::COLORMAP_JET);
             cv::Mat combined, comb4, comb4_acc;
-            //cv::vconcat(host_mat1, host_mat2, combined);
-            //cv::imshow("gpu_mat2", combined);
-
             cv::cvtColor(host_mat1, comb4, cv::COLOR_GRAY2BGRA );
             cv::cvtColor(host_mat2, comb4_acc, cv::COLOR_GRAY2BGRA );
 
