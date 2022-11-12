@@ -37,8 +37,8 @@
 #include "../gpu_hasher.cu"
 #include "imgproc/gpu_dct.h"
 
-#define RESIZED_WIDTH 256
-#define RESIZED_HEIGHT 256
+constexpr int RESIZED_WIDTH = 256;
+constexpr int RESIZED_HEIGHT = 256;
 
 class DatasetEvaluator {
     private:
@@ -77,7 +77,7 @@ class DatasetEvaluator {
     public:
 
 
-    std::string fillZeros(int n_zero, std::string old_string) {
+    std::string fillZeros(int n_zero, std::string old_string) const {
 
         std::stringstream ss;
         ss << std::string(n_zero - old_string.length(), '0') << old_string;
@@ -85,21 +85,21 @@ class DatasetEvaluator {
         return new_string;
     }
 
-    std::string make_string_path(std::string path1, int img_number) {
+    std::string make_string_path(std::string const& path1, int img_number) {
         std::stringstream ss;
         ss << path1 << "Image"<< fillZeros(5, std::to_string(img_number)) << ".jpg";
 
         return ss.str();
     }
 
-    std::string make_string_path_NORDLAND(std::string path1, int img_number) {
+    std::string make_string_path_NORDLAND(std::string const& path1, int img_number) {
         std::stringstream ss;
         ss << path1 << "images-"<< fillZeros(5, std::to_string(img_number)) << ".png";
 
         return ss.str();
     }
 
-    std::vector<std::bitset<64>> read_NORDLAND(std::string season, std::vector<cv::Mat> &images, int section = 1, cv::Size size = {64,64}) {
+    std::vector<std::bitset<64>> read_NORDLAND(std::string const& season, std::vector<cv::Mat> &images, int section = 1, cv::Size size = {64,64}) {
 
         std::vector<std::bitset<64>> hashes;
 

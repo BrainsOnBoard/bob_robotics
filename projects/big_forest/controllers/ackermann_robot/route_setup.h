@@ -21,8 +21,8 @@
 #include "imgproc/roll.h"
 #include "common/stopwatch.h"
 #include "third_party/units.h"
-#include "gpu_hasher.cu"
-#include "imgproc/gpu_dct.h"
+#include "gpu_hasher.h"
+#include "gpu_dct.h"
 
 
 using namespace units;
@@ -311,179 +311,6 @@ struct CSVReader {
 
 };
 
-class HashMatrix
-{
-    public:
-
-    size_t index( int x, int y ) const { return x + m_width * y; }
-    int m_width;  // height of the dataset ( number of data elements)
-    int m_height; // width of dataset ( number of rotate views )
-    std::vector<cv::Mat> images;
-    std::vector<std::bitset<64> > m_matrix; // training examples with pre-calc rotations
-
-    int getWidth() const { return m_width; }
-
-    //! get a difference hash vector form the best views ( 1rotation/ element)
-    static std::pair<std::vector<int>, std::vector<int>> getBestHashRotationDists(std::vector<int> &matrix, int width, std::vector<int> &bestRotationDists) {
-        std::vector<int >bestRotVector;
-        std::vector<int> bestRotationAngles;
-        std::vector<int> min_indices;
-
-        int min_index = 0;
-        for (size_t i=0; i< matrix.size()/width; i++) {
-            int min = 255;
-            int bestRot = 0;
-
-            for (int j = 0; j < width; j++ ) {
-                auto current_element = matrix[i*width+j];
-                if (current_element <= min) {
-                    min = current_element;
-                    bestRot = j;
-                    min_index = i;
-
-                }
-
-            }
-            // save best rotation's hash distance
-
-            bestRotVector.push_back(min);
-            bestRotationAngles.push_back(bestRot);
-        }
-
-        for (int r = 0; r < width; r++) {
-            auto rot_element = matrix[min_index * width + r];
-            bestRotationDists.push_back(rot_element);
-        }
-
-        return {bestRotVector, bestRotationAngles};
-    }
-
-
-
-    static void normalise_n(std::vector<int> &vector, int norm_window) {
-        for (int j = 0; j < vector.size(); j++) {
-            std::vector<int> window(norm_window);
-            for (int i = 0; i < norm_window; i++) {
-
-                if (j-i >=0) {
-                    window.push_back(vector[j-i]);
-                } else {
-                    window.push_back(0); // 0 padding
-                }
-
-                if (j+i < vector.size()) {
-                    window.push_back(vector[j+i]);
-                } else {
-                    window.push_back(0); // 0 padding
-                }
-            }
-
-            double sum = std::accumulate(window.begin(), window.end(), 0.0);
-            double mean = sum / double(window.size());
-            double sq_sum = std::inner_product(window.begin(), window.end(), window.begin(), 0.0);
-            double stdev = std::sqrt(sq_sum / float(window.size()) - mean * mean);
-            vector[j] = (vector[j] - mean) / stdev;
-        }
-        vector = vector;
-    }
-
-    //! gets the matrix object
-    std::vector<std::bitset<64>> getMatrix() { return m_matrix; }
-
-    //! get the image from database with given rotation
-    cv::Mat getImage( int node_num, int rotation) {
-        cv::Mat img = images[ node_num ];
-        std::vector<cv::Mat> img_rotations;
-        cv::cvtColor(img, img, cv::COLOR_BGR2GRAY);
-        HashMatrix::getImageRotations(img,img_rotations, m_width );
-        return img_rotations[rotation];
-    }
-
-    HashMatrix() {}
-
-    //! creates a  hash matrix with a route
-    HashMatrix(std::vector<RouteNode> nodes, int numRotations, bool gpu = true) {
-
-        this->m_width = numRotations;
-        this->m_height = nodes.size();
-
-
-        std::vector<cv::Mat> h_images;
-
-        for (size_t i = 0; i < nodes.size(); i++) {
-            cv::Mat img1 = nodes[i].image; // get current image
-            cv::Mat img_gray;
-            images.push_back(img1);
-            cv::cvtColor(img1, img_gray, cv::COLOR_BGRA2GRAY);
-            cv::resize(img_gray, img_gray, {numRotations, numRotations},cv::INTER_CUBIC);
-            img_gray.convertTo(img_gray, CV_32F,1.0 / 255);
-            h_images.push_back(img_gray);
-
-        }
-
-        std::vector<cv::Mat> rots;
-        for (size_t i = 0; i < h_images.size(); i++) {
-            if (i % 10 == 0) std::cout << " hashmat processing " << i << "/" << h_images.size() << std::endl;
-            float *d_rotations = GPUHasher::stream_rotations(h_images[i],rots, numRotations);// HashMatrix::getImageRotations(h_images[i], numRotations); // gets all the rotations (and hashes)
-            std::vector<std::bitset<64>> hash_rotations = GpuDct::stream_dct(d_rotations, numRotations, numRotations );
-            cudaFree(d_rotations);
-
-            for (size_t j = 0; j < hash_rotations.size(); j++) {
-                m_matrix.push_back(hash_rotations[j] );
-            }
-
-        }
-    }
-
-
-    //! gets rotations
-    static void getImageRotations(cv::Mat &image, std::vector<cv::Mat> &rotations, const int totalRotations)  {
-        GPUHasher::stream_rotations(image,rotations, totalRotations);
-    }
-
-    //! hash all values in matrix with given hash
-    static std::vector<int> calculateHashValues(std::bitset<64> hash, std::vector<std::bitset<64>> hashMatrix) {
-        std::vector<int> differenceMatrix;
-        for (size_t i =0; i < hashMatrix.size(); i++) {
-            differenceMatrix.push_back( DCTHash::distance(hashMatrix[i], hash) );
-        }
-        return differenceMatrix;
-    }
-
-    //! gets the minimum element of a matrix and it's 2d indices
-    template <typename T>
-    static void argmin_matrix(std::vector<T> &matrix, int width, int &min_col, int &min_row, T &min_value) {
-        T min = 1000000000; // init with big number
-        int index_min = 0;
-        for (size_t i=0; i< matrix.size(); i++) {
-            if (matrix[i] <= min) {
-                min = matrix[i];
-                index_min = i;
-            }
-        }
-        min_value = min;
-        min_col = fmod(index_min, width);    // % is the "modulo operator", the remainder of i / width;
-        min_row = index_min / width;    // where "/" is an integer division
-    }
-
-    //! matches an images hash against a database (single match)
-    static std::pair<int,int> getSingleMatch(std::bitset<64> hash, HashMatrix hashmat, int &min_value, int width) {
-        int min_col, min_row;
-        std::vector<int> differenceMatrix = HashMatrix::calculateHashValues(hash,hashmat.getMatrix());
-        HashMatrix::argmin_matrix(differenceMatrix , width, min_col, min_row, min_value);
-        std::pair<int,int> mat_position({min_col, min_row});
-        return mat_position;
-    }
-
-    // converts hashmat to C pointer style (for CUDA)
-    void getHashMatUL(unsigned long long int *hashMat) {
-
-        for (int i = 0; i < m_matrix.size(); i++) {
-            hashMat[i] = m_matrix[i].to_ullong();
-        }
-    }
-};
-
 
 
 // route
@@ -494,7 +321,7 @@ class Route {
 
     std::vector<RouteNode> nodes;
     int num_rotated_views;
-    HashMatrix m_hash_matrix;
+
 
     //! gets closest node from outer route and it's distance
     static RouteNode getClosestNode(Route route_train, Route route_test, int node_to_find, millimeter_t &distance ) {
@@ -608,35 +435,6 @@ class Route {
 
     }
 
-    static std::pair<int,int> pixel_distance_matrix(cv::Mat current_image, Route training_route, int num_rotations) {
-        std::vector<cv::Mat> rotated_images(num_rotations);
-        HashMatrix::getImageRotations(current_image,rotated_images, num_rotations);
-
-        std::vector<double> dist_mat;
-        for (int j = 0; j < training_route.nodes.size(); j++) {
-
-            cv::Mat training_img = training_route.nodes[j].image;
-            cv::cvtColor(training_img, training_img, cv::COLOR_BGRA2GRAY);
-            for (int i = 0; i < rotated_images.size(); i++) {
-                cv::Mat current_rot = rotated_images[i];
-                double dist = cv::norm(training_img, current_rot, cv::NORM_L2SQR);
-                dist_mat.push_back(dist);
-            }
-        }
-
-        int min_col,min_row;
-        double min_value;
-        HashMatrix::argmin_matrix(dist_mat, num_rotations, min_col, min_row, min_value);
-        return {min_row,min_col};
-    }
-
-    HashMatrix getHashMatrix() { return m_hash_matrix; }
-
-
-
-    void set_hash_matrix(HashMatrix matrix) {
-        m_hash_matrix = matrix;
-    }
 
 };
 

@@ -1,3 +1,4 @@
+#pragma once
 #include <webots/Robot.hpp>
 #include <webots/Motor.hpp>
 #include <webots/Keyboard.hpp>
@@ -35,10 +36,11 @@
 #include <thrust/device_ptr.h>
 #include <thrust/extrema.h>
 
-#include "route_setup.cuh"
+#include "route_setup.h"
 
-#include "gpu_hasher.cu"
-#include "imgproc/gpu_dct.h"
+#include "gpu_hasher.h"
+#include "gpu_dct.h"
+#include "hash_matrix.h"
 
 //#include "hash_matcher.cuh"
 
@@ -94,7 +96,6 @@ int main(int argc, char **argv) {
     Route route_vector;
 
 
-    GpuDct gct(roll_step);
 
     if (argc >= 2)
     {
@@ -128,24 +129,25 @@ int main(int argc, char **argv) {
    // Route route = Route(dataset_num,roll_step, skipstep, unwrap, createVideo, unwrapRes);
     Route route = Route(dataset_name,roll_step, skipstep, unwrap, createVideo, unwrapRes, false, false, {});
     std::cout << " creating Hash matrix" << std::endl;
-    HashMatrix hashMat(route.nodes, roll_step);
+    std::vector<cv::Mat> training_images;
+    for (int i = 0; i < route.nodes.size(); i++) {
+        cv::Mat im_col = route.nodes[i].image;
+        cv::Mat img_gray;
+        cv::cvtColor(im_col, img_gray, cv::COLOR_BGRA2GRAY);
+        training_images.push_back(img_gray);
+    }
+    unsigned long long int *d_hash_matrix;
+    HashMatrix::createGpuHashMatrix(training_images, roll_step, d_hash_matrix );
+    int hash_mat_size = roll_step * training_images.size();
 
 
-    int hash_mat_size = hashMat.getMatrix().size();
-    auto hm = hashMat.getMatrix();
-    unsigned long long int* l_hash_mat = (unsigned long long int*) malloc(hash_mat_size*sizeof(unsigned long long int));
-    hashMat.getHashMatUL(l_hash_mat);
     int *l_cost_matrix;
     int d_sequence_size = seq_length;
     unsigned long long int *l_sequence = (unsigned long long int *) malloc(d_sequence_size * sizeof(unsigned long long int));
-
-
+    unsigned long long int* l_hash_mat = (unsigned long long int*) malloc(hash_mat_size*sizeof(unsigned long long int));
+    cudaMemcpy(l_hash_mat, d_hash_matrix, hash_mat_size*sizeof(unsigned long long int), cudaMemcpyDeviceToHost);
 
     // init gpu
-    std::vector<cv::Mat> training_images;
-    for (int i = 0; i < route.nodes.size(); i++) {
-        training_images.push_back(route.nodes[i].image);
-    }
     GPUHasher g_hasher;
     g_hasher.initGPU(l_hash_mat, hash_mat_size, d_sequence_size, roll_step, RESIZED_WIDTH, RESIZED_HEIGHT);
 
@@ -363,19 +365,17 @@ int main(int argc, char **argv) {
 
             cv::Mat conv;
             resized.convertTo(conv, CV_32F, 1.0 / 255);
-            std::bitset<64> hash = gct.dct(conv);
+
 
             // ---- gpu sequence ----
-
-            unsigned long long int curr_hash_ptr = hash.to_ullong();
-            g_hasher.addToSequence(&curr_hash_ptr);
+            unsigned long long int curr_hash_ptr = g_hasher.addToSequence(conv);
             g_hasher.getDistanceMatrix();
             cv::Mat host_mat1 = g_hasher.downloadDistanceMatrix();
             cv::normalize(host_mat1, host_mat1, 0, 255, cv::NORM_MINMAX);
             host_mat1.convertTo(host_mat1,CV_8UC1);
             //cv::applyColorMap(host_mat1, host_mat1, cv::COLORMAP_JET);
             g_hasher.calculate_accumulated_cost_matrix();
-            std::pair<int,int> seq_index = g_hasher.getMinIndex(hash,hm);
+            std::pair<int,int> seq_index = g_hasher.getMinIndex(curr_hash_ptr,l_hash_mat);
             cv::Mat host_mat2 = g_hasher.downloadAccumulatedCostMatrix();
             cv::normalize(host_mat2, host_mat2, 0, 255, cv::NORM_MINMAX);
             host_mat2.convertTo(host_mat2,CV_8UC1);
