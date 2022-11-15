@@ -21,12 +21,12 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2022b/project
 WorldInfo {
 }
 Viewpoint {
-  orientation 0.3939106480478914 0.6633678791543819 -0.6362212337392614 1.5018543248212197
-  position -332.2770994943699 277.4187733032526 400.6846811012854
+  orientation 0.37505471577875193 0.36363865764494196 -0.8527021090851741 1.7599150751914718
+  position -194.14373973251978 313.94073301077066 239.6472714511381
   follow "RC_CAR"
 }
 TexturedBackground {
-  texture "noon_cloudy_empty"
+  texture "dusk"
 }
 TexturedBackgroundLight {
 }
