@@ -42,28 +42,8 @@ using namespace ImgProc;
 struct dataset_paths {
     std::vector<std::string> dataset_path_array;
     std::string root_path = "../../../../../../../../media/tenxlenx/3d_assets/simulation_databases/";
-    dataset_paths() {
-        std::string dataset0 = "route1_red";
-        std::string dataset1 = "route2_cloudy";
-        std::string dataset2 = "route3_partly_cloudy";
-        std::string dataset3 = "route4_partly_cloudy2";
-        std::string dataset4 = "route1_cloudy_long";
-        std::string dataset5 = "route_cloudy2";
-        std::string dataset6 = "world2_route1";
-        std::string dataset7 = "cloudy_circle_slow";
-        std::string dataset8 = "route_circle_middle";
-        std::string dataset9 = "outdoor_building2";
-        dataset_path_array.push_back(dataset0);
-        dataset_path_array.push_back(dataset1);
-        dataset_path_array.push_back(dataset2);
-        dataset_path_array.push_back(dataset3);
-        dataset_path_array.push_back(dataset4);
-        dataset_path_array.push_back(dataset5);
-        dataset_path_array.push_back(dataset6);
-        dataset_path_array.push_back(dataset7);
-        dataset_path_array.push_back(dataset8);
-        dataset_path_array.push_back(dataset9);
-    }
+    dataset_paths() {}
+
 };
 
 // database entry struct
@@ -94,37 +74,50 @@ struct RouteNode {
     millimeter_t y;
     millimeter_t z;
     degree_t heading;
-    std::bitset<64> image_hash;
     cv::Mat image;
     int node_number;
 
     //! Eauclidean distance between two 3d coordinates
-    static meter_t distance(RouteNode node1, RouteNode node2) {
+    static millimeter_t distance(RouteNode node1, RouteNode node2) {
 
         using namespace units::math;
-        auto x1 = node1.x;
-        auto y1 = node1.y;
-        auto z1 = node1.z;
+        millimeter_t x1 = node1.x;
+        millimeter_t y1 = node1.y;
+        millimeter_t z1 = node1.z;
 
-        auto x2 = node2.x;
-        auto y2 = node2.y;
-        auto z2 = node2.z;
+        millimeter_t x2 = node2.x;
+        millimeter_t y2 = node2.y;
+        millimeter_t z2 = node2.z;
 
-        meter_t d = sqrt( pow<2>(x2 - x1) + pow<2>(y2 - y1) + pow<2>(z2 - z1) );
+
+        millimeter_t d = sqrt( pow<2>(x2 - x1) + pow<2>(y2 - y1) + pow<2>(z2 - z1) );
         return d;
+
+    }
+
+    static degree_t normalise_angle(degree_t angle) {
+        float ang_val = fmod((angle.to<float>() + 180) , 360) - 180;
+        return degree_t(ang_val);
 
     }
 
     //! gets the angular difference between 2 nodes
     static degree_t angle_distance(RouteNode node1, RouteNode node2, units::angle::degree_t rotation) {
-        auto angle1 = node1.heading;
-        auto angle2 = (node2.heading - rotation);
+        degree_t angle1 = normalise_angle(node1.heading);
+        degree_t angle2 = normalise_angle(node2.heading);
+        degree_t rot = normalise_angle(rotation);
 
-        degree_t delta_theta = (angle1 > angle2) * (360_deg - angle2 - angle1)
-              + (angle2 > angle1) * (angle2 - angle1);
+        degree_t diff = (angle2 - rot);
 
-        return delta_theta;
+        degree_t err = diff - angle1;
+        degree_t err_val = normalise_angle(err);
+
+
+
+        return err_val;
     }
+
+
 
 };
 
@@ -322,27 +315,31 @@ class Route {
     std::vector<RouteNode> nodes;
     int num_rotated_views;
 
-
-    //! gets closest node from outer route and it's distance
-    static RouteNode getClosestNode(Route route_train, Route route_test, int node_to_find, millimeter_t &distance ) {
-
-        // get test node by index
-        RouteNode toFind = route_test.nodes[node_to_find];
-        // go through train values to pick closest node
-        auto train_nodes = route_train.nodes;
-        millimeter_t min_dist = 1000_m;
-        int min_index = 0;
-        for ( size_t i = 0; i < train_nodes.size();i++) {
-            auto curr_dist = RouteNode::distance(train_nodes[i], toFind);
-            if (curr_dist < min_dist) {
-                min_dist = curr_dist;
-                min_index = i;
-            }
-        }
-        distance = min_dist;
-        RouteNode retNode = route_test.nodes[min_index];
-        return retNode;
+    static std::pair<millimeter_t, degree_t> getMatchErrors(Route &train, RouteNode &test_node,  int match, degree_t rotation_match) {
+        millimeter_t position_error = RouteNode::distance(test_node, train.nodes[match]);
+        degree_t ang_error = RouteNode::angle_distance(train.nodes[match], test_node, rotation_match);
+        return std::make_pair(position_error, ang_error);
     }
+
+    static std::vector<std::vector<meter_t>> route_dist_matrix(Route &train, Route &test) {
+        int train_size = train.nodes.size();
+        int test_size = test.nodes.size();
+
+        std::vector<std::vector<meter_t>> dist_matrix;
+        for (int i = 0; i < train_size; i++) {
+            std::vector<meter_t> dist_row;
+            for (int j = 0; j < test_size; j++) {
+                auto n1 = train.nodes[i];
+                auto n2 = test.nodes[j];
+                meter_t distance = RouteNode::distance(n1,n2);
+                dist_row.push_back(distance);
+            }
+            dist_matrix.push_back(dist_row);
+        }
+        return dist_matrix;
+    }
+
+
 
     Route() {}
 
@@ -373,15 +370,15 @@ class Route {
             //node.image
             auto image = cv::imread(img_path);
             //cv::GaussianBlur(image, image, cv::Size(3, 3), 0);
-            cv::resize(image, image, unwrapRes,cv::INTER_CUBIC);
+            //cv::resize(image, image, unwrapRes,cv::INTER_CUBIC);
             node.image = image;
 
 
-            cv::Mat img1,img2;
-            cv::cvtColor(node.image, img1, cv::COLOR_BGR2GRAY);
+            //cv::Mat img1,img2;
+            //cv::cvtColor(node.image, img1, cv::COLOR_BGR2GRAY);
            // cv::equalizeHist(img1,img1);
 
-            img1.convertTo(img2, CV_32F, 1.0 / 255);
+            //img1.convertTo(img2, CV_32F, 1.0 / 255);
             nodes.push_back(node);
 
 
@@ -418,15 +415,15 @@ class Route {
             auto image = cv::imread(img_path);
 
             //cv::GaussianBlur(image, image, cv::Size(5, 5), 0);
-            cv::resize(image, image, unwrapRes,cv::INTER_CUBIC);
+            //cv::resize(image, image, unwrapRes,cv::INTER_CUBIC);
             node.image = image;
 
 
-            cv::Mat img1,img2;
-            cv::cvtColor(node.image, img1, cv::COLOR_BGR2GRAY);
+            //cv::Mat img1,img2;
+            //cv::cvtColor(node.image, img1, cv::COLOR_BGR2GRAY);
             //cv::equalizeHist(img1,img1);
 
-            img1.convertTo(img2, CV_32F, 1.0 / 255);
+            //img1.convertTo(img2, CV_32F, 1.0 / 255);
             nodes.push_back(node);
 
 

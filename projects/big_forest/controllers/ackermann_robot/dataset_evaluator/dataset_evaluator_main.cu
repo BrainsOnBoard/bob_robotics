@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
     std::string difference_method = "pixel";
     bool isSequence = false;
     bool isPanoramic = false;
-    cv::Size resolution = {256,256};
+    cv::Size resolution = {64,64};
     std::string db_path = "../../../../../../../../media/tenxlenx/3d_assets/simulation_databases/";
     //DatasetEvaluator dse(db_path, "big_forest/route1_red", "big_forest/route1_cloudy", resolution,  10, difference_method, true, "WEBOTS", "fall",  "summer", true, 1);
     //dse.score_dataset();

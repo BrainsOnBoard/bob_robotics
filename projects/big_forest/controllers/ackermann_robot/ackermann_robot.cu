@@ -20,6 +20,10 @@
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
+#include "opencv2/features2d.hpp"
+#include "opencv2/xfeatures2d.hpp"
+#include <opencv2/cudaoptflow.hpp>
+
 
 
 // Standard C includes
@@ -60,8 +64,8 @@ cv::Mat get_cam_image(const unsigned char *image, int width, int height) {
 
 #define MAX_SPEED 6.28
 
-#define RESIZED_WIDTH 256// 255
-#define RESIZED_HEIGHT 256 // 64
+#define RESIZED_WIDTH 64// 255
+#define RESIZED_HEIGHT 64 // 64
 
 #define PM_RESIZE_FACTOR 1
 
@@ -91,7 +95,7 @@ int main(int argc, char **argv) {
     int testRouteNum = 1; // 0 1 2 3
     int dataset_num = 9; // dataset to test
     double const PI = 3.14159265358979323;
-    std::string dataset_name= "big_forest/route_zigzag1";
+    std::string dataset_name= "big_forest/long_circle_forest";
 
     Route route_vector;
 
@@ -128,13 +132,26 @@ int main(int argc, char **argv) {
 
    // Route route = Route(dataset_num,roll_step, skipstep, unwrap, createVideo, unwrapRes);
     Route route = Route(dataset_name,roll_step, skipstep, unwrap, createVideo, unwrapRes, false, false, {});
+    auto ang_offset = route.nodes[0].heading;
+
     std::cout << " creating Hash matrix" << std::endl;
     std::vector<cv::Mat> training_images;
+    std::vector<cv::Mat> training_images2;
+    std::vector<cv::Mat> training_images3;
+    std::vector<cv::Mat> original_images;
+    cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(40, {8,8});
     for (int i = 0; i < route.nodes.size(); i++) {
         cv::Mat im_col = route.nodes[i].image;
         cv::Mat img_gray;
-        cv::cvtColor(im_col, img_gray, cv::COLOR_BGRA2GRAY);
+        cv::resize(im_col, img_gray, {RESIZED_WIDTH,RESIZED_HEIGHT});
+        cv::cvtColor(img_gray, img_gray, cv::COLOR_BGRA2GRAY);
+        //clahe->apply(img_gray, img_gray);
+        img_gray.convertTo(img_gray, CV_32F, 1.0 / 255);
         training_images.push_back(img_gray);
+
+
+
+        original_images.push_back(im_col);
     }
     //unsigned long long int *d_hash_matrix;
     int hash_mat_size =  training_images.size() * roll_step;
@@ -159,6 +176,7 @@ int main(int argc, char **argv) {
     Display *disp = driver->getDisplay("display");
     Display *disp_dist = driver->getDisplay("DIST_MAT");
     Display *disp_acc = driver->getDisplay("ACCUM_MAT");
+    Display *match_disp = driver->getDisplay("MATCH_DISP");
     disp->setColor(0x000000);
     Keyboard *kb = new Keyboard();
 
@@ -196,7 +214,11 @@ int main(int argc, char **argv) {
     BoBRobotics::Stopwatch sw;
     // feedback loop: step simulation until an exit event is received
     int current_step = 0;
-   // while (robot->step(TIME_STEP) != -1) {
+    unsigned long long int curr_hash_ptr;
+
+
+
+    //while (robot->step(TIME_STEP) != -1) {
     do {
       // begin simulation step computation: send command values to Webots for update
       // leave the loop when the simulation is over
@@ -204,24 +226,36 @@ int main(int argc, char **argv) {
         break;
 
         cv::Mat current_image = get_cam_image(cm->getImage(),width, height);
-       // cv::GaussianBlur(current_image, current_image, cv::Size(5, 5), 0);
+
+
+
+
         cv::Mat gray_image, resized;
         cv::Mat processed_image;
         const double speed_value = gps->getSpeed();
         const double *pos = gps->getValues();
         const double *orientation = imu->getRollPitchYaw();
-        auto yaw = radian_t(orientation[0]);
+        auto roll = radian_t(orientation[0]);
         auto pitch = radian_t(orientation[1]);
-        auto roll = radian_t(orientation[2]);
+        auto yaw = radian_t(orientation[2]);
         auto steering_angle = radian_t(driver->getSteeringAngle());
         // get positions
         double x_pos = pos[0];
         double y_pos = pos[1];
         double z_pos = pos[2];
 
+        RouteNode tnode;
+        tnode.x =  meter_t(x_pos);// to fill with csv data
+        tnode.y = meter_t(y_pos);
+        tnode.z = meter_t(z_pos);
+        tnode.heading = degree_t(yaw);
+        tnode.image = current_image;
+        tnode.node_number = current_step;
+
+
+
         if (!current_image.empty()) {
             cv::cvtColor(current_image, gray_image,cv::COLOR_BGRA2GRAY);
-            //cv::equalizeHist(gray_image,gray_image);
             cv::resize(gray_image, resized, cv::Size(RESIZED_WIDTH ,RESIZED_HEIGHT),cv::INTER_CUBIC);
         }
 
@@ -336,7 +370,7 @@ int main(int argc, char **argv) {
 
         if (recording_mode && isRecordRunning) {
             units::time::millisecond_t elapsed = sw.elapsed();
-            std::array<degree_t, 3> attitude{ degree_t(roll), degree_t(pitch), degree_t(yaw) };
+            std::array<degree_t, 3> attitude{ degree_t(yaw), degree_t(pitch), degree_t(roll) };
 
             recorder->record({ BoBRobotics::Vector3<meter_t>(meter_t(x_pos),meter_t(y_pos),meter_t(z_pos)), attitude },
                                 current_image, speed_value,
@@ -349,27 +383,33 @@ int main(int argc, char **argv) {
         // test mode
         if (test_mode && isTestRunning) {
 
+
+
+
             units::time::millisecond_t elapsed;
             cv::Mat img_gray;
             cv::cvtColor(current_image, img_gray, cv::COLOR_BGRA2GRAY);
+            cv::Mat current_image1 = current_image.clone();
             cv::Mat resized_gray;
-           // cv::GaussianBlur(img_gray, img_gray, cv::Size(3, 3), 0);
-            cv::resize(img_gray, resized_gray, unwrapRes, cv::INTER_CUBIC);
-
-            cv::Mat conv;
-            resized.convertTo(conv, CV_32F, 1.0 / 255);
+            cv::resize(img_gray, resized_gray, {RESIZED_WIDTH,RESIZED_HEIGHT}, cv::INTER_CUBIC);
+            resized_gray.convertTo(resized_gray, CV_32F, 1.0 / 255);
 
 
             // ---- gpu sequence ----
-            unsigned long long int curr_hash_ptr = g_hasher.addToSequence(conv);
-            g_hasher.getDistanceMatrix();
+            curr_hash_ptr = g_hasher.addToSequence(resized_gray);
+            std::pair<int,int> seq_index = g_hasher.getMinIndex(curr_hash_ptr);
+
+
             cv::Mat host_mat1 = g_hasher.downloadDistanceMatrix();
+
             cv::normalize(host_mat1, host_mat1, 0, 255, cv::NORM_MINMAX);
             host_mat1.convertTo(host_mat1,CV_8UC1);
+            //clahe->apply(host_mat1, host_mat1);
+
 
             // calculate accumulated cost matrix and get best match
-            g_hasher.calculate_accumulated_cost_matrix();
-            std::pair<int,int> seq_index = g_hasher.getMinIndex(curr_hash_ptr);
+            //g_hasher.calculate_accumulated_cost_matrix();
+
             cv::Mat host_mat2 = g_hasher.downloadAccumulatedCostMatrix();
             cv::normalize(host_mat2, host_mat2, 0, 255, cv::NORM_MINMAX);
             host_mat2.convertTo(host_mat2,CV_8UC1);
@@ -378,25 +418,58 @@ int main(int argc, char **argv) {
             cv::cvtColor(host_mat2, comb4_acc, cv::COLOR_GRAY2BGRA );
 
 
+            if (seq_index.first -33 > 0 && seq_index.first + 33 < training_images.size()) {
+                cv::Mat rect= g_hasher.best_rect_matches(resized_gray, seq_index.first ,64);
+                cv::normalize(rect, rect, 0, 255, cv::NORM_MINMAX);
+                rect.convertTo(rect,CV_8UC1);
+                cv::Mat rect1;
+                BoBRobotics::ImgProc::rollRight(rect, rect1, 32);
+                cv::resize(rect1, rect1, {256,256});
+                //rect.convertTo(rect,CV_8UC1);
+                cv::applyColorMap(rect1, rect1, cv::COLORMAP_JET);
+
+                cv::imshow("rotmat", rect1.t());
+                cv::waitKey(1);
+            }
+
+
+
+
+
+            //int pixel_step = int(256 / roll_step);
+            int seq_match_angle = seq_index.second * 5.625;
+
+            cv::Mat rolled_im;
+            cv::Mat match = original_images[seq_index.first];
+            cv::cvtColor(match, match, cv::COLOR_BGRA2GRAY);
+            match.convertTo(match, CV_8UC1);
+            cv::resize(match, match, {256,128});
+            BoBRobotics::ImgProc::rollRight(match,rolled_im, 256/RESIZED_WIDTH *seq_index.second);
+            cv::cvtColor(rolled_im, rolled_im, cv::COLOR_GRAY2BGRA);
+
+
             int dw = disp_dist->getWidth();
             int dh = disp_dist->getHeight();
             int aw = disp_acc->getWidth();
             int ah =disp_acc->getHeight();
             cv::resize(comb4, comb4, {dw,dh});
             cv::resize(comb4_acc, comb4_acc, {aw,ah});
+            cv::resize(rolled_im, rolled_im, {match_disp->getWidth(), match_disp->getHeight()});
 
             ImageRef *ir = disp_dist->imageNew(dw, dh, comb4.data, Display::BGRA);
             ImageRef *ir_acc = disp_acc->imageNew(aw, ah, comb4_acc.data, Display::BGRA);
+            ImageRef *ir_match = match_disp->imageNew(match_disp->getWidth(), match_disp->getHeight(), rolled_im.data, Display::BGRA);
             disp_dist->imagePaste(ir, 0, 0, false);
             disp_acc->imagePaste(ir_acc, 0, 0, false);
+            match_disp->imagePaste(ir_match, 0, 0, false);
             disp_dist->imageDelete(ir);
             disp_acc->imageDelete(ir_acc);
+            match_disp->imageDelete(ir_match);
 
 
             //////--------------------------------------------------------
 
-            int pixel_step = int(IMG_WIDTH / (float)roll_step);
-            int seq_match_angle = seq_index.second * pixel_step;
+
 
             int seq_angle;
             if (seq_match_angle <= 180) {
@@ -418,22 +491,51 @@ int main(int argc, char **argv) {
             int min_value;
         //  auto single_match = HashMatrix::getSingleMatch(hash, route_vector.getHashMatrix(),min_value,roll_step );
             //cv::Mat img_match = route_vector.nodes[seq_index.first].image;
-            if (seq_angle <= 0) {
-                speed = 45+seq_angle;
-            }
-            else {
-                speed = 45-seq_angle;
-            }
+
+          //  if (seq_angle <= 20) {
+          //      speed = 35 + seq_angle;
+           // } else if (seq_angle > 20) {
+          //      speed = 35 - seq_angle;
+         //   } else {
+                speed = 20;
+           // }
+            //yaw
+
             driver->setCruisingSpeed(speed);
 
+
+           // auto rad_angle= radian_t(-yawdiff);
             auto rad_angle= radian_t(degree_t(seq_angle));
+            //auto rad_angle= radian_t(degree_t(avg_ang));
             driver->setSteeringAngle(rad_angle.value());
 
-            std::cout << " sequence = " <<seq_index.first <<  "seq_angle= " << seq_angle << std::endl;
+
+
+
+            degree_t test_h = tnode.heading;
+            degree_t m_h = degree_t(seq_match_angle);
+            degree_t train_h = route.nodes[seq_index.first].heading;
+            std::cout << "test="<<test_h << " train=" <<train_h << " turn" << m_h <<std::endl;
+
+
+            // scoring
+            std::pair<meter_t, degree_t> errors = Route::getMatchErrors(route, tnode, seq_index.first, degree_t(seq_match_angle));
+            std::cout << " Pos err = " << errors.first << "  Ang err = " << errors.second << std::endl;
             //  cv::imshow("match", img_match);
             // can change ordering here << ang matrix >>
-            std::vector<std::vector<int>> ang_distances;
-            cv::waitKey(1);
+            std::ofstream myFile(d_name);
+
+            // Send the column name to the stream
+            //myFile << "hash" <<"," << "pixel" << "\n";
+            // Send data to the stream
+            //for(int i = 0; i < score_diff_hash.size(); ++i)
+            //{
+            //    myFile << score_diff_hash.at(i) << "," << score_diff_PM.at(i) << "\n";
+            //}
+            // Close the file
+            //myFile.close();
+
+
         }
 
         disp->setColor(0xFFFFFF);
