@@ -19,7 +19,8 @@ class ATV
   : public TankBase<ATV>
 {
 public:
-    ATV(const char *frontPath = "/dev/ttyACM1", const char *rearPath = "/dev/ttyACM0",
+    ATV(const char *frontPath = "//dev/serial/by-id/usb-Basicmicro_Inc._USB_Roboclaw_2x15A_10-if00",
+        const char *rearPath = "/dev/serial/by-id/usb-Basicmicro_Inc._USB_Roboclaw_2x15A_20-if00",
         uint8_t frontAddress = 0x80, uint8_t rearAddress = 0x80);
 
     //----------------------------------------------------------------------------
