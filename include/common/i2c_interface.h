@@ -13,6 +13,9 @@
 // Whereas, on Jetson TX2, I2C bus 0 is the one broken out
 #elif TEGRA_CHIP_ID == 24
     #define I2C_DEVICE_DEFAULT "/dev/i2c-0"
+// Whereas, on Jetson Xavier NX with default settings, I2C bus 1 is broken out on pins 27 and 28
+#elif TEGRA_CHIP_ID == 25
+    #define I2C_DEVICE_DEFAULT "/dev/i2c-1"
 // Otherwise, use /dev/null
 #else
     #define I2C_DEVICE_DEFAULT "/dev/null"
