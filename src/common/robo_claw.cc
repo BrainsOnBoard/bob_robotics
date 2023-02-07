@@ -2,7 +2,7 @@
 // BoB robotics includes
 #include "common/robo_claw.h"
 #include "common/macros.h"
-
+#include <iostream>
 
 //----------------------------------------------------------------------------
 // BoBRobotics::RoboClaw
@@ -27,18 +27,28 @@ RoboClaw::RoboClaw(const char *path, uint8_t address)
 //----------------------------------------------------------------------------
 void RoboClaw::setMotor1Speed(float throttle)
 {
-    const bool forward = (throttle > 0.0f);
-    const uint8_t byte = (uint8_t)std::round(127.0 * std::min(1.0f, forward ? throttle : -throttle));
+    // Clamp throttle between -1 and 1
+    throttle = std::min(1.0f, std::max(-1.0f, throttle));
 
-    writeCommand(forward ? Command::M1FORWARD : Command::M1BACKWARD, byte);
+    // Rescale between 0 and 1
+    throttle = (throttle + 1.0f) * 0.5f;
+
+    // Convert to byte and write command
+    const uint8_t byte = (uint8_t)std::round(127.0 * throttle);
+    writeCommand(Command::M17BIT, byte);
 }
 //----------------------------------------------------------------------------
 void RoboClaw::setMotor2Speed(float throttle)
 {
-    const bool forward = (throttle > 0.0f);
-    const uint8_t byte = (uint8_t)std::round(127.0 * std::min(1.0f, forward ? throttle : -throttle));
+    // Clamp throttle between -1 and 1
+    throttle = std::min(1.0f, std::max(-1.0f, throttle));
 
-    writeCommand(forward ? Command::M2FORWARD : Command::M2BACKWARD, byte);
+    // Rescale between 0 and 1
+    throttle = (throttle + 1.0f) * 0.5f;
+
+    // Convert to byte and write command
+    const uint8_t byte = (uint8_t)std::round(127.0 * throttle);
+    writeCommand(Command::M27BIT, byte);
 }
 //----------------------------------------------------------------------------
 uint32_t RoboClaw::getMotor1Encoder()
