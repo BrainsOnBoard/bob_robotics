@@ -41,7 +41,7 @@ public:
       : m_Connection{ std::forward<Ts>(args)... }
     {
         m_Connection.setCommandHandler("TNK_PARAMS", [this](auto &, const auto &command) {
-            if (command.size() != 5) {
+            if (command.size() != 4) {
                 throw BoBRobotics::Net::BadCommandError();
             }
 
