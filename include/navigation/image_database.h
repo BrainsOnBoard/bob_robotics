@@ -282,6 +282,7 @@ public:
             return m_ImageDatabase;
         }
 
+        // Other strings
         template<class... Ts>
         void setExtraFields(std::string value, Ts&&... otherValues)
         {
@@ -290,17 +291,26 @@ public:
             setExtraFields(std::forward<Ts>(otherValues)...);
         }
 
+        // String literals
         template<class... Ts>
         void setExtraFields(const char *value, Ts&&... otherValues)
         {
             setExtraFields(std::string{ value }, std::forward<Ts>(otherValues)...);
         }
 
+        template<class T, class... Ts, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr>
+        void setExtraFields(T value, Ts&&... otherValues)
+        {
+            setExtraFields(writePreciseString(value), std::forward<Ts>(otherValues)...);
+        }
+
+        // Anything else
         template<class T, class... Ts>
         void setExtraFields(T value, Ts&&... otherValues)
         {
             setExtraFields(std::to_string(value), std::forward<Ts>(otherValues)...);
         }
+
 
         // Stop condition
         void setExtraFields() const

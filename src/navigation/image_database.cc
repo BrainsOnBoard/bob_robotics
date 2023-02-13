@@ -1000,9 +1000,9 @@ ImageDatabase::addNewEntries(std::vector<ImageDatabase::Entry> &newEntries,
 
     for (auto &e : m_Entries) {
         // These fields are always written...
-        os << e.pose.x().value() << ", " << e.pose.y().value() << ", "
-           << e.pose.z().value() << ", " << e.pose.yaw().value() << ", "
-           << e.pose.pitch().value() << ", " << e.pose.roll().value();
+        os << writePreciseString(e.pose.x().value()) << ", " << writePreciseString(e.pose.y().value()) << ", "
+           << writePreciseString(e.pose.z().value()) << ", " << writePreciseString(e.pose.yaw().value()) << ", "
+           << writePreciseString(e.pose.pitch().value()) << ", " << writePreciseString(e.pose.roll().value());
 
         // ...this is only written if we're not saving as a video
         if (!isVideoType()) {
