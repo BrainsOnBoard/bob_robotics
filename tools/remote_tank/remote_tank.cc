@@ -15,6 +15,9 @@ using namespace std::literals;
 
 int bobMain(int, char **)
 {
+    // Enable networking on Windows
+    OS::Net::WindowsNetworking::initialise();
+
     // Make connection to robot on default port
     Net::Client client;
 
