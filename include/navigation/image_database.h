@@ -298,13 +298,21 @@ public:
             setExtraFields(std::string{ value }, std::forward<Ts>(otherValues)...);
         }
 
-        template<class T, class... Ts, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr>
-        void setExtraFields(T value, Ts&&... otherValues)
+        // Float values
+        template<class... Ts>
+        void setExtraFields(float value, Ts&&... otherValues)
         {
             setExtraFields(writePreciseString(value), std::forward<Ts>(otherValues)...);
         }
 
-        // Anything else
+        // Double values
+        template<class... Ts>
+        void setExtraFields(double value, Ts&&... otherValues)
+        {
+            setExtraFields(writePreciseString(value), std::forward<Ts>(otherValues)...);
+        }
+
+        // Other things
         template<class T, class... Ts>
         void setExtraFields(T value, Ts&&... otherValues)
         {
