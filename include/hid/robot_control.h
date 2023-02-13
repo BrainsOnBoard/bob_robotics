@@ -69,7 +69,7 @@ void
 addJoystick(RobotType &robot, JoystickBase<JAxis, JButton> &joystick,
             float deadZone, float gain)
 {
-    joystick.addHandler([&](auto &joystick, JAxis axis, float) {
+    joystick.addHandler([&robot, deadZone, gain](auto &joystick, JAxis axis, float) {
         constexpr auto axes = usedAxes<RobotType>();
         if (std::find(axes.begin(), axes.end(), axis) != axes.end()) {
             drive(robot, joystick, deadZone, gain);
