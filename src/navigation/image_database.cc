@@ -351,7 +351,7 @@ ImageDatabase::loadCSV()
             extraFieldNames.emplace(i, std::move(fields[i]));
         }
     }
-
+    
     // Sanity check the file: we need the first four columns
     const auto validIdx = [](int idx) {
         return idx != -1;
@@ -363,15 +363,15 @@ ImageDatabase::loadCSV()
      * make sense for video-type ones.
      */
     BOB_ASSERT(validIdx(fieldNameIdx[4]) == !isVideoType());
-
+    
     // Assume it's a grid if we have any of the Grid fields...
     if (!hasMetadata()) {
-        m_IsRoute = !std::any_of(fieldNameIdx.cbegin() + 5, fieldNameIdx.cend(), validIdx);
+        m_IsRoute = !std::any_of(fieldNameIdx.cbegin() + 5, fieldNameIdx.cbegin() + 8, validIdx);
     }
 
     // ...but we require *all* Grid fields for it to be valid
     if (!m_IsRoute) {
-        BOB_ASSERT(std::all_of(fieldNameIdx.cbegin() + 5, fieldNameIdx.cend(), validIdx));
+        BOB_ASSERT(std::all_of(fieldNameIdx.cbegin() + 5, fieldNameIdx.cbegin() + 8, validIdx));
     }
 
     // Read data line by line
