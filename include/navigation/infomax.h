@@ -184,7 +184,7 @@ public:
         // Convert image to vector of floats
         // **NOTE** m_Weights is MxN matrix and input is a Nx1 column vector so m_U and m_Y and Mx1 column vectors
         m_U = m_Weights * getNetInputs(image);
-        m_Y = tanh(m_U.array());
+        m_Y = m_U.array().tanh();
     }
 
     std::pair<VectorType, VectorType> getUY() const
