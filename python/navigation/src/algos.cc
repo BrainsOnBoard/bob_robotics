@@ -235,9 +235,9 @@ class PyAlgoWrapper<InfoMaxType>
 {
 public:
     PyAlgoWrapper(const cv::Size &size, float learningRate,
-                  float tanhScalingFactor, Normalisation normalisation,
+                  Normalisation normalisation,
                   const optional<unsigned> &seed, optional<Eigen::MatrixXf> weights)
-      : PyAlgoWrapperBase<InfoMaxType>(size, learningRate, tanhScalingFactor, normalisation, createWeights(size, seed, std::move(weights)))
+      : PyAlgoWrapperBase<InfoMaxType>(size, learningRate, normalisation, createWeights(size, seed, std::move(weights)))
     {}
 
     const auto &getWeights() const
@@ -371,16 +371,14 @@ addAlgorithmClasses(py::module &m)
             .def(py::init([](const optional<cv::Size> &size,
                              const optional<ImageSet> &trainImages,
                              float learningRate,
-                             float tanhScalingFactor,
                              Normalisation normalisation,
                              const optional<unsigned> &seed,
                              optional<Eigen::MatrixXf> weights) {
-                     return createAlgo<InfoMaxType>(size, trainImages, learningRate, tanhScalingFactor, normalisation, seed, std::move(weights));
+                     return createAlgo<InfoMaxType>(size, trainImages, learningRate, normalisation, seed, std::move(weights));
                  }),
                  "size"_a = nullopt,
                  "train_images"_a = nullopt,
                  "learning_rate"_a = InfoMaxType::DefaultLearningRate,
-                 "tanh_scaling_factor"_a = InfoMaxType::DefaultTanhScalingFactor,
                  "normalisation"_a = Normalisation::None,
                  "seed"_a = nullopt,
                  "weights"_a = nullopt)
@@ -390,7 +388,6 @@ addAlgorithmClasses(py::module &m)
                         return py::make_tuple(
                                 infomax.getUnwrapResolution(),
                                 infomax.getLearningRate(),
-                                infomax.getTanhScalingFactor(),
                                 infomax.getNormalisationMethod(),
                                 infomax.getWeights());
                     },
@@ -406,8 +403,7 @@ addAlgorithmClasses(py::module &m)
                     }))
             .def("get_weights", &PyAlgoWrapper<InfoMaxType>::getWeights)
             .def_static("generate_initial_weights", &PyAlgoWrapper<InfoMaxType>::generateInitialWeights, "size"_a, "num_hidden"_a = ::optional<int>{}, "seed"_a = ::optional<unsigned>{})
-            .def_property_readonly_static("DEFAULT_LEARNING_RATE", [](const py::object &) { return InfoMaxType::DefaultLearningRate; })
-            .def_property_readonly_static("DEFAULT_TANH_SCALING_FACTOR", [](const py::object &) { return InfoMaxType::DefaultTanhScalingFactor; });
+            .def_property_readonly_static("DEFAULT_LEARNING_RATE", [](const py::object &) { return InfoMaxType::DefaultLearningRate; });
 }
 } // Navigation
 } // BoBRobotics

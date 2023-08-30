@@ -53,17 +53,14 @@ public:
     using MatrixType = Eigen::Matrix<FloatType, Eigen::Dynamic, Eigen::Dynamic>;
     using VectorType = Eigen::Matrix<FloatType, Eigen::Dynamic, 1>;
 
-    static constexpr FloatType DefaultLearningRate{ 0.01 };
-    static constexpr FloatType DefaultTanhScalingFactor{ 0.1 };
+    static constexpr FloatType DefaultLearningRate{ 0.97 };
 
     InfoMax(const cv::Size &unwrapRes,
             FloatType learningRate,
-            FloatType tanhScalingFactor,
             Normalisation normalisation,
             MatrixType initialWeights)
       : m_UnwrapRes(unwrapRes)
       , m_LearningRate(learningRate)
-      , m_TanhScalingFactor(tanhScalingFactor)
       , m_Normalisation(normalisation)
       , m_Weights(std::move(initialWeights))
     {
@@ -72,19 +69,17 @@ public:
 
     InfoMax(const cv::Size &unwrapRes, unsigned int numHidden,
             FloatType learningRate = DefaultLearningRate,
-            FloatType tanhScalingFactor = DefaultTanhScalingFactor,
             Normalisation normalisation = Normalisation::None)
-      : InfoMax(unwrapRes, learningRate, tanhScalingFactor, normalisation,
+      : InfoMax(unwrapRes, learningRate, normalisation,
                 generateInitialWeights(unwrapRes.width * unwrapRes.height, 
                                        numHidden))
     {}
 
     InfoMax(const cv::Size &unwrapRes,
             FloatType learningRate = DefaultLearningRate,
-            FloatType tanhScalingFactor = DefaultTanhScalingFactor,
             Normalisation normalisation = Normalisation::None)
       : InfoMax(unwrapRes, unwrapRes.width * unwrapRes.height, learningRate, 
-                tanhScalingFactor, normalisation)
+                normalisation)
     {}
 
     
@@ -112,11 +107,6 @@ public:
     float getLearningRate() const
     {
         return m_LearningRate;
-    }
-
-    float getTanhScalingFactor() const
-    {
-        return m_TanhScalingFactor;
     }
 
     Normalisation getNormalisationMethod() const
@@ -193,7 +183,7 @@ public:
 
         // Convert image to vector of floats
         // **NOTE** m_Weights is MxN matrix and input is a Nx1 column vector so m_U and m_Y and Mx1 column vectors
-        m_U = m_Weights * getNetInputs(image) * m_TanhScalingFactor;
+        m_U = m_Weights * getNetInputs(image);
         m_Y = tanh(m_U.array());
     }
 
@@ -210,7 +200,7 @@ public:
 
 private:
     const cv::Size m_UnwrapRes;
-    const FloatType m_LearningRate, m_TanhScalingFactor;
+    const FloatType m_LearningRate;
     const Normalisation m_Normalisation;
     MatrixType m_Weights;
     VectorType m_U, m_Y;
@@ -259,11 +249,8 @@ class InfoMaxRotater : public InfoMax<FloatType>
 {
 public:
     using MatrixType = Eigen::Matrix<FloatType, Eigen::Dynamic, Eigen::Dynamic>;
-
-    template<class... Ts>
-    InfoMaxRotater(Ts&&... args)
-      : InfoMax<FloatType>(std::forward<Ts>(args)...)
-    {}
+    
+    using InfoMax<FloatType>::InfoMax;
 
     //------------------------------------------------------------------------
     // Public API
@@ -338,7 +325,5 @@ private:
 template<class T>
 constexpr T InfoMax<T>::DefaultLearningRate;
 
-template<class T>
-constexpr T InfoMax<T>::DefaultTanhScalingFactor;
 } // Navigation
 } // BoBRobotics
