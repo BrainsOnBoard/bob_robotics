@@ -22,7 +22,7 @@ ATV::~ATV()
     stopMoving();
 }
 
-void ATV::tank(float left, float right)
+void ATV::tankInternal(float left, float right)
 {
     m_FrontController.setMotor1Speed(-left);
     m_FrontController.setMotor2Speed(right);

@@ -34,25 +34,6 @@ MecanumPCA9685::~MecanumPCA9685()
 //----------------------------------------------------------------------------
 // Omni2D virtuals
 //----------------------------------------------------------------------------
-void
-MecanumPCA9685::omni2D(float forward, float sideways, float turn)
-{
-    BOB_ASSERT(forward >= -1.0f && forward <= 1.0f);
-    BOB_ASSERT(sideways >= -1.0f && sideways <= 1.0f);
-    BOB_ASSERT(turn >= -1.0f && turn <= 1.0f);
-
-    // resolve to motor speeds
-    const float m1 = -sideways + forward - turn;
-    const float m2 = +sideways + forward + turn;
-    const float m3 = +sideways + forward - turn;
-    const float m4 = -sideways + forward + turn;
-
-    // Cap before passing to driveMotors as valid forward, sideways and
-    // turn values can still result in invalid m1, m2, m3 and m4
-    const auto cap = [](float val) { return std::min(1.0f, std::max(val, -1.0f)); };
-    driveMotors(cap(m1), cap(m2), cap(m3), cap(m4));
-}
-//----------------------------------------------------------------------------
 void MecanumPCA9685::driveMotors(float m1, float m2, float m3, float m4)
 {
     setMotorThrottle(Motor::MOTOR_1, m1);
@@ -82,7 +63,25 @@ void MecanumPCA9685::setMotorThrottle(Motor motor, float throttle)
         m_PCA9685.setDutyCycle(motorChannels[motor][MOTOR_CHANNEL_NEGATIVE], 0.0f);
     }
 }
+//----------------------------------------------------------------------------
+void
+MecanumPCA9685::omni2DInternal(float forward, float sideways, float turn)
+{
+    BOB_ASSERT(forward >= -1.0f && forward <= 1.0f);
+    BOB_ASSERT(sideways >= -1.0f && sideways <= 1.0f);
+    BOB_ASSERT(turn >= -1.0f && turn <= 1.0f);
 
+    // resolve to motor speeds
+    const float m1 = -sideways + forward - turn;
+    const float m2 = +sideways + forward + turn;
+    const float m3 = +sideways + forward - turn;
+    const float m4 = -sideways + forward + turn;
+
+    // Cap before passing to driveMotors as valid forward, sideways and
+    // turn values can still result in invalid m1, m2, m3 and m4
+    const auto cap = [](float val) { return std::min(1.0f, std::max(val, -1.0f)); };
+    driveMotors(cap(m1), cap(m2), cap(m3), cap(m4));
+}
 } // Omni2D
 } // Robots
 } // BoBRobotics

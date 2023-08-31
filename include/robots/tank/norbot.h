@@ -26,8 +26,6 @@ public:
     //----------------------------------------------------------------------------
     ~Norbot();
 
-    void tank(float left, float right);
-
     static constexpr auto getMaximumSpeed()
     {
         return units::velocity::meters_per_second_t{ 0.11 };
@@ -40,6 +38,8 @@ public:
 
 private:
     I2CInterface m_I2C;
+
+    void tankInternal(float left, float right);
 
     template<typename T, size_t N>
     void read(T (&data)[N])

@@ -74,6 +74,13 @@ public:
         }
     }
 
+    void tank(float left, float right)
+    {
+        m_Left = left;
+        m_Right = right;
+        static_cast<Derived *>(this)->tankInternal(left, right);
+    }
+
     radians_per_second_t getMaximumTurnSpeed() const
     {
         // max turn speed = v_max / r
@@ -104,13 +111,6 @@ protected:
     {}
 
 private:
-    void tank(float left, float right)
-    {
-        m_Left = left;
-        m_Right = right;
-        static_cast<Derived *>(this)->tank(left, right);
-    }
-
     meter_t getRobotWidth() const
     {
         return static_cast<const Derived *>(this)->getRobotWidth();

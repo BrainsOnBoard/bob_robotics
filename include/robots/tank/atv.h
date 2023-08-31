@@ -28,8 +28,6 @@ public:
     //----------------------------------------------------------------------------
     ~ATV();
 
-    void tank(float left, float right);
-
     static constexpr auto getMaximumSpeed()
     {
         return units::velocity::meters_per_second_t{ 0.11 };
@@ -47,6 +45,8 @@ public:
     RoboClaw &getRearController(){ return m_RearController; }
 
 private:
+    void tankInternal(float left, float right);
+
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
