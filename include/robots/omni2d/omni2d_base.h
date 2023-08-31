@@ -36,6 +36,18 @@ public:
     float getSideways() const{ return m_Sideways; }
     float getTurn() const{ return m_Turn; }
 
+    //! Get forward movement speed
+    float getForwardSpeed() const
+    {
+        return getForward();
+    }
+
+    //! Get turning speed
+    float getTurnSpeed() const
+    {
+        return getTurn();
+    }
+
 private:
     void omni2D(float forward, float sideways, float turn)
     {

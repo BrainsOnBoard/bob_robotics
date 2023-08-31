@@ -80,8 +80,23 @@ public:
         return radians_per_second_t{ (getMaximumSpeed() * 2 / getRobotWidth()).value() };
     }
 
+    //! Get low-level left motor speed
     float getLeft() const{ return m_Left; }
+
+    //! Get low-level right motor speed
     float getRight() const{ return m_Right; }
+
+    //! Get forward movement speed
+    float getForwardSpeed() const
+    {
+        return (getLeft() + getRight()) * 0.5f;
+    }
+
+    //! Get turning speed
+    float getTurnSpeed() const
+    {
+        return (getLeft() - getRight()) * 0.5f;
+    }
 
 protected:
     TankBase()
