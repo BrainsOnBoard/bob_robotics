@@ -80,9 +80,19 @@ public:
         return radians_per_second_t{ (getMaximumSpeed() * 2 / getRobotWidth()).value() };
     }
 
+    float getLeft() const{ return m_Left; }
+    float getRight() const{ return m_Right; }
+
+protected:
+    TankBase()
+    :   m_Left(0.0f), m_Right(0.0f)
+    {}
+
 private:
     void tank(float left, float right)
     {
+        m_Left = left;
+        m_Right = right;
         static_cast<Derived *>(this)->tank(left, right);
     }
 
@@ -95,6 +105,9 @@ private:
     {
         return static_cast<const Derived *>(this)->getMaximumSpeed();
     }
+
+    float m_Left;
+    float m_Right;
 
 }; // TankBase
 } // Tank
