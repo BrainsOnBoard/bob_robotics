@@ -15,9 +15,9 @@ namespace Tank {
 // BoBRobotics::Robots::Tank::Norbot
 //----------------------------------------------------------------------------
 //! An interface for wheeled, Arduino-based robots developed at the University of Sussex
-class Norbot
-  : public TankBase<Norbot>
+class Norbot : public TankBase<Norbot>
 {
+    friend TankBase<Norbot>;
 public:
     Norbot(const char *path = I2C_DEVICE_DEFAULT, int slaveAddress = 0x29);
 

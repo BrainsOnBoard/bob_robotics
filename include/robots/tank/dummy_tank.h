@@ -13,9 +13,9 @@ namespace Tank {
 // BoBRobotics::Robots::Tank::DummyTank
 //----------------------------------------------------------------------------
 //! A tank interface which just prints out commands (for debugging)
-class DummyTank
-  : public TankBase<DummyTank>
+class DummyTank : public TankBase<DummyTank>
 {
+    friend TankBase<DummyTank>;
 public:
     static constexpr auto getRobotWidth()
     {

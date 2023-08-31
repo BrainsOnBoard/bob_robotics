@@ -18,8 +18,7 @@ namespace Omni2D {
 //----------------------------------------------------------------------------
 // BoBRobotics::Robots::Omni2D::MecanumPCA9685
 //----------------------------------------------------------------------------
-class MecanumPCA9685
-  : public Omni2DBase<MecanumPCA9685>
+class MecanumPCA9685 : public Omni2DBase<MecanumPCA9685>
 {
     friend Omni2DBase<MecanumPCA9685>;
 public:

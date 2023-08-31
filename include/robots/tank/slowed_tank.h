@@ -8,19 +8,14 @@ namespace BoBRobotics {
 namespace Robots {
 namespace Tank {
 template<class TankType>
-class SlowedTank
-  : public TankBase<SlowedTank<TankType>>
+class SlowedTank : public TankBase<SlowedTank<TankType>>
 {
+    friend TankBase<SlowedTank<TankType>>;
 public:
     template<class... Ts>
     SlowedTank(Ts&&... args)
       : m_Tank(std::forward<Ts>(args)...)
     {}
-
-    void tank(float left, float right)
-    {
-        m_Tank.tank(left * m_MaximumSpeed, right * m_MaximumSpeed);
-    }
 
     void setMaximumSpeedProportion(float speed)
     {
@@ -43,6 +38,11 @@ public:
         return m_Tank.getRobotWidth();
     }
 
+protected:
+    void tankInternal(float left, float right)
+    {
+        m_Tank.tank(left * m_MaximumSpeed, right * m_MaximumSpeed);
+    }
 private:
     TankType m_Tank;
     float m_MaximumSpeed = 1.f;

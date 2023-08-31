@@ -18,8 +18,8 @@ namespace Omni2D {
 //----------------------------------------------------------------------------
 // BoBRobotics::Robots::Omni2D::Mecanum
 //----------------------------------------------------------------------------
-class Mecanum
-  : public Omni2DBase<Mecanum>{
+class Mecanum : public Omni2DBase<Mecanum>
+{
     friend Omni2DBase<Mecanum>;
 public:
     Mecanum(bool alternativeWiring = true,
@@ -33,12 +33,6 @@ protected:
     void omni2DInternal(float forward, float sideways, float turn);
 
 private:
-    //----------------------------------------------------------------------------
-    // Private members
-    //----------------------------------------------------------------------------
-    const bool m_AlternativeWiring;
-    SerialInterface m_Serial;
-
     template<typename T, size_t N>
     void read(T (&data)[N])
     {
@@ -51,6 +45,11 @@ private:
         m_Serial.write(data);
     }
 
+    //----------------------------------------------------------------------------
+    // Private members
+    //----------------------------------------------------------------------------
+    const bool m_AlternativeWiring;
+    SerialInterface m_Serial;
 }; // Mecanum
 } // Omni2D
 } // Robots
