@@ -22,6 +22,11 @@ public:
         omni2D(0.f, 0.f, clockwiseSpeed);
     }
 
+    void move(float speed, float clockwiseSpeed)
+    {
+        omni2D(speed, 0.f, clockwiseSpeed);
+    }
+
     void stopMoving()
     {
         omni2D(0.f, 0.f, 0.f);
