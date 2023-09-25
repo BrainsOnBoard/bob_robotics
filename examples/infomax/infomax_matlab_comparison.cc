@@ -51,21 +51,20 @@ runTest(const filesystem::path &dataPath, int num)
 
     // Make our InfoMax runner object
     using InfoMaxType = InfoMaxRotater<double>;
-    InfoMaxType infomax(image.size(), InfoMaxType::DefaultLearningRate,
-                        InfoMaxType::DefaultTanhScalingFactor,
+    InfoMaxType infomax(image.size(), 0.0001 * imageMatrix.rows() * imageMatrix.cols(),
                         Normalisation::None, std::move(initWeights));
+    
+    LOGI << "Weights before training: "
+         << infomax.getWeights();
+
+    LOGI << "Image: "
+         << imageMatrix.cast<int>();
 
     // Do training
     Matrix<double, Dynamic, 1> u, y;
     infomax.calculateUY(image);
     std::tie(u, y) = infomax.getUY();
     infomax.trainUY();
-
-    LOGI << "Weights before training: "
-         << infomax.getWeights();
-
-    LOGI << "Image: "
-         << imageMatrix.cast<int>();
 
     LOGI << "U: " << u;
     LOGI << "Y: " << y;

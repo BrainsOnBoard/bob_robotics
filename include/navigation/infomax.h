@@ -53,31 +53,36 @@ public:
     using MatrixType = Eigen::Matrix<FloatType, Eigen::Dynamic, Eigen::Dynamic>;
     using VectorType = Eigen::Matrix<FloatType, Eigen::Dynamic, 1>;
 
-    static constexpr FloatType DefaultLearningRate{ 0.01 };
-    static constexpr FloatType DefaultTanhScalingFactor{ 0.1 };
+    static constexpr FloatType DefaultLearningRate{ 0.97 };
 
     InfoMax(const cv::Size &unwrapRes,
             FloatType learningRate,
-            FloatType tanhScalingFactor,
             Normalisation normalisation,
             MatrixType initialWeights)
       : m_UnwrapRes(unwrapRes)
       , m_LearningRate(learningRate)
-      , m_TanhScalingFactor(tanhScalingFactor)
       , m_Normalisation(normalisation)
       , m_Weights(std::move(initialWeights))
     {
         BOB_ASSERT(m_Weights.cols() == unwrapRes.width * unwrapRes.height);
     }
 
+    InfoMax(const cv::Size &unwrapRes, unsigned int numHidden,
+            FloatType learningRate = DefaultLearningRate,
+            Normalisation normalisation = Normalisation::None)
+      : InfoMax(unwrapRes, learningRate, normalisation,
+                generateInitialWeights(unwrapRes.width * unwrapRes.height, 
+                                       numHidden))
+    {}
+
     InfoMax(const cv::Size &unwrapRes,
             FloatType learningRate = DefaultLearningRate,
-            FloatType tanhScalingFactor = DefaultTanhScalingFactor,
             Normalisation normalisation = Normalisation::None)
-      : InfoMax(unwrapRes, learningRate, tanhScalingFactor, normalisation,
-                generateInitialWeights(unwrapRes.width * unwrapRes.height,
-                                       unwrapRes.width * unwrapRes.height))
+      : InfoMax(unwrapRes, unwrapRes.width * unwrapRes.height, learningRate, 
+                normalisation)
     {}
+
+    
 
     //------------------------------------------------------------------------
     // Public API
@@ -96,17 +101,12 @@ public:
     //! Generates new random weights
     void clearMemory()
     {
-        m_Weights = generateInitialWeights(m_Weights.cols(), m_Weights.rows());
+        m_Weights = generateInitialWeights(getNumInputs(), getNumHidden());
     }
 
     float getLearningRate() const
     {
         return m_LearningRate;
-    }
-
-    float getTanhScalingFactor() const
-    {
-        return m_TanhScalingFactor;
     }
 
     Normalisation getNormalisationMethod() const
@@ -150,12 +150,14 @@ public:
 #endif
     void trainUY()
     {
-        // weights = weights + lrate/N * (eye(H)-(y+u)*u') * weights;
-        const auto id = MatrixType::Identity(m_Weights.rows(), m_Weights.rows());
-        const auto sumYU = (m_Y.array() + m_U.array()).matrix();
-        const FloatType learnRate = m_LearningRate / (FloatType) m_U.rows();
+        // weights = weights + lrate/N.M * (eye(M)-(y+u)*u') * weights;
+        // **NOTE** additional scaling after M from Azevedo et al. 2023
+        const auto id = MatrixType::Identity(getNumHidden(), getNumHidden());
+        const FloatType learnRate = m_LearningRate / (FloatType)(getNumInputs() * getNumHidden());
 
-        m_Weights.array() += (learnRate * (id - sumYU * m_U.transpose()) * m_Weights).array();
+        // **NOTE** middle term evaluates to MxM matrix, m_Weights are M*N,
+        // meaning result is M*N as required for adding back to m_Weights
+        m_Weights += (learnRate * (id - ((m_Y + m_U) * m_U.transpose())) * m_Weights);
 
         /*
          * If the learning rate is too high, we may end up with NaNs in our
@@ -180,8 +182,9 @@ public:
         BOB_ASSERT(image.rows == unwrapRes.height);
 
         // Convert image to vector of floats
-        m_U = m_Weights * getNetInputs(image) * m_TanhScalingFactor;
-        m_Y = tanh(m_U.array());
+        // **NOTE** m_Weights is MxN matrix and input is a Nx1 column vector so m_U and m_Y and Mx1 column vectors
+        m_U = m_Weights * getNetInputs(image);
+        m_Y = m_U.array().tanh();
     }
 
     std::pair<VectorType, VectorType> getUY() const
@@ -197,19 +200,19 @@ public:
 
 private:
     const cv::Size m_UnwrapRes;
-    const FloatType m_LearningRate, m_TanhScalingFactor;
+    const FloatType m_LearningRate;
     const Normalisation m_Normalisation;
     MatrixType m_Weights;
     VectorType m_U, m_Y;
 
-    template<class T>
-    static auto toZScore(const T &vec)
+    Eigen::Index getNumInputs() const
     {
-        const FloatType mean = vec.mean();
+        return m_Weights.cols();
+    }
 
-        const auto vNorm = vec.array() - mean;
-        const FloatType sd = std::sqrt((vNorm * vNorm).mean());
-        return vNorm / sd;
+    Eigen::Index getNumHidden() const
+    {
+        return m_Weights.rows();
     }
 
     //! Converts image to VectorType and normalises
@@ -218,13 +221,15 @@ private:
         Eigen::Map<Eigen::Matrix<uint8_t, Eigen::Dynamic, 1>> map(image.data, image.cols * image.rows);
         const auto vec = map.cast<FloatType>();
 
-        switch (m_Normalisation) {
-        case Normalisation::None:
+        if(m_Normalisation == Normalisation::None) {
             return vec / 255.0;
-        case Normalisation::ZScore:
-            return toZScore(vec);
-        default:
-            throw std::runtime_error{ "Invalid normalisation method" };
+        }
+        else {
+            const FloatType mean = vec.mean();
+
+            const auto vNorm = vec.array() - mean;
+            const FloatType sd = std::sqrt((vNorm * vNorm).mean());
+            return vNorm / sd;
         }
     }
 
@@ -244,11 +249,8 @@ class InfoMaxRotater : public InfoMax<FloatType>
 {
 public:
     using MatrixType = Eigen::Matrix<FloatType, Eigen::Dynamic, Eigen::Dynamic>;
-
-    template<class... Ts>
-    InfoMaxRotater(Ts&&... args)
-      : InfoMax<FloatType>(std::forward<Ts>(args)...)
-    {}
+    
+    using InfoMax<FloatType>::InfoMax;
 
     //------------------------------------------------------------------------
     // Public API
@@ -323,7 +325,5 @@ private:
 template<class T>
 constexpr T InfoMax<T>::DefaultLearningRate;
 
-template<class T>
-constexpr T InfoMax<T>::DefaultTanhScalingFactor;
 } // Navigation
 } // BoBRobotics
