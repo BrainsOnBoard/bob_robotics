@@ -18,17 +18,18 @@ namespace Omni2D {
 //----------------------------------------------------------------------------
 // BoBRobotics::Robots::Omni2D::MecanumPCA9685
 //----------------------------------------------------------------------------
-class MecanumPCA9685
-  : public Omni2DBase<MecanumPCA9685>
+class MecanumPCA9685 : public Omni2DBase<MecanumPCA9685>
 {
+    friend Omni2DBase<MecanumPCA9685>;
 public:
     MecanumPCA9685(int slaveAddress = 0x40, const char *path = I2C_DEVICE_DEFAULT);
     ~MecanumPCA9685();
 
-    void omni2D(float forward, float sideways, float turn);
-
     //! Drive robot using individual motor speeds - all range from -1 to 1
     void driveMotors(float m1, float m2, float m3, float m4);
+
+protected:
+    void omni2DInternal(float forward, float sideways, float turn);
 
 private:
     //------------------------------------------------------------------------

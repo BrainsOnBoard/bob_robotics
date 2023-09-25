@@ -17,9 +17,9 @@ using namespace units::literals;
 
 template<typename LengthUnit = units::length::millimeter_t,
          typename AngleUnit = units::angle::degree_t>
-class SimulatedTank
-  : public TankBase<SimulatedTank<LengthUnit, AngleUnit>>
+class SimulatedTank : public TankBase<SimulatedTank<LengthUnit, AngleUnit>>
 {
+    friend TankBase<SimulatedTank<LengthUnit, AngleUnit>>;
     using millimeter_t = units::length::millimeter_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
 
@@ -57,7 +57,8 @@ public:
         return true;
     }
 
-    void tank(float left, float right)
+protected:
+    void tankInternal(float left, float right)
     {
         updatePose();
         BOB_ASSERT(left >= -1.f && left <= 1.f);

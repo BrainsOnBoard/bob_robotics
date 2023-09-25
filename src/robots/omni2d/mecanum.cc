@@ -49,21 +49,6 @@ Mecanum::~Mecanum()
 //----------------------------------------------------------------------------
 // Omni2DBase virtuals
 //----------------------------------------------------------------------------
-void
-Mecanum::omni2D(float forward, float sideways, float turn)
-{
-    // resolve to motor speeds
-    const float m1 = m_AlternativeWiring ? (-sideways + forward - turn) : (+sideways - forward - turn);
-    const float m2 = +sideways + forward + turn;
-    const float m3 = m_AlternativeWiring ? (+sideways + forward - turn) : (-sideways + forward - turn);
-    const float m4 = m_AlternativeWiring ? (-sideways + forward + turn) : (-sideways - forward + turn);
-
-    // Cap before passing to driveMotors as valid forward, sideways and
-    // turn values can still result in invalid m1, m2, m3 and m4
-    const auto cap = [](float val) { return std::min(1.0f, std::max(val, -1.0f)); };
-    driveMotors(cap(m1), cap(m2), cap(m3), cap(m4));
-}
-//----------------------------------------------------------------------------
 void Mecanum::driveMotors(float m1, float m2, float m3, float m4)
 {
     BOB_ASSERT(m1 >= -1.0f && m1 <= 1.0f);
@@ -77,7 +62,21 @@ void Mecanum::driveMotors(float m1, float m2, float m3, float m4)
     // Send buffer
     write(buffer);
 }
+//----------------------------------------------------------------------------
+void
+Mecanum::omni2DInternal(float forward, float sideways, float turn)
+{
+    // resolve to motor speeds
+    const float m1 = m_AlternativeWiring ? (-sideways + forward - turn) : (+sideways - forward - turn);
+    const float m2 = +sideways + forward + turn;
+    const float m3 = m_AlternativeWiring ? (+sideways + forward - turn) : (-sideways + forward - turn);
+    const float m4 = m_AlternativeWiring ? (-sideways + forward + turn) : (-sideways - forward + turn);
 
+    // Cap before passing to driveMotors as valid forward, sideways and
+    // turn values can still result in invalid m1, m2, m3 and m4
+    const auto cap = [](float val) { return std::min(1.0f, std::max(val, -1.0f)); };
+    driveMotors(cap(m1), cap(m2), cap(m3), cap(m4));
+}
 } // Omni2D
 } // Robots
 } // BoBRobotics

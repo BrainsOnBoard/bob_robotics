@@ -34,6 +34,12 @@ public:
         tank(clockwiseSpeed, -clockwiseSpeed);
     }
 
+    void move(float speed, float clockwiseSpeed)
+    {
+        tankMaxScaled(speed + clockwiseSpeed,
+                      speed - clockwiseSpeed);
+    }
+
     void stopMoving()
     {
         tank(0.f, 0.f);
@@ -74,18 +80,43 @@ public:
         }
     }
 
+    void tank(float left, float right)
+    {
+        m_Left = left;
+        m_Right = right;
+        static_cast<Derived *>(this)->tankInternal(left, right);
+    }
+
     radians_per_second_t getMaximumTurnSpeed() const
     {
         // max turn speed = v_max / r
         return radians_per_second_t{ (getMaximumSpeed() * 2 / getRobotWidth()).value() };
     }
 
-private:
-    void tank(float left, float right)
+    //! Get low-level left motor speed
+    float getLeft() const{ return m_Left; }
+
+    //! Get low-level right motor speed
+    float getRight() const{ return m_Right; }
+
+    //! Get forward movement speed
+    float getForwardSpeed() const
     {
-        static_cast<Derived *>(this)->tank(left, right);
+        return (getLeft() + getRight()) * 0.5f;
     }
 
+    //! Get turning speed
+    float getTurnSpeed() const
+    {
+        return (getLeft() - getRight()) * 0.5f;
+    }
+
+protected:
+    TankBase()
+    :   m_Left(0.0f), m_Right(0.0f)
+    {}
+
+private:
     meter_t getRobotWidth() const
     {
         return static_cast<const Derived *>(this)->getRobotWidth();
@@ -95,6 +126,9 @@ private:
     {
         return static_cast<const Derived *>(this)->getMaximumSpeed();
     }
+
+    float m_Left;
+    float m_Right;
 
 }; // TankBase
 } // Tank

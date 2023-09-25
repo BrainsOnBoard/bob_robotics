@@ -39,39 +39,6 @@ SinkBase<ConnectionType>::~SinkBase()
     m_Connection.setCommandHandler("TNK_PARAMS", nullptr);
 }
 
-//! Motor command: send TNK command over TCP
-template<class ConnectionType>
-void
-SinkBase<ConnectionType>::tank(float left, float right)
-{
-    BOB_ASSERT(left >= -1.f && left <= 1.f);
-    BOB_ASSERT(right >= -1.f && right <= 1.f);
-
-    // don't send a command if it's the same as the last one
-    if (left == m_OldLeft && right == m_OldRight) {
-        return;
-    }
-
-    // time how long it takes to send command
-    Stopwatch netTimer;
-    netTimer.start();
-
-    // send steering command
-    m_Connection.getSocketWriter().send("TNK " + std::to_string(left) + " " +
-                                        std::to_string(right) + "\n");
-
-    // print warning if steering command was slow to send
-    using namespace std::literals;
-    const auto duration = netTimer.elapsed();
-    LOG_WARNING_IF(duration > 100ms) << "Network is slow ("
-                                     << static_cast<units::time::millisecond_t>(duration)
-                                     << " to send motor command)";
-
-    // store current left/right values to compare next time
-    m_OldLeft = left;
-    m_OldRight = right;
-}
-
 template<class ConnectionType>
 units::length::millimeter_t
 SinkBase<ConnectionType>::getRobotWidth() const
@@ -103,6 +70,39 @@ SinkBase<ConnectionType>::getMaximumTurnSpeed() const
     }
 
     return m_TurnSpeed;
+}
+
+//! Motor command: send TNK command over TCP
+template<class ConnectionType>
+void
+SinkBase<ConnectionType>::tankInternal(float left, float right)
+{
+    BOB_ASSERT(left >= -1.f && left <= 1.f);
+    BOB_ASSERT(right >= -1.f && right <= 1.f);
+
+    // don't send a command if it's the same as the last one
+    if (left == m_OldLeft && right == m_OldRight) {
+        return;
+    }
+
+    // time how long it takes to send command
+    Stopwatch netTimer;
+    netTimer.start();
+
+    // send steering command
+    m_Connection.getSocketWriter().send("TNK " + std::to_string(left) + " " +
+                                        std::to_string(right) + "\n");
+
+    // print warning if steering command was slow to send
+    using namespace std::literals;
+    const auto duration = netTimer.elapsed();
+    LOG_WARNING_IF(duration > 100ms) << "Network is slow ("
+                                     << static_cast<units::time::millisecond_t>(duration)
+                                     << " to send motor command)";
+
+    // store current left/right values to compare next time
+    m_OldLeft = left;
+    m_OldRight = right;
 }
 
 } // Net

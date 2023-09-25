@@ -39,7 +39,7 @@ Norbot::~Norbot()
     stopMoving();
 }
 
-void Norbot::tank(float left, float right)
+void Norbot::tankInternal(float left, float right)
 {
     // Convert standard (-1,1) values to bytes in order to send to I2C slave
     uint8_t buffer[2] = { floatToI2C(left), floatToI2C(right) };

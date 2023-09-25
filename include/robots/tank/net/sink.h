@@ -21,10 +21,11 @@ namespace Net {
 //----------------------------------------------------------------------------
 //! An interface for transmitting tank steering commands over the network
 template<class ConnectionType = BoBRobotics::Net::Connection &>
-class SinkBase
-  : public TankBase<SinkBase<ConnectionType>>
+class SinkBase : public TankBase<SinkBase<ConnectionType>>
 {
 private:
+    friend TankBase<SinkBase<ConnectionType>>;
+
     using millimeter_t = units::length::millimeter_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
     using radians_per_second_t = units::angular_velocity::radians_per_second_t;
@@ -63,9 +64,6 @@ public:
 
     ~SinkBase();
 
-    //! Motor command: send TNK command over TCP
-    void tank(float left, float right);
-
     millimeter_t getRobotWidth() const;
 
     meters_per_second_t getMaximumSpeed() const;
@@ -76,6 +74,10 @@ public:
     {
         return m_Connection;
     }
+
+protected:
+    //! Motor command: send TNK command over TCP
+    void tankInternal(float left, float right);
 
 }; // SinkBase
 

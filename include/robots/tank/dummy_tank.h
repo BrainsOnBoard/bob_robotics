@@ -13,15 +13,10 @@ namespace Tank {
 // BoBRobotics::Robots::Tank::DummyTank
 //----------------------------------------------------------------------------
 //! A tank interface which just prints out commands (for debugging)
-class DummyTank
-  : public TankBase<DummyTank>
+class DummyTank : public TankBase<DummyTank>
 {
+    friend TankBase<DummyTank>;
 public:
-    static void tank(float left, float right)
-    {
-        LOGV << "Driving: " << left << ", " << right;
-    }
-
     static constexpr auto getRobotWidth()
     {
         return units::length::meter_t{ 1 };
@@ -30,6 +25,11 @@ public:
     static constexpr auto getMaximumSpeed()
     {
         return units::velocity::meters_per_second_t{ 1 };
+    }
+private:
+    static void tankInternal(float left, float right)
+    {
+        LOGV << "Driving: " << left << ", " << right;
     }
 }; // DummyTank
 } // Tank
