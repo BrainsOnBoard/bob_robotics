@@ -1,11 +1,12 @@
 // BoB robotics includes
-#include "plog/Log.h"
 #include "common/pose.h"
 #include "robots/control/robot_positioner.h"
 #include "robots/tank/simulated_tank.h"
-#include "viz/sfml/sfml_world.h"
+#include "viz/sfml/robot_control.h"
+#include "viz/sfml/world.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/units.h"
 
 // Standard C++ includes
@@ -24,14 +25,14 @@ using namespace std::literals;
 int bobMain(int, char **)
 {
     Robots::Tank::SimulatedTank<> robot(0.3_mps, 104_mm);
-    Viz::SFMLWorld display;
+    Viz::SFML::World display;
     auto car = display.createCarAgent();
 
     // A circle to show where the goal is
     sf::CircleShape goalCircle(10);
     goalCircle.setFillColor(sf::Color::Blue);
     goalCircle.setOrigin(10, 10);
-    goalCircle.setPosition(Viz::SFMLWorld::WindowWidth / 2, Viz::SFMLWorld::WindowHeight / 2);
+    goalCircle.setPosition(Viz::SFML::World::WindowWidth / 2, Viz::SFML::World::WindowHeight / 2);
 
     constexpr meter_t stoppingDistance = 5_cm;      // if the robot's distance from goal < stopping dist, robot stops
     constexpr radian_t allowedHeadingError = 2_deg; // the amount of error allowed in the final heading
@@ -53,37 +54,42 @@ int bobMain(int, char **)
 
     bool runPositioner = false;
     while (display.isOpen()) {
-        // Run GUI events
         car.setPose(robot.getPose());
-        const sf::Event event = display.updateAndDrive(robot, goalCircle, car);
 
-        // Spacebar toggles whether positioner is running
-        if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Space) {
-            runPositioner = !runPositioner;
-            robot.stopMoving();
-        }
+        auto eventHandler = [&](const sf::Event &event) {
+            // drive robot with keyboard
+            if (Viz::SFML::drive(robot, event)) {
+                return;
+            }
 
-        if (runPositioner) {
-            if (display.mouseClicked()) {
-                // Set a new goal position if user clicks in the window
-                const auto mousePosition = display.mouseClickPosition();
+            // Spacebar toggles whether positioner is running
+            if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Space) {
+                runPositioner = !runPositioner;
+                robot.stopMoving();
+                return;
+            }
+
+            // Set a new goal position if user clicks in the window
+            if (runPositioner && event.type == sf::Event::MouseButtonPressed
+                && event.mouseButton.button == sf::Mouse::Left) {
+                const auto vec = display.pixelToVector(event.mouseButton.x, event.mouseButton.y);
 
                 // Set the goal to this position
-                positioner.moveTo({ mousePosition.x(), mousePosition.y(), 15_deg });
+                positioner.moveTo({ vec.x(), vec.y(), 15_deg });
 
-                goalCircle.setPosition(display.vectorToPixel(mousePosition));
+                goalCircle.setPosition(event.mouseButton.x, event.mouseButton.y);
             }
+        };
 
-            // Check if the robot is within threshold distance and bearing of goal
-            if (!positioner.pollPositioner()) {
-                runPositioner = false;
-                LOGI << "Reached goal";
-                robot.stopMoving();
-            }
+        // Run GUI events
+        display.drawAndHandleEvents(eventHandler, goalCircle, car);
+
+        // Check if the robot is within threshold distance and bearing of goal
+        if (runPositioner && !positioner.pollPositioner()) {
+            runPositioner = false;
+            LOGI << "Reached goal";
+            robot.stopMoving();
         }
-
-        // A small delay, so we don't eat all the CPU
-        std::this_thread::sleep_for(2ms);
     }
 
     return EXIT_SUCCESS;

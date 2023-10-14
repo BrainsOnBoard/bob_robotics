@@ -78,16 +78,18 @@ drive(volatile Movement &m)
 void
 readRemote()
 {
-  int curTurn = pulseIn(STEERING, HIGH, 0);
-  int curSpeed = pulseIn(THROTTLE, HIGH, 0);
+  // Timeout for reading pulses (in microsecs)
+  constexpr auto Timeout = 500000;
 
-  // curTurn is zero if controller not connected
+  // curTurn will be 0 if pulseIn() times out
+  int curTurn = pulseIn(STEERING, HIGH, Timeout);
   if (curTurn == 0) {
     remoteMove.speed = 0;
     remoteMove.turn = 0;
     return;
   }
 
+  int curSpeed = pulseIn(THROTTLE, HIGH, Timeout);
   remoteMove.turn = map(curTurn, MINSTEERING, MAXSTEERING, -100, 100);
   remoteMove.speed = map(curSpeed, MINCONTROL, MAXCONTROL, -100, 100);
 }

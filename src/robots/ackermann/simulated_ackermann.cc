@@ -24,7 +24,7 @@ SimulatedAckermann::SimulatedAckermann(const meters_per_second_t maximumSpeed,
 }
 
 meter_t
-SimulatedAckermann::getDistanceBetweenAxis() const
+SimulatedAckermann::getDistanceBetweenAxes() const
 {
     return m_distanceBetweenAxis;
 }

@@ -1,1 +1,8 @@
+auto_dataset_recorder
+auto_dataset_recorder_simulated
 dataset_recorder
+
+# Image databases
+*.avi
+*.csv
+*.yaml

@@ -1,6 +1,7 @@
 // BoB robotics includes
 #include "robots/ackermann/simulated_ackermann.h"
-#include "viz/car_display/car_display.h"
+#include "viz/sfml/robot_control.h"
+#include "viz/sfml/world.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -15,46 +16,27 @@ using namespace units::literals;
 using namespace units::angle;
 using namespace units::length;
 
-int bobMain(int, char **)
+int
+bobMain(int, char **)
 {
-    Robots::Ackermann::SimulatedAckermann car(1.4_mps, 500_mm); // simulated ackermann car
-    Viz::CarDisplay display(10.2_m, 160_mm);                    // For displaying the agent
+    constexpr auto MaxSpeed = 1.4_mps;
+    constexpr auto MaxTurn = 30_deg;
 
-    auto mmps = 0_mps;
-    degree_t deg = 0_deg;
-    while(display.isOpen()) {
-        // clear screen
-        display.clearScreen();
+    Robots::Ackermann::SimulatedAckermann robot(MaxSpeed, 500_mm, 0_m, MaxTurn);
+    Viz::SFML::World display({ 10.2_m, 10.2_m });
 
-        //move car
-        car.move(mmps, deg);
+    auto car = display.createCarAgent(160_mm);
 
-        // run GUI 1 step and get user key command
-        const auto key = display.runGUI(car.getPose());
+    while (display.isOpen()) {
+        car.setPose(robot.getPose());
 
-        // if key up -> add speed
-        if (key.first == SDLK_UP) {
-            mmps = 1.4_mps;
-        }
+        auto eventHandler = [&](const sf::Event &event) {
+            Viz::SFML::drive(robot, event);
+        };
 
-        // if key down -> stop
-        if (key.first == SDLK_DOWN) {
-            mmps = 0_mps;
-        }
-
-        // if left or right key -> turn steering wheel
-        if (key.first == SDLK_LEFT) {
-            deg = 30_deg;
-        }
-
-        else if (key.first == SDLK_RIGHT) {
-            deg = -30_deg;
-        }
-
-        else {
-            deg = 0_deg;
-        }
-
+        // run GUI and handle events
+        display.drawAndHandleEvents(eventHandler, car);
     }
+
     return EXIT_SUCCESS;
 }

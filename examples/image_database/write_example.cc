@@ -16,7 +16,7 @@ int bobMain(int argc, char **argv)
     Navigation::ImageDatabase imdb;
 
     // Use randomly generated images
-    Video::RandomInput<> cam{ { 640, 480 }, "random", /*seed=*/42 };
+    Video::RandomInput<> cam{ { 640, 480 }, /*seed=*/42 };
 
     /*
      * Start recording data, using a single extra field called Sensor value. You

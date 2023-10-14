@@ -55,6 +55,7 @@ class RCCarBot final
   : public AckermannBase<RCCarBot>
 {
     using degree_t = units::angle::degree_t;
+    using meter_t = units::length::meter_t;
 
 public:
     RCCarBot(const char *path = I2C_DEVICE_DEFAULT);
@@ -63,7 +64,6 @@ public:
     std::pair<float, degree_t> readRemoteControl();
 
     void moveForward(float speed);
-    constexpr static degree_t getMaximumTurn();
 
     void move(float speed, float left);
 
@@ -72,6 +72,12 @@ public:
 
     //! Stop the car
     void stopMoving();
+
+    constexpr static degree_t getMaximumTurn();
+    constexpr static meter_t getDistanceBetweenAxes()
+    {
+        return units::length::centimeter_t{ 34 };
+    }
 
 private:
     PassiveRCCarBot m_Bot;
