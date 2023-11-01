@@ -57,31 +57,31 @@ void MemoryBase::setCSVFieldValues(std::unordered_map<std::string, std::string> 
     fields[CSVBestHeading] = std::to_string(getBestHeading().value());
     fields[CSVLowestDifference] = std::to_string(getLowestDifference());
 }
-
+//------------------------------------------------------------------------
 void MemoryBase::trainRoute(const Navigation::ImageDatabase &route,
                             ImageInput &imageInput,
                             size_t testFrameSkip,
                             BackgroundExceptionCatcher *backgroundEx)
 {
     const size_t numSnaps = (testFrameSkip < route.size()) ? route.size() / testFrameSkip : 1;
-    std::vector<std::pair<cv::Mat, ImgProc::Mask>> snapshots(numSnaps);
+    std::vector<cv::Mat> snapshots(numSnaps);
 
     // Load and process images in parallel
     // **TODO**: Add support for static mask images
     {
         ProgressBar loadProgBar{ "Loading snapshots", numSnaps };
         route.forEachImage(
-                [&](size_t i, const cv::Mat &snapshot) {
-                    if (backgroundEx) {
-                        backgroundEx->check();
-                    }
+            [&](size_t i, const cv::Mat &snapshot) {
+                if (backgroundEx) {
+                    backgroundEx->check();
+                }
 
-                    // Process snapshot
-                    snapshots[i] = imageInput.processSnapshot(snapshot);
-                    loadProgBar.increment();
-                },
-                /*frameSkip=*/testFrameSkip,
-                /*greyscale=*/false);
+                // Store snapshot in vector
+                snapshots[i] = snapshot;
+                loadProgBar.increment();
+            },
+            /*frameSkip=*/testFrameSkip,
+            /*greyscale=*/false);
     }
 
     // Train model
@@ -92,7 +92,11 @@ void MemoryBase::trainRoute(const Navigation::ImageDatabase &route,
                 backgroundEx->check();
             }
 
-            train(snapshot.first, snapshot.second);
+            // Process snapshot
+            // **NOTE** ImageInput classes are NOT THREAD-SAFE so this needs to be done in serial
+            const auto processedSnapshot = imageInput.processSnapshot(snapshot);
+
+            train(processedSnapshot.first, processedSnapshot.second);
             trainProgBar.increment();
         }
     }
