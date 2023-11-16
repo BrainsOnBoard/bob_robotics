@@ -1,2 +1,2 @@
 [build-system]
-requires = ["setuptools", "wheel", "scikit-build", "cmake", "cv2", "numpy"]
+requires = ["setuptools", "wheel", "scikit-build", "cmake", "opencv-python", "numpy"]
