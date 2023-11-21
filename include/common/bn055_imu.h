@@ -263,6 +263,8 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
+    void setup(OperationMode mode = OperationMode::NDOF);
+    
     Eigen::Quaternionf getQuaternion();
     
     Eigen::Vector3f getVector(VectorType vectorType = VectorType::EULER);
