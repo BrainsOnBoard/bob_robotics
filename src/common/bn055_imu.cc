@@ -18,8 +18,6 @@ constexpr uint8_t BN055::imuID;
 //----------------------------------------------------------------------------
 BN055::BN055(OperationMode mode, const char *path, int slaveAddress)
 {
-    using namespace std::chrono_literals;
-
     // Setup I2C device
     m_IMU.setup(path, slaveAddress);
 
@@ -28,6 +26,14 @@ BN055::BN055(OperationMode mode, const char *path, int slaveAddress)
     if(chipID != imuID) {
         throw std::runtime_error("Incorrect chip id at slave address:" + std::to_string(slaveAddress));
     }
+
+    // Configure into desired mode
+    setup(mode);
+}
+//----------------------------------------------------------------------------
+void BN055::setup(OperationMode mode)
+{
+    using namespace std::chrono_literals;
 
     LOGD << "Switching mode";
     // Switch to config mode (just in case since this is the default)
