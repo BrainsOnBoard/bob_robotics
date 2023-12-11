@@ -84,7 +84,6 @@ TEST(InfoMax, RandomWeightsDistribution)
 TEST(InfoMax, ExplodingWeights)
 {
     InfoMaxRotater<> infomax{ TestImageSize, /*learningRate=*/0.1f,
-                              /*tanhScalingFactor=*/1.f,
                               Normalisation::None,
                               InitialWeights };
 
@@ -99,7 +98,6 @@ TEST(InfoMax, ExplodingWeights)
 TEST(InfoMax, NonExplodingWeights)
 {
     InfoMaxRotater<> infomax{ TestImageSize, /*learningRate=*/1e-5f,
-                              /*tanhScalingFactor=*/1.f,
                               Normalisation::None,
                               InitialWeights };
 
