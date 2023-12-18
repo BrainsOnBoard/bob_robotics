@@ -395,7 +395,6 @@ addAlgorithmClasses(py::module &m)
                         return PyAlgoWrapper<InfoMaxType>{
                             state[0].cast<cv::Size>(),
                             state[1].cast<float>(),
-                            state[2].cast<float>(),
                             state[3].cast<Normalisation>(),
                             nullopt,
                             state[4].cast<InfoMaxType::MatrixType>()
