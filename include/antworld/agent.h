@@ -25,8 +25,8 @@ class AntAgent
 
 public:
     // I chose these values to be (roughly) desert ant-like -- AD
-    static constexpr meters_per_second_t DefaultVelocity = 0.03_mps;
-    static constexpr radians_per_second_t DefaultTurnSpeed = 200_deg_per_s;
+    static meters_per_second_t DefaultVelocity;
+    static radians_per_second_t DefaultTurnSpeed;
 
     AntAgent(sf::Window &window, Renderer &renderer,
              const cv::Size &renderSize,

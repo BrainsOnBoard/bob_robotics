@@ -4,6 +4,9 @@
 // POSIX includes
 #include <unistd.h>
 
+// Standard C includes
+#include <cstdint>
+
 // Standard C++ includes
 #include <stdexcept>
 

@@ -11,8 +11,8 @@ namespace BoBRobotics {
 namespace AntWorld {
 
 // Declarations
-constexpr meters_per_second_t AntAgent::DefaultVelocity;
-constexpr radians_per_second_t AntAgent::DefaultTurnSpeed;
+meters_per_second_t AntAgent::DefaultVelocity = 0.03_mps;
+radians_per_second_t AntAgent::DefaultTurnSpeed = 200_deg_per_s;
 
 AntAgent::AntAgent(sf::Window &window,
                    Renderer &renderer,

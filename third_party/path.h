@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <cctype>
+#include <cstdint>
 #include <cstdlib>
 #include <cerrno>
 #include <cstring>
