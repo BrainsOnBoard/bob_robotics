@@ -21,8 +21,6 @@
 using namespace BoBRobotics;
 using degree_t = units::angle::degree_t;
 
-namespace
-{
 struct AgentObjectData
 {
     AgentObjectData(const cv::Size &renderSize, GLsizei cubemapSize, 
@@ -46,66 +44,28 @@ struct AgentObject
     // clang-format on
 };
 
-bool getULongKWARG(PyObject *kwargs, const char *name, unsigned long &value) 
-{
-    PyObject *kwargVal = PyDict_GetItemString(kwargs, name);
-    if(kwargVal) {
-        if(!PyLong_Check(kwargVal)) {
-            return false;
-        }
-        else {
-            value = PyLong_AsUnsignedLong(kwargVal);
-        }
-    }
-    
-    return true;
-}
-
-bool getDoubleKWARG(PyObject *kwargs, const char *name, double &value) 
-{
-    PyObject *kwargVal = PyDict_GetItemString(kwargs, name);
-    if(kwargVal) {
-        if(!PyFloat_Check(kwargVal)) {
-            return false;
-        }
-        else {
-            value = PyFloat_AsDouble(kwargVal);
-        }
-    }
-    
-    return true;
-}
-
-}
 DLL_EXPORT PyObject *
 Agent_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    int width, height;
-    if (!PyArg_ParseTuple(args, "ii", &width, &height))
-        return nullptr;
+    
+    static char *kwlist[] = {"width", "height", "cubemap_size", 
+                             "near_clip", "far_clip", 
+                             "horizontal_fov", "vertical_fov", NULL};
     
     // Read renderer settings from kwargs
-    unsigned long cubemapSize = 256;
+    GLsizei cubemapSize = 256;
     double nearClip = 0.001;
     double farClip = 1000.0;
     double horizontalFOV = 360.0;
     double verticalFOV = 75.0;
-    if(!getULongKWARG(kwargs, "cubemap_size", cubemapSize)) {
-        return false;
+    int width, height;
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "ii|Idddd", kwlist, 
+                                     &width, &height, &cubemapSize,
+                                     &nearClip, &farClip, &horizontalFOV, &verticalFOV)) 
+    {
+        return nullptr;
     }
-    if(!getDoubleKWARG(kwargs, "near_clip", nearClip)) {
-        return false;
-    }
-    if(!getDoubleKWARG(kwargs, "far_clip", farClip)) {
-        return false;
-    }
-    if(!getDoubleKWARG(kwargs, "horizontal_fov", horizontalFOV)) {
-        return false;
-    }
-    if(!getDoubleKWARG(kwargs, "vertical_fov", verticalFOV)) {
-        return false;
-    }
-    
+
     PyObject *self = type->tp_alloc(type, 0);
     if (!self)
         return nullptr;
@@ -264,6 +224,38 @@ Agent_set_attitude(AgentObject *self, PyObject *args)
 }
 
 DLL_EXPORT PyObject *
+Agent_set_fog(AgentObject *self, PyObject *args, PyObject *kwargs)
+{
+    char *mode;
+    if (!PyArg_ParseTuple(args, "s", &mode)) {
+        return nullptr;
+    }
+    
+    // If fog is disabled, turn it off
+    if(strcmp(mode, "disabled")) {
+        glDisable(GL_FOG);
+    }
+    // Otherwise
+    else {
+        // Enable fog
+        glEnable(GL_FOG);
+        
+        // If linear, 
+        if(strcmp(mode, "linear")) {
+        }
+        else if(strcmp(mode, "exp")) {
+        }
+        else if(strcmp(mode, "exp2")) {
+        }
+        else {
+            return nullptr;
+        }
+    }
+    
+    Py_RETURN_NONE;
+}
+
+DLL_EXPORT PyObject *
 Agent_display(AgentObject *self, PyObject *)
 {
     self->members->agent.display();
@@ -282,6 +274,8 @@ static PyMethodDef Agent_methods[] = {
       "Set the agent's current position" },
     { "set_attitude", (PyCFunction) Agent_set_attitude, METH_VARARGS,
       "Set the agent's current attitude" },
+    { "set_fog", (PyCFunction) Agent_set_fog, METH_VARARGS | METH_KEYWORDS,
+      "Configure fog settings for rendering" },
     { "display", (PyCFunction) Agent_display, METH_NOARGS,
       "Render to the current window (you don't need to call this explicitly if calling read_frame)" },
     {}
