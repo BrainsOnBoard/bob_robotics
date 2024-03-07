@@ -19,12 +19,17 @@
 #endif
 
 using namespace BoBRobotics;
+using degree_t = units::angle::degree_t;
 
+namespace
+{
 struct AgentObjectData
 {
-    AgentObjectData(const cv::Size &renderSize)
+    AgentObjectData(const cv::Size &renderSize, GLsizei cubemapSize, 
+                    double nearClip, double farClip,
+                    degree_t horizontalFOV, degree_t verticalFOV)
       : window{ AntWorld::AntAgent::initialiseWindow(renderSize) }
-      , renderer(256, 0.001, 1000.0, 360_deg)
+      , renderer(cubemapSize, nearClip, farClip, horizontalFOV, verticalFOV)
       , agent(*window, renderer, renderSize)
     {}
 
@@ -41,18 +46,73 @@ struct AgentObject
     // clang-format on
 };
 
+bool getULongKWARG(PyObject *kwargs, const char *name, unsigned long &value) 
+{
+    PyObject *kwargVal = PyDict_GetItemString(kwargs, name);
+    if(kwargVal) {
+        if(!PyLong_Check(kwargVal)) {
+            return false;
+        }
+        else {
+            value = PyLong_AsUnsignedLong(kwargVal);
+        }
+    }
+    
+    return true;
+}
+
+bool getDoubleKWARG(PyObject *kwargs, const char *name, double &value) 
+{
+    PyObject *kwargVal = PyDict_GetItemString(kwargs, name);
+    if(kwargVal) {
+        if(!PyFloat_Check(kwargVal)) {
+            return false;
+        }
+        else {
+            value = PyFloat_AsDouble(kwargVal);
+        }
+    }
+    
+    return true;
+}
+
+}
 DLL_EXPORT PyObject *
-Agent_new(PyTypeObject *type, PyObject *args, PyObject * /*kwds*/)
+Agent_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     int width, height;
     if (!PyArg_ParseTuple(args, "ii", &width, &height))
         return nullptr;
-
+    
+    // Read renderer settings from kwargs
+    unsigned long cubemapSize = 256;
+    double nearClip = 0.001;
+    double farClip = 1000.0;
+    double horizontalFOV = 360.0;
+    double verticalFOV = 75.0;
+    if(!getULongKWARG(kwargs, "cubemap_size", cubemapSize)) {
+        return false;
+    }
+    if(!getDoubleKWARG(kwargs, "near_clip", nearClip)) {
+        return false;
+    }
+    if(!getDoubleKWARG(kwargs, "far_clip", farClip)) {
+        return false;
+    }
+    if(!getDoubleKWARG(kwargs, "horizontal_fov", horizontalFOV)) {
+        return false;
+    }
+    if(!getDoubleKWARG(kwargs, "vertical_fov", verticalFOV)) {
+        return false;
+    }
+    
     PyObject *self = type->tp_alloc(type, 0);
     if (!self)
         return nullptr;
     try {
-        auto data = new AgentObjectData({ width, height });
+        auto data = new AgentObjectData({ width, height }, cubemapSize,
+                                        nearClip, farClip, 
+                                        degree_t{horizontalFOV}, degree_t{verticalFOV});
         reinterpret_cast<AgentObject *>(self)->members = data;
     } catch (std::exception &e) {
         Py_DECREF(self);
