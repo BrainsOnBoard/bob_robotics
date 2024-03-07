@@ -227,21 +227,61 @@ DLL_EXPORT PyObject *
 Agent_set_fog(AgentObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = {"mode", "colour", "start", "end", "density", NULL};
-    
+
     // Read renderer settings from kwargs
     char *mode = nullptr;
     PyObject *colour = nullptr;
     double start = 0.0;
     double end = 0.0;
     double density = 1.0;
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|O!ddd", kwlist, 
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|Oddd", kwlist, 
                                      &mode, &colour, &start, &end, &density)) 
     {
         return nullptr;
     }
+
+    // If colour was passed
+    if(colour) {
+        // Parse colour 
+        GLfloat colourArray[4];
+        if (!PyArg_ParseTuple(colour, "ffff", &colourArray[0], &colourArray[1], 
+            &colourArray[2], &colourArray[3])) 
+        {
+            return nullptr;
+        }
+        
+        // Set fog colour
+        glFogfv (GL_FOG_COLOR, colourArray);
+    }
+
+    // Set fog start, end and density
+    glFogf(GL_FOG_START, start);
+    glFogf(GL_FOG_END, end);
+    glFogf(GL_FOG_DENSITY, density);
     
-    std::cout << "mode:" << mode << ":" << start << "," << end << "," << density <<std::endl;
-    
+    // If fog is disabled, turn it off
+    if(strcmp(mode, "disabled") == 0) {
+        glDisable(GL_FOG);
+    }
+    // Otherwise
+    else {
+        // Enable
+        glEnable(GL_FOG);
+
+        // Convert mode string to GL enumeration
+        if(strcmp(mode, "linear") == 0) {
+            glFogi(GL_FOG_MODE, GL_LINEAR);
+        }
+        else if(strcmp(mode, "exp") == 0) {
+            glFogi(GL_FOG_MODE, GL_EXP);
+        }
+        else if(strcmp(mode, "exp2") == 0) {
+            glFogi(GL_FOG_MODE, GL_EXP2);
+        }
+        else {
+            return nullptr;
+        }
+    }
     Py_RETURN_NONE;
 }
 
