@@ -226,31 +226,21 @@ Agent_set_attitude(AgentObject *self, PyObject *args)
 DLL_EXPORT PyObject *
 Agent_set_fog(AgentObject *self, PyObject *args, PyObject *kwargs)
 {
-    char *mode;
-    if (!PyArg_ParseTuple(args, "s", &mode)) {
+    static char *kwlist[] = {"mode", "colour", "start", "end", "density", NULL};
+    
+    // Read renderer settings from kwargs
+    char *mode = nullptr;
+    PyObject *colour = nullptr;
+    double start = 0.0;
+    double end = 0.0;
+    double density = 1.0;
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|O!ddd", kwlist, 
+                                     &mode, &colour, &start, &end, &density)) 
+    {
         return nullptr;
     }
     
-    // If fog is disabled, turn it off
-    if(strcmp(mode, "disabled")) {
-        glDisable(GL_FOG);
-    }
-    // Otherwise
-    else {
-        // Enable fog
-        glEnable(GL_FOG);
-        
-        // If linear, 
-        if(strcmp(mode, "linear")) {
-        }
-        else if(strcmp(mode, "exp")) {
-        }
-        else if(strcmp(mode, "exp2")) {
-        }
-        else {
-            return nullptr;
-        }
-    }
+    std::cout << "mode:" << mode << ":" << start << "," << end << "," << density <<std::endl;
     
     Py_RETURN_NONE;
 }
