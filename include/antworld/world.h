@@ -50,8 +50,11 @@ public:
     // Public API
     //------------------------------------------------------------------------
     void render() const;
-    void load(const filesystem::path &filename, const GLfloat (&worldColour)[3], const GLfloat (&groundColour)[3]);
-    void loadObj(const filesystem::path &objFilename, float scale = 1.0f, int maxTextureSize = -1, GLint textureFormat = GL_RGB);
+    void load(const filesystem::path &filename, const GLfloat (&worldColour)[3],
+              const GLfloat (&groundColour)[3], bool clear = true);
+    void loadObj(const filesystem::path &objFilename, float scale = 1.0f,
+                 int maxTextureSize = -1, GLint textureFormat = GL_RGB, 
+                 bool clear = true);
 
     const Vector3<meter_t> &getMinBound()
     {
