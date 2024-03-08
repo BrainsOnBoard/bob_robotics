@@ -96,7 +96,8 @@ DLL_EXPORT PyObject *
 Agent_load_world(AgentObject *self, PyObject *args)
 {
     char *filepath_c;
-    if (!PyArg_ParseTuple(args, "s", &filepath_c)) {
+    int clear = 1;
+    if (!PyArg_ParseTuple(args, "s|p", &filepath_c, &clear)) {
         return nullptr;
     }
 
@@ -106,9 +107,10 @@ Agent_load_world(AgentObject *self, PyObject *args)
         const auto ext = filepath.extension();
         if (ext == "bin") {
             // Load with default world and ground colours
-            world.load(filepath, { 0.0f, 1.0f, 0.0f }, { 0.898f, 0.718f, 0.353f });
+            world.load(filepath, { 0.0f, 1.0f, 0.0f },
+                       { 0.898f, 0.718f, 0.353f }, clear);
         } else if (ext == "obj") {
-            world.loadObj(filepath);
+            world.loadObj(filepath, 1.0f, -1, GL_RGB, clear);
         } else {
             throw std::runtime_error{ "Unknown file type" };
         }
