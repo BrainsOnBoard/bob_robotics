@@ -233,10 +233,10 @@ Agent_set_fog(AgentObject *self, PyObject *args, PyObject *kwargs)
     // Read renderer settings from kwargs
     char *mode = nullptr;
     PyObject *colour = nullptr;
-    double start = 0.0;
-    double end = 0.0;
-    double density = 1.0;
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|Oddd", kwlist, 
+    GLfloat start = 0.0f;
+    GLfloat end = 0.0f;
+    GLfloat density = 1.0f;
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|Offf", kwlist, 
                                      &mode, &colour, &start, &end, &density)) 
     {
         return nullptr;
@@ -245,8 +245,8 @@ Agent_set_fog(AgentObject *self, PyObject *args, PyObject *kwargs)
     // If colour was passed
     if(colour) {
         // Parse colour 
-        GLfloat colourArray[4];
-        if (!PyArg_ParseTuple(colour, "ffff", &colourArray[0], &colourArray[1], 
+        GLfloat colourArray[4]{0.75f, 0.75f, 0.75f, 1.0f};
+        if (!PyArg_ParseTuple(colour, "fff|f", &colourArray[0], &colourArray[1], 
             &colourArray[2], &colourArray[3])) 
         {
             return nullptr;
@@ -288,6 +288,24 @@ Agent_set_fog(AgentObject *self, PyObject *args, PyObject *kwargs)
 }
 
 DLL_EXPORT PyObject *
+Agent_set_clear_colour(AgentObject *self, PyObject *args)
+{
+    // Parse colour 
+    GLfloat r = 0.75f;
+    GLfloat g = 0.75f;
+    GLfloat b = 0.75f;
+    GLfloat a = 1.0f;
+    if(!PyArg_ParseTuple(args, "fff|f", &r, &g, &b, &a)) 
+    {
+        return nullptr;
+    }
+
+    glClearColor(r, g, b, a);
+    
+    Py_RETURN_NONE;
+}
+
+DLL_EXPORT PyObject *
 Agent_display(AgentObject *self, PyObject *)
 {
     self->members->agent.display();
@@ -308,6 +326,8 @@ static PyMethodDef Agent_methods[] = {
       "Set the agent's current attitude" },
     { "set_fog", (PyCFunction) Agent_set_fog, METH_VARARGS | METH_KEYWORDS,
       "Configure fog settings for rendering" },
+    { "set_clear_colour", (PyCFunction) Agent_set_clear_colour, METH_VARARGS,
+      "Configure clear colour settings for rendering" },
     { "display", (PyCFunction) Agent_display, METH_NOARGS,
       "Render to the current window (you don't need to call this explicitly if calling read_frame)" },
     {}
