@@ -446,7 +446,6 @@ void World::loadMaterials(const filesystem::path &basePath, const std::string &f
                           std::map<std::string, std::tuple<Texture*, Surface::Colour>> &materialNames)
 {
     // Open obj file
-    LOGE << (basePath / filename).str();
     std::ifstream mtlFile((basePath / filename).str());
     BOB_ASSERT(!mtlFile.fail());
     mtlFile.exceptions(std::ios::badbit);
