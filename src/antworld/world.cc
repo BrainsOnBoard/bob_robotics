@@ -99,6 +99,21 @@ void stripWindowsLineEnding(std::string &lineString)
         lineString.pop_back();
     }
 }
+//----------------------------------------------------------------------------
+std::string readName(std::istringstream &lineStream)
+{
+    // Skip any whitespace preceeding name
+    while(lineStream.peek() == ' ') {
+        lineStream.get();
+    }
+
+    // Treat remainder of line as name
+    std::string name;
+    std::getline(lineStream, name);
+    const size_t firstNonQuote = name.find_first_not_of('"');
+    const size_t lastNonQuote = name.find_last_not_of('"');
+    return name.substr(firstNonQuote, lastNonQuote - firstNonQuote + 1);
+}
 }
 
 //----------------------------------------------------------------------------
@@ -109,12 +124,16 @@ namespace BoBRobotics
 namespace AntWorld
 {
 void World::load(const filesystem::path &filename, const GLfloat (&worldColour)[3],
-                 const GLfloat (&groundColour)[3])
+                 const GLfloat (&groundColour)[3], bool clear)
 {
     LOGI << "Loading " << filename << "...";
 
+    // Clear existing surfaces if required
+    if(clear) {
+        m_Surfaces.clear();
+    }
+
     // Create single surface
-    m_Surfaces.clear();
     m_Surfaces.emplace_back();
     auto &surface = m_Surfaces.back();
 
@@ -224,7 +243,8 @@ void World::load(const filesystem::path &filename, const GLfloat (&worldColour)[
     surface.unbind();
 }
 //----------------------------------------------------------------------------
-void World::loadObj(const filesystem::path &filename, float scale, int maxTextureSize, GLint textureFormat)
+void World::loadObj(const filesystem::path &filename, float scale,
+                    int maxTextureSize, GLint textureFormat, bool clear)
 {
     LOGI << "Loading " << filename << "...";
 
@@ -288,10 +308,8 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
             // Read command from first token
             lineStream >> commandString;
             if(commandString == "mtllib") {
-                lineStream >> parameterString;
-
                 // Parse materials
-                loadMaterials(basePath, parameterString,
+                loadMaterials(basePath, readName(lineStream),
                               textureFormat, maxTextureSize,
                               materialNames);
             }
@@ -365,16 +383,19 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
     }
 
     // Remove any existing surfaces
-    m_Surfaces.clear();
-
+    if(clear) {
+        m_Surfaces.clear();
+    }
+    
     // Allocate new materials array to match those found in obj
-    m_Surfaces.resize(objSurfaces.size());
+    m_Surfaces.reserve(m_Surfaces.size() + objSurfaces.size());
 
     // Loop through surfaces
-    for(unsigned int s = 0; s < objSurfaces.size(); s++) {
-        const auto &objSurface = objSurfaces[s];
-        auto &surface = m_Surfaces[s];
-
+    for(const auto &objSurface : objSurfaces) {
+        // Create surface
+        m_Surfaces.emplace_back();
+        auto &surface = m_Surfaces.back();
+        
         // Find corresponding material
         const auto mtl = materialNames.find(std::get<0>(objSurface));
 
@@ -480,17 +501,8 @@ void World::loadMaterials(const filesystem::path &basePath, const std::string &f
         else if(commandString == "map_Kd") {
             BOB_ASSERT(!currentMaterialName.empty());
 
-            // Skip any whitespace preceeding texture filename
-            while(lineStream.peek() == ' ') {
-                lineStream.get();
-            }
 
-            // Treat remainder of line as texture filename
-            std::string textureFilename;
-            std::getline(lineStream, textureFilename);
-            const size_t firstNonQuote = textureFilename.find_first_not_of('"');
-            const size_t lastNonQuote = textureFilename.find_last_not_of('"');
-            textureFilename = textureFilename.substr(firstNonQuote, lastNonQuote - firstNonQuote + 1);
+            std::string textureFilename = readName(lineStream);
 
             LOG_DEBUG << "\t\tTexture: '" << textureFilename << "'";
 

@@ -19,12 +19,15 @@
 #endif
 
 using namespace BoBRobotics;
+using degree_t = units::angle::degree_t;
 
 struct AgentObjectData
 {
-    AgentObjectData(const cv::Size &renderSize)
+    AgentObjectData(const cv::Size &renderSize, GLsizei cubemapSize, 
+                    double nearClip, double farClip,
+                    degree_t horizontalFOV, degree_t verticalFOV)
       : window{ AntWorld::AntAgent::initialiseWindow(renderSize) }
-      , renderer(256, 0.001, 1000.0, 360_deg)
+      , renderer(cubemapSize, nearClip, farClip, horizontalFOV, verticalFOV)
       , agent(*window, renderer, renderSize)
     {}
 
@@ -42,17 +45,34 @@ struct AgentObject
 };
 
 DLL_EXPORT PyObject *
-Agent_new(PyTypeObject *type, PyObject *args, PyObject * /*kwds*/)
+Agent_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
+    
+    static char *kwlist[] = {"width", "height", "cubemap_size", 
+                             "near_clip", "far_clip", 
+                             "horizontal_fov", "vertical_fov", NULL};
+    
+    // Read renderer settings from kwargs
+    GLsizei cubemapSize = 256;
+    double nearClip = 0.001;
+    double farClip = 1000.0;
+    double horizontalFOV = 360.0;
+    double verticalFOV = 75.0;
     int width, height;
-    if (!PyArg_ParseTuple(args, "ii", &width, &height))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "ii|Idddd", kwlist, 
+                                     &width, &height, &cubemapSize,
+                                     &nearClip, &farClip, &horizontalFOV, &verticalFOV)) 
+    {
         return nullptr;
+    }
 
     PyObject *self = type->tp_alloc(type, 0);
     if (!self)
         return nullptr;
     try {
-        auto data = new AgentObjectData({ width, height });
+        auto data = new AgentObjectData({ width, height }, cubemapSize,
+                                        nearClip, farClip, 
+                                        degree_t{horizontalFOV}, degree_t{verticalFOV});
         reinterpret_cast<AgentObject *>(self)->members = data;
     } catch (std::exception &e) {
         Py_DECREF(self);
@@ -76,7 +96,8 @@ DLL_EXPORT PyObject *
 Agent_load_world(AgentObject *self, PyObject *args)
 {
     char *filepath_c;
-    if (!PyArg_ParseTuple(args, "s", &filepath_c)) {
+    int clear = 1;
+    if (!PyArg_ParseTuple(args, "s|p", &filepath_c, &clear)) {
         return nullptr;
     }
 
@@ -86,9 +107,10 @@ Agent_load_world(AgentObject *self, PyObject *args)
         const auto ext = filepath.extension();
         if (ext == "bin") {
             // Load with default world and ground colours
-            world.load(filepath, { 0.0f, 1.0f, 0.0f }, { 0.898f, 0.718f, 0.353f });
+            world.load(filepath, { 0.0f, 1.0f, 0.0f },
+                       { 0.898f, 0.718f, 0.353f }, clear);
         } else if (ext == "obj") {
-            world.loadObj(filepath);
+            world.loadObj(filepath, 1.0f, -1, GL_RGB, clear);
         } else {
             throw std::runtime_error{ "Unknown file type" };
         }
@@ -204,6 +226,86 @@ Agent_set_attitude(AgentObject *self, PyObject *args)
 }
 
 DLL_EXPORT PyObject *
+Agent_set_fog(AgentObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = {"mode", "colour", "start", "end", "density", NULL};
+
+    // Read renderer settings from kwargs
+    char *mode = nullptr;
+    PyObject *colour = nullptr;
+    GLfloat start = 0.0f;
+    GLfloat end = 0.0f;
+    GLfloat density = 1.0f;
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|Offf", kwlist, 
+                                     &mode, &colour, &start, &end, &density)) 
+    {
+        return nullptr;
+    }
+
+    // If colour was passed
+    if(colour) {
+        // Parse colour 
+        GLfloat colourArray[4]{0.75f, 0.75f, 0.75f, 1.0f};
+        if (!PyArg_ParseTuple(colour, "fff|f", &colourArray[0], &colourArray[1], 
+            &colourArray[2], &colourArray[3])) 
+        {
+            return nullptr;
+        }
+        
+        // Set fog colour
+        glFogfv (GL_FOG_COLOR, colourArray);
+    }
+
+    // Set fog start, end and density
+    glFogf(GL_FOG_START, start);
+    glFogf(GL_FOG_END, end);
+    glFogf(GL_FOG_DENSITY, density);
+    
+    // If fog is disabled, turn it off
+    if(strcmp(mode, "disabled") == 0) {
+        glDisable(GL_FOG);
+    }
+    // Otherwise
+    else {
+        // Enable
+        glEnable(GL_FOG);
+
+        // Convert mode string to GL enumeration
+        if(strcmp(mode, "linear") == 0) {
+            glFogi(GL_FOG_MODE, GL_LINEAR);
+        }
+        else if(strcmp(mode, "exp") == 0) {
+            glFogi(GL_FOG_MODE, GL_EXP);
+        }
+        else if(strcmp(mode, "exp2") == 0) {
+            glFogi(GL_FOG_MODE, GL_EXP2);
+        }
+        else {
+            return nullptr;
+        }
+    }
+    Py_RETURN_NONE;
+}
+
+DLL_EXPORT PyObject *
+Agent_set_clear_colour(AgentObject *self, PyObject *args)
+{
+    // Parse colour 
+    GLfloat r = 0.75f;
+    GLfloat g = 0.75f;
+    GLfloat b = 0.75f;
+    GLfloat a = 1.0f;
+    if(!PyArg_ParseTuple(args, "fff|f", &r, &g, &b, &a)) 
+    {
+        return nullptr;
+    }
+
+    glClearColor(r, g, b, a);
+    
+    Py_RETURN_NONE;
+}
+
+DLL_EXPORT PyObject *
 Agent_display(AgentObject *self, PyObject *)
 {
     self->members->agent.display();
@@ -222,6 +324,10 @@ static PyMethodDef Agent_methods[] = {
       "Set the agent's current position" },
     { "set_attitude", (PyCFunction) Agent_set_attitude, METH_VARARGS,
       "Set the agent's current attitude" },
+    { "set_fog", (PyCFunction) Agent_set_fog, METH_VARARGS | METH_KEYWORDS,
+      "Configure fog settings for rendering" },
+    { "set_clear_colour", (PyCFunction) Agent_set_clear_colour, METH_VARARGS,
+      "Configure clear colour settings for rendering" },
     { "display", (PyCFunction) Agent_display, METH_NOARGS,
       "Render to the current window (you don't need to call this explicitly if calling read_frame)" },
     {}
