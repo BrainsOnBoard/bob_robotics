@@ -112,9 +112,7 @@ std::string readName(std::istringstream &lineStream)
     std::getline(lineStream, name);
     const size_t firstNonQuote = name.find_first_not_of('"');
     const size_t lastNonQuote = name.find_last_not_of('"');
-    name = name.substr(firstNonQuote, lastNonQuote - firstNonQuote + 1);
-
-    return name;
+    return name.substr(firstNonQuote, lastNonQuote - firstNonQuote + 1);
 }
 }
 
