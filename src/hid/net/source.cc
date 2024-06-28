@@ -12,6 +12,16 @@ namespace Net {
 Source::Source(BoBRobotics::Net::Connection &connection)
 :   m_Connection(connection)
 {
+    // Set initial state of all axes to 0.0f
+    for(size_t a = 0; a < static_cast<size_t>(JAxis::LENGTH); a++) {
+        setState(static_cast<JAxis>(a), 0.0f, true);
+    }
+
+    // Set initial state of all buttons to down
+    for(size_t b = 0; b < static_cast<size_t>(JButton::LENGTH); b++) {
+        setState(static_cast<JButton>(b), 0, true);
+    }
+
     // Handle incoming JOY_AXIS commands
     m_Connection.setCommandHandler("JOY_AXIS",
                                    [this](auto&, const auto &command)
@@ -43,7 +53,7 @@ Source::Source(BoBRobotics::Net::Connection &connection)
                                        m_Events.emplace_back();
                                        m_Events.back().axisNotButton = false;
                                        m_Events.back().button.button = toButton(std::stoul(command[1]));
-                                       m_Events.back().button.pressed = std::stof(command[2]);
+                                       m_Events.back().button.pressed = (std::stoul(command[2]) != 0);
                                    });
 }
 //------------------------------------------------------------------------
