@@ -17,7 +17,7 @@ Sink::Sink(BoBRobotics::Net::Connection &connection, Joystick &joystick)
         [this](auto&, JAxis axis, float value)
         {
             std::stringstream ss;
-            ss << "JOY_AXIS " << static_cast<int>(axis) << " " << value << "\n";
+            ss << "JOY_AXIS " << static_cast<size_t>(axis) << " " << value << "\n";
 
             m_Connection.getSocketWriter().send(ss.str());
             return true;
@@ -28,7 +28,7 @@ Sink::Sink(BoBRobotics::Net::Connection &connection, Joystick &joystick)
         [this](auto&, JButton button, bool pressed)
         {
             std::stringstream ss;
-            ss << "JOY_BTN " << static_cast<int>(button) << " " << pressed << "\n";
+            ss << "JOY_BTN " << static_cast<size_t>(button) << " " << (pressed ? "1" : "0") << "\n";
 
             m_Connection.getSocketWriter().send(ss.str());
             return true;
