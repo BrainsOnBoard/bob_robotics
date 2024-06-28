@@ -31,7 +31,7 @@ int bobMain(int, char **)
     catcher.trapSignals(); // Catch Ctrl-C
     client.runInBackground();
 
-    while (!joystick.isPressed(HID::JButton::X)) {
+    while (true) {
         // Rethrow any exceptions caught on background thread
         catcher.check();
 

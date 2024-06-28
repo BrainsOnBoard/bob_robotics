@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "common/background_exception_catcher.h"
 #include "plog/Log.h"
 #include "hid/net/source.h"
 #include "net/server.h"
@@ -18,10 +19,18 @@ int bobMain(int, char **)
     // Read motor commands from network
     Net::Source js(*connection);
 
-    for (int i = 1; !js.isDown(JButton::B); i++) {
+    // While TCP/IP connection remains open
+    BoBRobotics::BackgroundExceptionCatcher catcher;
+    catcher.trapSignals();
+    connection->runInBackground();
+    for (int i = 1; connection->isOpen(); i++) {
+        // Rethrow any exceptions caught on background thread
+        catcher.check();
+
         // read from joystick
         js.update();
 
+        LOGI << js.getState(JAxis::LeftStickHorizontal);
         if (js.isDown(JButton::A)) {
             LOGI << i << " | A is down";
         }
