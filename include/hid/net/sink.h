@@ -24,6 +24,9 @@ public:
     Sink(BoBRobotics::Net::Connection &connection, Joystick &joystick);
 
 private:
+    //------------------------------------------------------------------------
+    // Members
+    //------------------------------------------------------------------------
     BoBRobotics::Net::Connection &m_Connection;
 }; // Source
 

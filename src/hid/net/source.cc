@@ -34,6 +34,7 @@ Source::Source(BoBRobotics::Net::Connection &connection)
                                    [this](auto&, const auto &command)
                                    {
                                        std::lock_guard<std::mutex> lock(m_EventMutex);
+
                                        if (command.size() != 3) {
                                            throw BoBRobotics::Net::BadCommandError();
                                        }
@@ -65,8 +66,12 @@ bool Source::updateState()
             if (e.axisNotButton) {
                 setState(e.axis.axis, e.axis.value, false);
             } else {
-                setState(e.button.button, e.button.pressed ? StateDown : 0,
-                         false);
+                if (e.button.pressed) {
+                    setPressed(e.button.button, false);
+
+                } else {
+                    setReleased(e.button.button, false);
+                }
             }
         }
 

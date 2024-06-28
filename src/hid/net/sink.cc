@@ -9,6 +9,9 @@ namespace BoBRobotics {
 namespace HID {
 namespace Net {
 
+//----------------------------------------------------------------------------
+// BoBRobotics::HID::Net::Sink
+//----------------------------------------------------------------------------
 Sink::Sink(BoBRobotics::Net::Connection &connection, Joystick &joystick)
 : m_Connection{ connection }
 {
@@ -28,7 +31,7 @@ Sink::Sink(BoBRobotics::Net::Connection &connection, Joystick &joystick)
         [this](auto&, JButton button, bool pressed)
         {
             std::stringstream ss;
-            ss << "JOY_BTN " << static_cast<size_t>(button) << " " << (pressed ? "1" : "0") << "\n";
+            ss << "JOY_BUTTON " << static_cast<size_t>(button) << " " << (pressed ? "1" : "0") << "\n";
 
             m_Connection.getSocketWriter().send(ss.str());
             return true;
