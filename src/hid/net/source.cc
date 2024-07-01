@@ -33,10 +33,10 @@ Source::Source(BoBRobotics::Net::Connection &connection)
                                        }
 
                                        // Parse event
-                                       m_Events.emplace_back();
-                                       m_Events.back().axisNotButton = true;
-                                       m_Events.back().axis.axis = toAxis(std::stoul(command[1]));
-                                       m_Events.back().axis.value = std::stof(command[2]);
+                                       auto &evt = m_Events.emplace_back();
+                                       evt.axisNotButton = true;
+                                       evt.axis.axis = toAxis(std::stoul(command[1]));
+                                       evt.axis.value = std::stof(command[2]);
                                    });
 
     // Handle incoming JOY_BUTTON commands
@@ -50,10 +50,10 @@ Source::Source(BoBRobotics::Net::Connection &connection)
                                        }
 
                                        // Parse event
-                                       m_Events.emplace_back();
-                                       m_Events.back().axisNotButton = false;
-                                       m_Events.back().button.button = toButton(std::stoul(command[1]));
-                                       m_Events.back().button.pressed = (std::stoul(command[2]) != 0);
+                                       auto &evt = m_Events.emplace_back();
+                                       evt.axisNotButton = false;
+                                       evt.button.button = toButton(std::stoul(command[1]));
+                                       evt.button.pressed = (std::stoul(command[2]) != 0);
                                    });
 }
 //------------------------------------------------------------------------
@@ -71,23 +71,22 @@ bool Source::updateState()
     if(m_Events.empty()) {
         return false;
     }
-    else {
-        for(const auto &e : m_Events) {
-            if (e.axisNotButton) {
-                setState(e.axis.axis, e.axis.value, false);
-            } else {
-                if (e.button.pressed) {
-                    setPressed(e.button.button, false);
 
-                } else {
-                    setReleased(e.button.button, false);
-                }
+    for(const auto &e : m_Events) {
+        if (e.axisNotButton) {
+            setState(e.axis.axis, e.axis.value, false);
+        } else {
+            if (e.button.pressed) {
+                setPressed(e.button.button, false);
+
+            } else {
+                setReleased(e.button.button, false);
             }
         }
-
-        m_Events.clear();
-        return true;
     }
+
+    m_Events.clear();
+    return true;
 }
 } // Net
 } // HID
