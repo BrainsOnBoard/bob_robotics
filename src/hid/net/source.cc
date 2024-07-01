@@ -2,6 +2,9 @@
 #include "hid/net/source.h"
 #include "net/connection.h"
 
+// Third party includes
+#include "plog/Log.h"
+
 namespace BoBRobotics {
 namespace HID {
 namespace Net {
@@ -12,6 +15,10 @@ namespace Net {
 Source::Source(BoBRobotics::Net::Connection &connection)
 :   m_Connection(connection)
 {
+#ifndef __linux__
+    LOGW << "Net joysticks require the same OS to be running the sink and source - be careful!";
+#endif
+
     // Set initial state of all axes to 0.0f
     for(size_t a = 0; a < static_cast<size_t>(JAxis::LENGTH); a++) {
         setState(static_cast<JAxis>(a), 0.0f, true);
@@ -33,7 +40,8 @@ Source::Source(BoBRobotics::Net::Connection &connection)
                                        }
 
                                        // Parse event
-                                       auto &evt = m_Events.emplace_back();
+                                       m_Events.emplace_back();
+                                       auto &evt = m_Events.back();
                                        evt.axisNotButton = true;
                                        evt.axis.axis = toAxis(std::stoul(command[1]));
                                        evt.axis.value = std::stof(command[2]);
@@ -50,7 +58,8 @@ Source::Source(BoBRobotics::Net::Connection &connection)
                                        }
 
                                        // Parse event
-                                       auto &evt = m_Events.emplace_back();
+                                       m_Events.emplace_back();
+                                       auto &evt = m_Events.back();
                                        evt.axisNotButton = false;
                                        evt.button.button = toButton(std::stoul(command[1]));
                                        evt.button.pressed = (std::stoul(command[2]) != 0);

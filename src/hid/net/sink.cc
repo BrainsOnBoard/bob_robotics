@@ -2,6 +2,9 @@
 #include "hid/net/sink.h"
 #include "net/connection.h"
 
+// Third party includes
+#include "plog/Log.h"
+
 // Standard C++ includes
 #include <sstream>
 
@@ -15,6 +18,10 @@ namespace Net {
 Sink::Sink(BoBRobotics::Net::Connection &connection, Joystick &joystick)
 : m_Connection{ connection }
 {
+#ifndef __linux__
+    LOGW << "Net joysticks require the same OS to be running the sink and source - be careful!";
+#endif
+
     // Add axis handler to send network event
     joystick.addHandler(
         [this](auto&, JAxis axis, float value)
