@@ -531,15 +531,23 @@ public:
     bool isVideoType() const;
 
     template<class Func>
-    void forEachImage(const Func& func, const std::vector<std::pair<size_t, size_t>>& idx, bool greyscale = true) const
+    void forEachImage(const Func& func, const std::vector<std::pair<size_t, size_t>>& idx, bool greyscale = true, bool serial = false) const
     {
         // If database consists of individual image files...
         if (m_VideoFilePath.empty()) {
-            const auto load = [&](const auto &pair) {
-                func(pair.first, m_Entries[pair.second].load(greyscale));
-            };
 
-            tbb::parallel_for_each(idx, load);
+            if(serial) {
+                for(const auto &i : idx) {
+                    func(i.first, m_Entries[i.second].load(greyscale));
+                }
+            }
+            else {
+                 const auto load = [&](const auto &pair) {
+                    func(pair.first, m_Entries[pair.second].load(greyscale));
+                };
+
+                tbb::parallel_for_each(idx, load);
+            }
             return;
         }
 
@@ -581,7 +589,7 @@ public:
 
     template<class Func, class Container>
     void forEachImage(const Func &func, const Container &container,
-                      bool greyscale = true) const
+                      bool greyscale = true, bool serial = false) const
     {
         std::vector<std::pair<size_t, size_t>> idx;
         size_t i = 0;
@@ -589,12 +597,12 @@ public:
             idx.emplace_back(i++, *it);
         }
 
-        forEachImage(func, idx, greyscale);
+        forEachImage(func, idx, greyscale, serial);
     }
 
     template<class Func>
     void forEachImage(const Func &func, size_t frameSkip = 1,
-                      bool greyscale = true) const
+                      bool greyscale = true, bool serial = false) const
     {
         BOB_ASSERT(frameSkip > 0);
 
@@ -604,7 +612,7 @@ public:
             idx.emplace_back(i, i * frameSkip);
         }
 
-        forEachImage(func, idx, greyscale);
+        forEachImage(func, idx, greyscale, serial);
     }
 
     /**!
