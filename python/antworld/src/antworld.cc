@@ -27,7 +27,15 @@ struct AgentObjectData
                     double nearClip, double farClip,
                     degree_t horizontalFOV, degree_t verticalFOV)
       : window{ AntWorld::AntAgent::initialiseWindow(renderSize) }
-      , renderer(cubemapSize, nearClip, farClip, horizontalFOV, verticalFOV)
+      , renderer(AntWorld::Renderer::sphericalRenderMesh, cubemapSize, nearClip, farClip, 
+                 horizontalFOV, verticalFOV)
+      , agent(*window, renderer, renderSize)
+    {}
+
+    AgentObjectData(const cv::Size &renderSize, GLsizei cubemapSize, 
+                    double nearClip, double farClip)
+      : window{ AntWorld::AntAgent::initialiseWindow(renderSize) }
+      , renderer(AntWorld::Renderer::cubeMapRenderMesh, cubemapSize, nearClip, farClip)
       , agent(*window, renderer, renderSize)
     {}
 
@@ -50,18 +58,21 @@ Agent_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     
     static char *kwlist[] = {"width", "height", "cubemap_size", 
                              "near_clip", "far_clip", 
-                             "horizontal_fov", "vertical_fov", NULL};
+                             "horizontal_fov", "vertical_fov", 
+                             "render_cubemap", NULL};
     
     // Read renderer settings from kwargs
+    int width, height;
     GLsizei cubemapSize = 256;
     double nearClip = 0.001;
     double farClip = 1000.0;
     double horizontalFOV = 360.0;
     double verticalFOV = 75.0;
-    int width, height;
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "ii|Idddd", kwlist, 
+    bool renderCubeMap = false;
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "ii|Iddddp", kwlist, 
                                      &width, &height, &cubemapSize,
-                                     &nearClip, &farClip, &horizontalFOV, &verticalFOV)) 
+                                     &nearClip, &farClip, &horizontalFOV, &verticalFOV, 
+                                     &renderCubeMap)) 
     {
         return nullptr;
     }
@@ -70,9 +81,16 @@ Agent_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     if (!self)
         return nullptr;
     try {
-        auto data = new AgentObjectData({ width, height }, cubemapSize,
+        AgentObjectData *data;
+        if(renderCubeMap) {
+            data = new AgentObjectData({ width, height }, cubemapSize,
+                                        nearClip, farClip);
+        }
+        else {
+            data = new AgentObjectData({ width, height }, cubemapSize,
                                         nearClip, farClip, 
                                         degree_t{horizontalFOV}, degree_t{verticalFOV});
+        }
         reinterpret_cast<AgentObject *>(self)->members = data;
     } catch (std::exception &e) {
         Py_DECREF(self);
