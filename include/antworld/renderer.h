@@ -36,6 +36,10 @@ public:
     static const struct SphericalRenderMesh{} sphericalRenderMesh;
     static const struct CubeMapRenderMesh{} cubeMapRenderMesh;
 
+    // Legacy spherical cubemap constructor
+    Renderer(GLsizei cubemapSize = 256, double nearClip = 0.001, double farClip = 1000.0,
+             degree_t horizontalFOV = 360_deg, degree_t verticalFOV = 75_deg);
+        
     Renderer(SphericalRenderMesh, GLsizei cubemapSize = 256, double nearClip = 0.001, double farClip = 1000.0,
              degree_t horizontalFOV = 360_deg, degree_t verticalFOV = 75_deg);
     Renderer(CubeMapRenderMesh, GLsizei cubemapSize = 256, double nearClip = 0.001, double farClip = 1000.0);

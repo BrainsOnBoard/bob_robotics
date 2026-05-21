@@ -15,6 +15,13 @@ namespace AntWorld
 // **NOTE** RenderMesh initialisation matches the matlab:
 // hfov = hfov/180/2*pi;
 // axis([0 14 -hfov hfov -pi/12 pi/3]);
+Renderer::Renderer(GLsizei cubemapSize, double nearClip, double farClip,
+                   degree_t horizontalFOV, degree_t verticalFOV)
+:   Renderer(sphericalRenderMesh, cubemapSize, nearClip, 
+             farClip, horizontalFOV, verticalFOV)
+{
+}
+//----------------------------------------------------------------------------
 Renderer::Renderer(SphericalRenderMesh, GLsizei cubemapSize, double nearClip, double farClip,
                    degree_t horizontalFOV, degree_t verticalFOV)
 :   Renderer(std::make_unique<RenderMeshSpherical>(horizontalFOV, verticalFOV, 15_deg, 40, 10),
