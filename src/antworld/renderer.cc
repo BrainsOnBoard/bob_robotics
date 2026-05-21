@@ -15,52 +15,17 @@ namespace AntWorld
 // **NOTE** RenderMesh initialisation matches the matlab:
 // hfov = hfov/180/2*pi;
 // axis([0 14 -hfov hfov -pi/12 pi/3]);
-Renderer::Renderer(GLsizei cubemapSize, double nearClip, double farClip,
+Renderer::Renderer(SphericalRenderMesh, GLsizei cubemapSize, double nearClip, double farClip,
                    degree_t horizontalFOV, degree_t verticalFOV)
-:   m_RenderMesh(horizontalFOV, verticalFOV, 15_deg, 40, 10),
-    m_CubemapTexture(0), m_FBO(0), m_DepthBuffer(0),
-    m_CubemapSize(cubemapSize), m_NearClip(nearClip), m_FarClip(farClip)
+:   Renderer(std::make_unique<RenderMeshSpherical>(horizontalFOV, verticalFOV, 15_deg, 40, 10),
+             cubemapSize, nearClip, farClip)
 {
-    // Create FBO for rendering to cubemap and bind
-    glGenFramebuffers(1, &m_FBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
-
-    // Create cubemap and bind
-    glGenTextures(1, &m_CubemapTexture);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, m_CubemapTexture);
-
-    // Create textures for all faces of cubemap
-    // **NOTE** even though we don't need top and bottom faces we still need to create them or rendering fails
-    // **TODO** it would be better to use native format
-    for(unsigned int t = 0; t < 6; t++) {
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + t, 0, GL_RGB,
-                     m_CubemapSize, m_CubemapSize, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-    }
-    glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-    // Create depth render buffer
-    glGenRenderbuffers(1, &m_DepthBuffer);
-    glBindRenderbuffer(GL_RENDERBUFFER, m_DepthBuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_CubemapSize, m_CubemapSize);
-
-    // Attach depth buffer to frame buffer
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_DepthBuffer);
-
-    // Check frame buffer is created correctly
-    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        throw std::runtime_error("Frame buffer not complete");
-    }
-
-    // Unbind cube map and frame buffer
-    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    // Pre-generate lookat matrices to point at cubemap faces
-    generateCubeFaceLookAtMatrices();
+}
+//----------------------------------------------------------------------------
+Renderer::Renderer(CubeMapRenderMesh, GLsizei cubemapSize, double nearClip, double farClip)
+:   Renderer(std::make_unique<RenderMeshCubeMap>(),
+             cubemapSize, nearClip, farClip)
+{
 }
 //----------------------------------------------------------------------------
 Renderer::~Renderer()
@@ -135,7 +100,7 @@ void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
     glLoadIdentity();
 
     // Render render mesh
-    m_RenderMesh.render();
+    m_RenderMesh->render();
 
     // Disable texture coordinate array, cube map texture and cube map texturing!
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
@@ -269,6 +234,54 @@ void Renderer::renderTopDownView(RenderTarget &renderTarget, bool bind, bool cle
     if(bind) {
         renderTarget.unbind();
     }
+}
+//----------------------------------------------------------------------------
+Renderer::Renderer(std::unique_ptr<RenderMesh> renderMesh, GLsizei cubemapSize, 
+                   double nearClip, double farClip)
+:   m_RenderMesh(std::move(renderMesh)),
+    m_CubemapTexture(0), m_FBO(0), m_DepthBuffer(0),
+    m_CubemapSize(cubemapSize), m_NearClip(nearClip), m_FarClip(farClip)
+{
+    // Create FBO for rendering to cubemap and bind
+    glGenFramebuffers(1, &m_FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
+
+    // Create cubemap and bind
+    glGenTextures(1, &m_CubemapTexture);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, m_CubemapTexture);
+
+    // Create textures for all faces of cubemap
+    // **NOTE** even though we don't need top and bottom faces we still need to create them or rendering fails
+    // **TODO** it would be better to use native format
+    for(unsigned int t = 0; t < 6; t++) {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + t, 0, GL_RGB,
+                     m_CubemapSize, m_CubemapSize, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    }
+    glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    // Create depth render buffer
+    glGenRenderbuffers(1, &m_DepthBuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, m_DepthBuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_CubemapSize, m_CubemapSize);
+
+    // Attach depth buffer to frame buffer
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_DepthBuffer);
+
+    // Check frame buffer is created correctly
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        throw std::runtime_error("Frame buffer not complete");
+    }
+
+    // Unbind cube map and frame buffer
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // Pre-generate lookat matrices to point at cubemap faces
+    generateCubeFaceLookAtMatrices();
 }
 //----------------------------------------------------------------------------
 void Renderer::renderPanoramicGeometry()

@@ -56,5 +56,15 @@ public:
     RenderMeshSpherical(units::angle::degree_t horizontalFOV, units::angle::degree_t verticalFOV, units::angle::degree_t startLongitude,
                         unsigned int numHorizontalSegments, unsigned int numVerticalSegments);
 };
+
+//----------------------------------------------------------------------------
+// BoBRobotics::AntWorld::RenderMeshCubeMap
+//----------------------------------------------------------------------------
+//! Class for rendering cubemap straight back onto a unwrapped cube
+class RenderMeshCubeMap : public RenderMesh
+{
+public:
+    RenderMeshCubeMap();
+};
 }   // namespace AntWorld
 }   // namespace BoBRobotics

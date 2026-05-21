@@ -5,6 +5,9 @@
 // Standard C++ includes
 #include <vector>
 
+// Standard C includes
+#include <cassert>
+
 using namespace units::angle;
 using namespace units::math; // cmath functions for unit types
 
@@ -118,5 +121,123 @@ RenderMeshSpherical::RenderMeshSpherical(degree_t horizontalFOV, degree_t vertic
     getSurface().unbindIndices();
 }
 
+//----------------------------------------------------------------------------
+// BoBRobotics::AntWorld::RenderMeshCubeMap
+//----------------------------------------------------------------------------
+RenderMeshCubeMap::RenderMeshCubeMap()
+{
+    // Bind surface
+    getSurface().bind();
+    
+    // Build vertices
+    {
+        // Reserve 2 XY positions and 2 SRT texture coordinates for each of the 12 vertices
+        const std::vector<GLfloat> positions{
+            // +Y
+            0.25f, 1.00f,
+            0.25f, 0.6666667f,
+            0.50f, 0.6666667f,
+            0.50f, 1.00f,
+
+            // -X
+            0.00f, 0.6666667f,
+            0.00f, 0.3333333f,
+            0.25f, 0.3333333f,
+            0.25f, 0.6666667f,
+
+            // +Z
+            0.25f, 0.6666667f,
+            0.25f, 0.3333333f,
+            0.50f, 0.3333333f,
+            0.50f, 0.6666667f,
+
+            // +X
+            0.50f, 0.6666667f,
+            0.50f, 0.3333333f,
+            0.75f, 0.3333333f,
+            0.75f, 0.6666667f,
+
+            // -Z
+            0.75f, 0.6666667f,
+            0.75f, 0.3333333f,
+            1.00f, 0.3333333f,
+            1.00f, 0.6666667f,
+
+            // -Y
+            0.25f, 0.3333333f,
+            0.25f, 0.00f,
+            0.50f, 0.00f,
+            0.50f, 0.3333333f};
+
+        const std::vector<GLfloat> textureCoords{
+            // +Y
+            -1.0f,  1.0f, -1.0f,
+            1.0f,  1.0f, -1.0f,
+            1.0f,  1.0f,  1.0f,
+            -1.0f,  1.0f,  1.0f,
+
+            // -X
+            -1.0f,  1.0f,  1.0f,
+            -1.0f,  1.0f, -1.0f,
+            -1.0f, -1.0f, -1.0f,
+            -1.0f, -1.0f,  1.0f,
+
+            // +Z
+            -1.0f,  1.0f,  1.0f,
+            1.0f,  1.0f,  1.0f,
+            1.0f, -1.0f,  1.0f,
+            -1.0f, -1.0f,  1.0f,
+
+            // +X
+            1.0f,  1.0f, -1.0f,
+            1.0f,  1.0f,  1.0f,
+            1.0f, -1.0f,  1.0f,
+            1.0f, -1.0f, -1.0f,
+
+            // -Z
+            1.0f,  1.0f, -1.0f,
+            -1.0f,  1.0f, -1.0f,
+            -1.0f, -1.0f, -1.0f,
+            1.0f, -1.0f, -1.0f,
+
+            // -Y
+            -1.0f, -1.0f,  1.0f,
+            1.0f, -1.0f,  1.0f,
+            1.0f, -1.0f, -1.0f,
+            -1.0f, -1.0f, -1.0f
+        };
+
+        assert(positions.size() == (6 * 4 * 2));
+        assert(textureCoords.size() == (6 * 4 * 3));
+
+         // Upload positions and texture coordinates
+        getSurface().uploadPositions(positions, 2);
+        getSurface().uploadTexCoords(textureCoords, 3);
+    }
+
+    {
+        const std::vector<GLuint> indices{
+            0,  1,  2,  3,      // +Y
+            4,  5,  6,  7,      // -X
+            8,  9, 10, 11,      // +Z
+            12, 13, 14, 15,     // +X
+            16, 17, 18, 19,     // -Z
+            20, 21, 22, 23};    // -Y
+        
+        assert(indices.size() == (6 * 4));
+
+        // Upload indices to surface
+        getSurface().uploadIndices(indices);
+    }
+
+    // Unbind surface
+    getSurface().unbind();
+
+    // Unbind indices
+    getSurface().unbindIndices();
+}
+
 }   // namespace AntWorld
 }   // namespace BoBRobotics
+
+

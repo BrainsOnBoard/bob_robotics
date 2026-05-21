@@ -2,6 +2,7 @@
 
 // Standard C++ includes
 #include <algorithm>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -32,8 +33,13 @@ class Renderer
     using meter_t = units::length::meter_t;
 
 public:
-    Renderer(GLsizei cubemapSize = 256, double nearClip = 0.001, double farClip = 1000.0,
+    static const struct SphericalRenderMesh{} sphericalRenderMesh;
+    static const struct CubeMapRenderMesh{} cubeMapRenderMesh;
+
+    Renderer(SphericalRenderMesh, GLsizei cubemapSize = 256, double nearClip = 0.001, double farClip = 1000.0,
              degree_t horizontalFOV = 360_deg, degree_t verticalFOV = 75_deg);
+    Renderer(CubeMapRenderMesh, GLsizei cubemapSize = 256, double nearClip = 0.001, double farClip = 1000.0);
+
     virtual ~Renderer();
 
 
@@ -60,12 +66,16 @@ public:
     const World &getWorld() const{ return m_World; }
 
 protected:
+    Renderer(std::unique_ptr<RenderMesh> renderMesh, GLsizei cubemapSize, 
+             double nearClip, double farClip);
+    
     //------------------------------------------------------------------------
     // Declared virtuals
     //------------------------------------------------------------------------
     virtual void renderPanoramicGeometry();
     virtual void renderFirstPersonGeometry();
     virtual void renderTopDownGeometry();
+
 private:
     //------------------------------------------------------------------------
     // Private methods
@@ -78,7 +88,7 @@ private:
     // Members
     //------------------------------------------------------------------------
     World m_World;
-    RenderMeshSpherical m_RenderMesh;
+    std::unique_ptr<RenderMesh> m_RenderMesh;
 
     GLuint m_CubemapTexture;
     GLuint m_FBO;
